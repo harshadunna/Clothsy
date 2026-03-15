@@ -12,6 +12,9 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import FormControl from "@mui/material/FormControl";
 import FilterListIcon from '@mui/icons-material/FilterList';
 
+// Import router hooks for URL manipulation
+import { useLocation, useNavigate } from "react-router-dom";
+
 import ProductCard from "./ProductCard";
 import { mens_kurta } from "../../../Data/Men/men_kurta";
 
@@ -38,45 +41,70 @@ const cardVariants = {
 export default function Product() {
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
     const [activeSort, setActiveSort] = useState("popular");
-
-    // State for Multi-select (Checkboxes)
-    const [checkedFilters, setCheckedFilters] = useState({});
-
-    // State for Single-select (Radio Buttons)
-    const [radioFilters, setRadioFilters] = useState({});
-
     const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
 
-    // Handler for Checkboxes (Multi-select)
+    // Initialize router hooks
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    // Parse current URL search parameters
+    const searchParams = new URLSearchParams(location.search);
+
+    // Handler for Checkboxes (Multi-select) to update URL
     const toggleFilter = (sectionId, value) => {
-        setCheckedFilters((prev) => {
-            const current = prev[sectionId] || [];
-            return {
-                ...prev,
-                [sectionId]: current.includes(value)
-                    ? current.filter((v) => v !== value)
-                    : [...current, value],
-            };
-        });
+        let filterValues = searchParams.getAll(sectionId);
+
+        // Check if there are existing values and if the clicked value is already in the URL
+        if (filterValues.length > 0 && filterValues[0].split(",").includes(value)) {
+            // Remove the value if it exists
+            filterValues = filterValues[0]
+                .split(",")
+                .filter((item) => item !== value);
+            
+            if (filterValues.length === 0) {
+                searchParams.delete(sectionId);
+            } else {
+                searchParams.set(sectionId, filterValues.join(","));
+            }
+        } else {
+            // Add the new value to the existing ones
+            if (filterValues.length === 0) {
+                filterValues = [value];
+            } else {
+                filterValues = filterValues[0].split(",");
+                filterValues.push(value);
+            }
+            searchParams.set(sectionId, filterValues.join(","));
+        }
+
+        // Push the new URL to the browser
+        const query = searchParams.toString();
+        navigate({ search: `?${query}` });
     };
 
-    // Handler for Radio Buttons (Single-select)
+    // Handler for Radio Buttons (Single-select) to update URL
     const handleRadioFilter = (e, sectionId) => {
-        setRadioFilters((prev) => ({
-            ...prev,
-            [sectionId]: e.target.value,
-        }));
+        searchParams.set(sectionId, e.target.value);
+        const query = searchParams.toString();
+        navigate({ search: `?${query}` });
     };
 
-    const isChecked = (sectionId, value) =>
-        (checkedFilters[sectionId] || []).includes(value);
+    // Helper function to determine if a checkbox should be checked based on the URL
+    const isChecked = (sectionId, value) => {
+        const sectionValues = searchParams.get(sectionId);
+        if (!sectionValues) return false;
+        return sectionValues.split(",").includes(value);
+    };
 
+    // Clear all filters by resetting the URL parameters entirely
     const clearFilters = () => {
-        setCheckedFilters({});
-        setRadioFilters({});
+        navigate({ search: "" });
     };
 
-    const hasActiveFilters = Object.keys(checkedFilters).some(k => checkedFilters[k].length > 0) || Object.keys(radioFilters).length > 0;
+    // Check if there are any active filters in the URL to show the clear button
+    const hasActiveFilters = Array.from(searchParams.keys()).some(
+        key => key !== 'sort' && key !== 'page'
+    );
 
     const FilterSidebar = () => (
         <div>
@@ -138,7 +166,8 @@ export default function Product() {
                                     <RadioGroup
                                         aria-labelledby={`radio-group-${section.id}`}
                                         name={section.id}
-                                        value={radioFilters[section.id] || ""}
+                                        // Read the currently selected radio value directly from the URL
+                                        value={searchParams.get(section.id) || ""}
                                         onChange={(e) => handleRadioFilter(e, section.id)}
                                     >
                                         {section.options.map((option) => (
@@ -296,7 +325,7 @@ export default function Product() {
                     {/* Desktop Sidebar */}
                     <aside className="hidden lg:block w-60 flex-shrink-0 sticky top-6">
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                            {/*  Used MUI FilterListIcon here */}
+                            {/* Used MUI FilterListIcon here */}
                             <div className="flex items-center gap-2 mb-4">
                                 <FilterListIcon className="text-gray-500" fontSize="small" />
                                 <h2 className="font-semibold text-gray-900">Filters</h2>
