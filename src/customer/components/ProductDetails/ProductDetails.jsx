@@ -2,6 +2,9 @@ import { useState } from "react";
 import { RadioGroup } from "@headlessui/react";
 import { motion, AnimatePresence } from "framer-motion";
 
+// IMPORT YOUR NEW REVIEW CARD HERE
+import ProductReviewCard from "./ProductReviewCard"; 
+
 // --- DUMMY DATA ---
 const dummyProductInfo = {
   brand: "DressBerry",
@@ -120,7 +123,6 @@ export default function ProductDetails() {
           
           {/* Image Gallery */}
           <motion.div variants={staggerContainer} initial="hidden" animate="show" className="flex flex-col-reverse lg:flex-row gap-4 lg:gap-6">
-            {/* Thumbnails */}
             <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 w-full lg:w-24 shrink-0">
               {productImages.map((image, index) => (
                 <motion.button
@@ -136,7 +138,6 @@ export default function ProductDetails() {
               ))}
             </div>
 
-            {/* Main Image */}
             <motion.div variants={fadeUp} className="w-full aspect-[4/5] lg:aspect-auto lg:h-[600px] rounded-2xl overflow-hidden bg-gray-100 shadow-sm relative">
               <AnimatePresence mode="wait">
                 <motion.img
@@ -160,7 +161,6 @@ export default function ProductDetails() {
               <h1 className="mt-2 text-3xl font-bold text-gray-900 tracking-tight sm:text-4xl">{dummyProductInfo.title}</h1>
             </motion.div>
 
-            {/* Price & Rating */}
             <motion.div variants={fadeUp} className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-end gap-3">
                 <p className="text-3xl font-bold text-gray-900">₹{dummyProductInfo.discountedPrice}</p>
@@ -173,7 +173,6 @@ export default function ProductDetails() {
               </div>
             </motion.div>
 
-            {/* Description */}
             <motion.div variants={fadeUp} className="mt-8">
               <p className="text-base text-gray-600 leading-relaxed">{dummyProductInfo.description}</p>
               
@@ -189,7 +188,6 @@ export default function ProductDetails() {
               </ul>
             </motion.div>
 
-            {/* Form */}
             <motion.form variants={fadeUp} className="mt-10 border-t border-gray-200 pt-8" onSubmit={handleSubmit}>
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium text-gray-900">Select Size</h3>
@@ -240,7 +238,7 @@ export default function ProductDetails() {
           <motion.h2 variants={fadeUp} className="text-2xl font-bold text-gray-900 tracking-tight">Customer Reviews</motion.h2>
           
           <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-12">
-            {/* Rating Summary */}
+            
             <motion.div variants={fadeUp} className="lg:col-span-4 flex flex-col">
               <div className="flex items-center gap-4 mb-6">
                 <div className="text-5xl font-extrabold text-gray-900">4.6</div>
@@ -259,27 +257,14 @@ export default function ProductDetails() {
               </div>
             </motion.div>
 
-            {/* Review Cards */}
+            {/* INTEGRATING PRODUCT REVIEW CARD HERE */}
             <motion.div variants={fadeUp} className="lg:col-span-8 space-y-6">
               {dummyProductInfo.reviews.map((review) => (
-                <div key={review.id} className="p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
-                        {review.author.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-gray-900">{review.author}</p>
-                        <CustomRating value={review.rating} />
-                      </div>
-                    </div>
-                    <span className="text-sm text-gray-500">{review.date}</span>
-                  </div>
-                  <p className="text-gray-600 text-sm leading-relaxed">{review.comment}</p>
-                </div>
+                <ProductReviewCard key={review.id} item={review} />
               ))}
               <button className="text-indigo-600 font-semibold text-sm hover:underline mt-4">Read all reviews &rarr;</button>
             </motion.div>
+
           </div>
         </motion.section>
 
