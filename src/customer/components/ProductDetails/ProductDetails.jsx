@@ -2,8 +2,9 @@ import { useState } from "react";
 import { RadioGroup } from "@headlessui/react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// IMPORT YOUR NEW REVIEW CARD HERE
+// IMPORT YOUR COMPONENTS HERE
 import ProductReviewCard from "./ProductReviewCard"; 
+import HomeSectionCard from "../HomeSectionCard/HomeSectionCard"; // Adjust this path if needed based on your folder structure!
 
 // --- DUMMY DATA ---
 const dummyProductInfo = {
@@ -257,7 +258,7 @@ export default function ProductDetails() {
               </div>
             </motion.div>
 
-            {/* INTEGRATING PRODUCT REVIEW CARD HERE */}
+            {/* PRODUCT REVIEW CARD */}
             <motion.div variants={fadeUp} className="lg:col-span-8 space-y-6">
               {dummyProductInfo.reviews.map((review) => (
                 <ProductReviewCard key={review.id} item={review} />
@@ -268,7 +269,7 @@ export default function ProductDetails() {
           </div>
         </motion.section>
 
-        {/* Similar Products */}
+        {/* Similar Products USING YOUR HOME SECTION CARD */}
         <motion.section 
           initial="hidden" whileInView="show" viewport={{ once: true, margin: "-100px" }} variants={staggerContainer}
           className="mt-24 border-t border-gray-200 pt-16"
@@ -278,30 +279,12 @@ export default function ProductDetails() {
             <a href="#" className="hidden sm:block text-sm font-semibold text-indigo-600 hover:text-indigo-500">Shop the collection &rarr;</a>
           </motion.div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+          {/* Replaced old cards with your HomeSectionCard component */}
+          <div className="flex flex-wrap gap-4 sm:gap-6 justify-center lg:justify-start">
             {dummySimilarProducts.map((item) => (
-              <motion.a 
-                href="#"
-                variants={fadeUp}
-                whileHover={{ y: -8 }}
-                key={item.id} 
-                className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100"
-              >
-                <div className="relative aspect-[4/5] overflow-hidden bg-gray-200">
-                  <img src={item.imageUrl} alt={item.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-md text-xs font-bold text-gray-900 shadow-sm">
-                    {item.discountPersent}% OFF
-                  </div>
-                </div>
-                <div className="p-4 flex flex-col flex-1">
-                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{item.brand}</h3>
-                  <p className="text-sm font-medium text-gray-900 line-clamp-1 mb-2">{item.title}</p>
-                  <div className="mt-auto flex items-baseline gap-2">
-                    <span className="text-lg font-bold text-gray-900">₹{item.discountedPrice}</span>
-                    <span className="text-xs text-gray-400 line-through">₹{item.price}</span>
-                  </div>
-                </div>
-              </motion.a>
+              <motion.div variants={fadeUp} key={item.id}>
+                <HomeSectionCard product={item} />
+              </motion.div>
             ))}
           </div>
         </motion.section>
