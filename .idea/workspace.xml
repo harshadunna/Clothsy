@@ -5,15 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9d539ffe-91e7-46b9-9478-76fddfab32e6" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Backend/.gitattributes" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Backend/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Backend/.mvn/wrapper/maven-wrapper.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Backend/mvnw" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Backend/mvnw.cmd" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Backend/pom.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Backend/src/main/java/com/harsha/ecommerce_project/EcommerceProjectApplication.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/build.gradle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/gradle/wrapper/gradle-wrapper.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/gradlew" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/gradlew.bat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/settings.gradle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/src/main/java/org/harsha/backend/BackendApplication.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Backend/src/main/resources/application.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Backend/src/test/java/com/harsha/ecommerce_project/EcommerceProjectApplicationTests.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/src/test/java/org/harsha/backend/BackendApplicationTests.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -88,6 +91,8 @@
       <workItem from="1774115954198" duration="126000" />
       <workItem from="1774116161485" duration="91000" />
       <workItem from="1774116292277" duration="123000" />
+      <workItem from="1774116551221" duration="16000" />
+      <workItem from="1774116621372" duration="60000" />
     </task>
     <servers />
   </component>
