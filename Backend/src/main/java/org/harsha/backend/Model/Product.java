@@ -1,4 +1,4 @@
-package org.harsha.backend.Model;
+package org.harsha.backend.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

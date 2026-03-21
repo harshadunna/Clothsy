@@ -1,4 +1,4 @@
-package org.harsha.backend.Model;
+package org.harsha.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
