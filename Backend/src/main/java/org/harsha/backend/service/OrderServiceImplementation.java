@@ -93,5 +93,93 @@ public class OrderServiceImplementation implements OrderService {
         return savedOrder;
     }
 
-/**
- *
+    /**
+     * Marks the order as PLACED and updates payment status to COMPLETED.
+     */
+    @Override
+    public Order placedOrder(Long orderId) throws OrderException {
+        Order order = findOrderById(orderId);
+        order.setOrderStatus("PLACED");
+        order.getPaymentDetails().setStatus("COMPLETED");
+        return orderRepository.save(order);
+    }
+
+    /**
+     * Marks the order as CONFIRMED by admin.
+     */
+    @Override
+    public Order confirmedOrder(Long orderId) throws OrderException {
+        Order order = findOrderById(orderId);
+        order.setOrderStatus("CONFIRMED");
+        return orderRepository.save(order);
+    }
+
+    /**
+     * Marks the order as SHIPPED.
+     */
+    @Override
+    public Order shippedOrder(Long orderId) throws OrderException {
+        Order order = findOrderById(orderId);
+        order.setOrderStatus("SHIPPED");
+        return orderRepository.save(order);
+    }
+
+    /**
+     * Marks the order as DELIVERED.
+     */
+    @Override
+    public Order deliveredOrder(Long orderId) throws OrderException {
+        Order order = findOrderById(orderId);
+        order.setOrderStatus("DELIVERED");
+        return orderRepository.save(order);
+    }
+
+    /**
+     * Marks the order as CANCELLED.
+     */
+    @Override
+    public Order cancledOrder(Long orderId) throws OrderException {
+        Order order = findOrderById(orderId);
+        order.setOrderStatus("CANCELLED");
+        return orderRepository.save(order);
+    }
+
+    /**
+     * Finds an order by ID or throws OrderException if not found.
+     */
+    @Override
+    public Order findOrderById(Long orderId) throws OrderException {
+        Optional<Order> opt = orderRepository.findById(orderId);
+
+        if (opt.isPresent()) {
+            return opt.get();
+        }
+
+        throw new OrderException("Order not found with id: " + orderId);
+    }
+
+    /**
+     * Returns the order history for a specific user.
+     */
+    @Override
+    public List<Order> usersOrderHistory(Long userId) {
+        return orderRepository.getUsersOrders(userId);
+    }
+
+    /**
+     * Returns all orders sorted by creation date descending.
+     */
+    @Override
+    public List<Order> getAllOrders() {
+        return orderRepository.findAllByOrderByCreatedAtDesc();
+    }
+
+    /**
+     * Deletes an order by ID after verifying it exists.
+     */
+    @Override
+    public void deleteOrder(Long orderId) throws OrderException {
+        findOrderById(orderId);
+        orderRepository.deleteById(orderId);
+    }
+}
