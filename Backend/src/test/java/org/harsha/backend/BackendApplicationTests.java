@@ -1,13 +1,13 @@
-package com.harsha.ecommerce_project;
+package org.harsha.backend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class EcommerceProjectApplicationTests {
+class BackendApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+    @Test
+    void contextLoads() {
+    }
 
 }
