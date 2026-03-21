@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { RadioGroup } from "@headlessui/react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -98,10 +99,12 @@ const fadeUp = {
 export default function ProductDetails() {
   const [selectedSize, setSelectedSize] = useState(sizes[1]);
   const [activeImage, setActiveImage] = useState(productImages[0]);
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault(); 
     console.log("Added to cart: ", { size: selectedSize.name, product: dummyProductInfo.title });
+    navigate("/cart");
   };
 
   return (

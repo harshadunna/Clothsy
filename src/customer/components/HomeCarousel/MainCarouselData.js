@@ -1,18 +1,18 @@
 export const homeCarouselData = [
   {
-    image: "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?q=80&w=1600&auto=format&fit=crop",
-    path: "/women/clothing/lehenga_choli"
+    image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1400&q=80",
+    path: "/women/clothing"
   },
   {
-    image: "https://images.unsplash.com/photo-1603252109303-2751441dd157?q=80&w=1600&auto=format&fit=crop",
-    path: "/women/clothing/women_dress"
+    image: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&w=1400&q=80",
+    path: "/men/clothing"
   },
   {
-    image: "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?q=80&w=1600&auto=format&fit=crop",
-    path: "/women/clothing/kurti"
+    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1400&q=80",
+    path: "/women/clothing"
   },
   {
-    image: "https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?q=80&w=1600&auto=format&fit=crop",
-    path: "/women/clothing/saree"
-  }
+    image: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1400&q=80",
+    path: "/kids/clothing"
+  },
 ];
