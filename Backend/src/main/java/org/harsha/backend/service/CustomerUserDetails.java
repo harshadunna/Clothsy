@@ -22,7 +22,7 @@ import java.util.ArrayList;
  */
 @Service
 @RequiredArgsConstructor
-public class CustomUserDetails implements UserDetailsService {
+public class CustomerUserDetails implements UserDetailsService {
 
     private final UserRepository userRepository;
 

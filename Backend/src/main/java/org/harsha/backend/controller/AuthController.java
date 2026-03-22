@@ -2,15 +2,14 @@ package org.harsha.backend.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.harsha.backend.config.JwtProvider;
+import org.harsha.backend.config.JwtTokenProvider;
 import org.harsha.backend.exception.UserException;
 import org.harsha.backend.model.User;
 import org.harsha.backend.repository.UserRepository;
 import org.harsha.backend.request.LoginRequest;
 import org.harsha.backend.response.AuthResponse;
 import org.harsha.backend.service.CartService;
-import org.harsha.backend.service.CustomUserDetailsService;
-import org.springframework.http.HttpStatus;
+import org.harsha.backend.service.CustomerUserDetails;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -38,8 +37,8 @@ public class AuthController {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtProvider jwtProvider;
-    private final CustomUserDetailsService customUserDetailsService;
+    private final JwtTokenProvider jwtProvider;
+    private final CustomerUserDetails customerUserDetails;
     private final CartService cartService;
 
     /**
@@ -58,12 +57,10 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<AuthResponse> signup(@Valid @RequestBody User user) throws UserException {
 
-        // Reject registration if email is already associated with an account
         if (userRepository.findByEmail(user.getEmail()) != null) {
             throw new UserException("Email is already associated with another account");
         }
 
-        // Build and persist the new user with a securely hashed password
         User newUser = new User();
         newUser.setEmail(user.getEmail());
         newUser.setFirstName(user.getFirstName());
@@ -72,11 +69,8 @@ public class AuthController {
         newUser.setRole(user.getRole());
 
         User savedUser = userRepository.save(newUser);
-
-        // Initialize an empty cart for the newly registered user
         cartService.createCart(savedUser);
 
-        // Authenticate the user and generate a JWT token
         Authentication authentication = new UsernamePasswordAuthenticationToken(
                 user.getEmail(), user.getPassword()
         );
@@ -101,7 +95,6 @@ public class AuthController {
     @PostMapping("/signin")
     public ResponseEntity<AuthResponse> signin(@RequestBody LoginRequest loginRequest) {
 
-        // Validate credentials and build the authenticated token
         Authentication authentication = authenticate(
                 loginRequest.getEmail(),
                 loginRequest.getPassword()
@@ -127,14 +120,12 @@ public class AuthController {
      */
     private Authentication authenticate(String email, String password) {
 
-        UserDetails userDetails = customUserDetailsService.loadUserByUsername(email);
+        UserDetails userDetails = customerUserDetails.loadUserByUsername(email);
 
-        // Reject if no account exists for this email
         if (userDetails == null) {
             throw new BadCredentialsException("Invalid email or password");
         }
 
-        // Reject if the provided password doesn't match the stored hash
         if (!passwordEncoder.matches(password, userDetails.getPassword())) {
             throw new BadCredentialsException("Invalid email or password");
         }

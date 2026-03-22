@@ -1,7 +1,7 @@
 package org.harsha.backend.service;
 
 import lombok.RequiredArgsConstructor;
-import org.harsha.backend.config.JwtProvider;
+import org.harsha.backend.config.JwtTokenProvider;
 import org.harsha.backend.exception.UserException;
 import org.harsha.backend.model.User;
 import org.harsha.backend.repository.UserRepository;
@@ -23,7 +23,7 @@ import java.util.Optional;
 public class UserServiceImplementation implements UserService {
 
     private final UserRepository userRepository;
-    private final JwtProvider jwtProvider;
+    private final JwtTokenProvider jwtProvider;
 
     /**
      * Finds a user by their unique database ID.

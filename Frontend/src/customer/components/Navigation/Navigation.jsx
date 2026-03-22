@@ -1,5 +1,7 @@
-import { Fragment, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Fragment, useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useSelector, useDispatch } from 'react-redux'
+import { logout, getUser } from '../../../Redux/Auth/Action'
 import {
   Dialog, DialogBackdrop, DialogPanel,
   Popover, PopoverButton, PopoverGroup, PopoverPanel,
@@ -8,18 +10,33 @@ import {
 } from '@headlessui/react'
 import { Bars3Icon, MagnifyingGlassIcon, ShoppingBagIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { navigation } from './navigationMenu'
+import AuthModel from '../Auth/AuthModel'
 
 export default function Navigation() {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
+  const dispatch = useDispatch()
+  const { auth } = useSelector((store) => store)
+  const jwt = localStorage.getItem("jwt")
 
-  // TODO: Replace with Redux auth state
-  const isLoggedIn = true
-  const userInitial = "R"
-  const cartCount = 2
+  useEffect(() => {
+    if (jwt) {
+      dispatch(getUser(jwt))
+    }
+  }, [jwt])
+
+  const openAuthModel = location.pathname === "/login" || location.pathname === "/register"
+  const handleClose = () => {
+    navigate("/")
+  }
+
+  const isLoggedIn = auth.user !== null;
+  const userInitial = auth.user?.firstName ? auth.user.firstName[0].toUpperCase() : "U";
+  const cartCount = 2;
 
   const handleLogout = () => {
-    // TODO: dispatch(logout())
+    dispatch(logout());
     navigate("/")
   }
 
@@ -367,6 +384,7 @@ export default function Navigation() {
           </nav>
         </div>
       </header>
+      <AuthModel handleClose={handleClose} open={openAuthModel}/>
     </div>
   )
 }
