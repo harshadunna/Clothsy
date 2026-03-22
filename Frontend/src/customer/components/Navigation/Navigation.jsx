@@ -1,5 +1,5 @@
 import { Fragment, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   Dialog, DialogBackdrop, DialogPanel,
   Popover, PopoverButton, PopoverGroup, PopoverPanel,
@@ -7,19 +7,31 @@ import {
   Menu, MenuButton, MenuItem, MenuItems
 } from '@headlessui/react'
 import { Bars3Icon, MagnifyingGlassIcon, ShoppingBagIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { useDispatch, useSelector } from 'react-redux'
 import { navigation } from './navigationMenu'
+import { logout } from '../../../Redux/Auth/Action'
+import AuthModel from '../Auth/AuthModel'
 
 export default function Navigation() {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
+  const dispatch = useDispatch()
 
-  // TODO: Replace with Redux auth state
-  const isLoggedIn = true
-  const userInitial = "R"
-  const cartCount = 2
+  const { auth } = useSelector((store) => store)
+  const { cart } = useSelector((store) => store)
+
+  const openAuthModel = location.pathname === "/login" || location.pathname === "/register"
+  const handleClose = () => {
+    navigate("/")
+  }
+
+  const isLoggedIn = !!auth.user
+  const userInitial = auth.user?.firstName?.charAt(0).toUpperCase() || "U"
+  const cartCount = cart?.cartItems?.length || 0
 
   const handleLogout = () => {
-    // TODO: dispatch(logout())
+    dispatch(logout())
     navigate("/")
   }
 
@@ -128,14 +140,46 @@ export default function Navigation() {
             <div className="space-y-4 border-t border-gray-100 px-4 py-6 bg-gray-50/50">
               {isLoggedIn ? (
                 <>
-                  <Link to="/account/profile" className="block text-sm font-medium text-gray-700 hover:text-[#c8742a]" onClick={() => setOpen(false)}>Profile</Link>
-                  <Link to="/account/orders" className="block text-sm font-medium text-gray-700 hover:text-[#c8742a]" onClick={() => setOpen(false)}>My Orders</Link>
-                  <button onClick={handleLogout} className="block w-full text-left text-sm font-medium text-red-600 hover:text-red-700 transition-colors">Logout</button>
+                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
+                    Hey, {auth.user?.firstName}
+                  </p>
+                  <Link
+                    to="/account/profile"
+                    className="block text-sm font-medium text-gray-700 hover:text-[#c8742a]"
+                    onClick={() => setOpen(false)}
+                  >
+                    Profile
+                  </Link>
+                  <Link
+                    to="/account/orders"
+                    className="block text-sm font-medium text-gray-700 hover:text-[#c8742a]"
+                    onClick={() => setOpen(false)}
+                  >
+                    My Orders
+                  </Link>
+                  <button
+                    onClick={() => { handleLogout(); setOpen(false); }}
+                    className="block w-full text-left text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
+                  >
+                    Logout
+                  </button>
                 </>
               ) : (
                 <>
-                  <Link to="/login" className="block text-sm font-medium text-gray-700 hover:text-[#c8742a]" onClick={() => setOpen(false)}>Sign in</Link>
-                  <Link to="/register" className="block text-sm font-medium text-[#c8742a] hover:text-[#b06524]" onClick={() => setOpen(false)}>Create account</Link>
+                  <Link
+                    to="/login"
+                    className="block text-sm font-medium text-gray-700 hover:text-[#c8742a]"
+                    onClick={() => setOpen(false)}
+                  >
+                    Sign in
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="block text-sm font-medium text-[#c8742a] hover:text-[#b06524]"
+                    onClick={() => setOpen(false)}
+                  >
+                    Create account
+                  </Link>
                 </>
               )}
             </div>
@@ -145,7 +189,6 @@ export default function Navigation() {
 
       {/* ── Desktop Header ── */}
       <header className="relative z-40">
-        {/* Top announcement bar */}
         <p
           className="flex h-10 items-center justify-center px-4 text-sm font-medium text-white sm:px-6 lg:px-8"
           style={{ background: "linear-gradient(135deg, #d4832f, #c8742a)" }}
@@ -153,10 +196,10 @@ export default function Navigation() {
           Get free delivery on orders over ₹999
         </p>
 
-        {/* Sticky Nav Wrapper */}
         <div className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all">
           <nav aria-label="Top" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex h-16 items-center">
+
               {/* Mobile menu button */}
               <button
                 type="button"
@@ -176,9 +219,7 @@ export default function Navigation() {
                   >
                     S
                   </div>
-                  <span
-                    className="hidden sm:block font-black text-xl tracking-tight text-gray-900 transition-colors group-hover:text-[#c8742a]"
-                  >
+                  <span className="hidden sm:block font-black text-xl tracking-tight text-gray-900 transition-colors group-hover:text-[#c8742a]">
                     Shophive
                   </span>
                 </Link>
@@ -190,9 +231,7 @@ export default function Navigation() {
                   {navigation.categories.map((category) => (
                     <Popover key={category.name} className="flex">
                       <div className="relative flex">
-                        <PopoverButton
-                          className="group relative flex items-center justify-center text-sm font-semibold transition-colors duration-200 ease-out text-gray-700 hover:text-[#c8742a] data-open:text-[#c8742a] outline-none"
-                        >
+                        <PopoverButton className="group relative flex items-center justify-center text-sm font-semibold transition-colors duration-200 ease-out text-gray-700 hover:text-[#c8742a] data-open:text-[#c8742a] outline-none">
                           {category.name}
                           <span
                             aria-hidden="true"
@@ -207,7 +246,6 @@ export default function Navigation() {
                       >
                         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                           <div className="grid grid-cols-2 gap-x-8 gap-y-10 py-12">
-                            {/* Featured images */}
                             <div className="col-start-2 grid grid-cols-2 gap-x-8">
                               {category.featured.map((item) => (
                                 <div key={item.name} className="group relative text-base sm:text-sm">
@@ -230,7 +268,6 @@ export default function Navigation() {
                               ))}
                             </div>
 
-                            {/* Section links */}
                             <div className="row-start-1 grid grid-cols-3 gap-x-8 gap-y-8 text-sm">
                               {category.sections.map((section) => (
                                 <div key={section.name}>
@@ -272,6 +309,7 @@ export default function Navigation() {
 
               {/* Right side icons */}
               <div className="ml-auto flex items-center gap-2 sm:gap-4">
+
                 {/* Search */}
                 <button className="p-2 rounded-full text-gray-400 hover:text-[#c8742a] hover:bg-orange-50 transition-all duration-200">
                   <span className="sr-only">Search</span>
@@ -294,7 +332,7 @@ export default function Navigation() {
                   )}
                 </Link>
 
-                {/* User Dropdown with Headless UI Menu */}
+                {/* User Menu */}
                 <div className="relative ml-2">
                   {isLoggedIn ? (
                     <Menu as="div" className="relative inline-block text-left">
@@ -311,12 +349,16 @@ export default function Navigation() {
                       >
                         <div className="px-4 py-3 border-b border-gray-50 bg-gray-50/50 rounded-t-2xl">
                           <p className="text-xs font-bold uppercase tracking-widest text-gray-500">
-                            My Account
+                            Hey, {auth.user?.firstName}
                           </p>
+                          <p className="text-xs text-gray-400 mt-0.5 truncate">{auth.user?.email}</p>
                         </div>
                         <div className="py-1">
                           <MenuItem>
-                            <Link to="/account/profile" className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-orange-50 hover:text-[#c8742a] transition-colors data-focus:bg-orange-50 data-focus:text-[#c8742a]">
+                            <Link
+                              to="/account/profile"
+                              className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-orange-50 hover:text-[#c8742a] transition-colors data-focus:bg-orange-50 data-focus:text-[#c8742a]"
+                            >
                               <svg className="w-4 h-4 text-[#c8742a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                               </svg>
@@ -324,7 +366,10 @@ export default function Navigation() {
                             </Link>
                           </MenuItem>
                           <MenuItem>
-                            <Link to="/account/orders" className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-orange-50 hover:text-[#c8742a] transition-colors data-focus:bg-orange-50 data-focus:text-[#c8742a]">
+                            <Link
+                              to="/account/orders"
+                              className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-orange-50 hover:text-[#c8742a] transition-colors data-focus:bg-orange-50 data-focus:text-[#c8742a]"
+                            >
                               <svg className="w-4 h-4 text-[#c8742a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                               </svg>
@@ -334,7 +379,10 @@ export default function Navigation() {
                         </div>
                         <div className="border-t border-gray-50 py-1">
                           <MenuItem>
-                            <button onClick={handleLogout} className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors data-focus:bg-red-50">
+                            <button
+                              onClick={handleLogout}
+                              className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors data-focus:bg-red-50"
+                            >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                               </svg>
@@ -367,6 +415,7 @@ export default function Navigation() {
           </nav>
         </div>
       </header>
+      <AuthModel handleClose={handleClose} open={openAuthModel}/>
     </div>
   )
 }
