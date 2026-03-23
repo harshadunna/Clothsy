@@ -12,6 +12,9 @@ import {
   GET_ALL_CUSTOMERS_REQUEST,
   GET_ALL_CUSTOMERS_SUCCESS,
   GET_ALL_CUSTOMERS_FAILURE,
+  DELETE_ADDRESS_REQUEST,
+  DELETE_ADDRESS_SUCCESS,
+  DELETE_ADDRESS_FAILURE,
 } from "./ActionTypes";
 import api from "../../config/api";
 
@@ -70,4 +73,24 @@ export const getAllCustomers = () => async (dispatch) => {
 export const logout = () => (dispatch) => {
   localStorage.removeItem("jwt");
   dispatch({ type: LOGOUT });
+};
+
+export const deleteAddress = (addressId) => async (dispatch) => {
+  dispatch({ type: DELETE_ADDRESS_REQUEST });
+  try {
+    // 1. Call the backend
+    await api.delete(`/api/addresses/${addressId}`);
+
+    // 2. ONLY dispatch the success. 
+    // Do NOT call dispatch(getUser()) here, as that re-fetches everything 
+    // and can cause the component to reset and redirect you to Home.
+    dispatch({ type: DELETE_ADDRESS_SUCCESS, payload: addressId });
+
+    console.log("Address deleted successfully, UI should update silently.");
+  } catch (error) {
+    dispatch({
+      type: DELETE_ADDRESS_FAILURE,
+      payload: error.response?.data?.message || error.message,
+    });
+  }
 };

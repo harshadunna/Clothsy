@@ -42,8 +42,10 @@ export default function AuthModel({ handleClose, open }) {
   const isLogin = location.pathname === "/login";
 
   useEffect(() => {
-    if (auth.user) handleClose();
-  }, [auth.user]);
+    if (auth.user && open) {
+      handleClose();
+    }
+  }, [auth.user, open]);
 
   useEffect(() => {
     if (open) {
