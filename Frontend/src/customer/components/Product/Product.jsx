@@ -32,7 +32,7 @@ export default function Product() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { levelThree } = useParams();
-  const { customersProduct } = useSelector((store) => store);
+  const customersProduct = useSelector((store) => store.customersProduct);
 
   const searchParams = new URLSearchParams(location.search);
   const pageNumber = parseInt(searchParams.get("page") || "1");

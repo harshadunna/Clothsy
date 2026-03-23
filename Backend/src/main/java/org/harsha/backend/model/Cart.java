@@ -1,8 +1,12 @@
 package org.harsha.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
@@ -26,6 +30,8 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(exclude = {"cartItems", "user"})
+@ToString(exclude = {"cartItems", "user"})
 public class Cart {
 
     /** Auto-incremented primary key */
@@ -35,8 +41,11 @@ public class Cart {
 
     /**
      * The user who owns this cart.
+     * Excluded from JSON serialization to prevent infinite recursion
+     * (Cart → User → Cart → ...).
      * LAZY fetched — user data is only loaded when explicitly accessed.
      */
+    @JsonIgnore
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

@@ -5,7 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.harsha.backend.model.Size;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -50,8 +52,11 @@ public class CreateProductRequest {
     /** Available size variants with their stock quantities */
     private Set<Size> sizes = new HashSet<>();
 
-    /** URL of the product's main image */
+    /** URL of the product's main image — kept for backward compatibility */
     private String imageUrl;
+
+    /** Multiple image URLs for the product gallery */
+    private List<String> images = new ArrayList<>();
 
     /** Top level category name (e.g. "Men", "Women") */
     private String topLevelCategory;

@@ -5,7 +5,6 @@ import org.harsha.backend.exception.ProductException;
 import org.harsha.backend.model.Product;
 import org.harsha.backend.service.ProductService;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,7 +35,8 @@ public class UserProductController {
                 minDiscount, sort, stock, pageNumber, pageSize
         );
 
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(products);
+        // FIX: Use 200 OK for successful GET requests instead of 202 ACCEPTED
+        return ResponseEntity.ok(products);
     }
 
     @GetMapping("/products/id/{productId}")
@@ -44,7 +44,7 @@ public class UserProductController {
             @PathVariable Long productId) throws ProductException {
 
         Product product = productService.findProductById(productId);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(product);
+        return ResponseEntity.ok(product);
     }
 
     @GetMapping("/products/search")

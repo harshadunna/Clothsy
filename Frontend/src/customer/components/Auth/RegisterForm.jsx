@@ -10,7 +10,7 @@ export default function RegisterForm({ handleNext }) {
   const [openSnackBar, setOpenSnackBar] = useState(false);
   const [snackType, setSnackType] = useState("success");
   const [focusedField, setFocusedField] = useState(null);
-  const { auth } = useSelector((store) => store);
+  const auth = useSelector((store) => store.auth);
   const jwt = localStorage.getItem("jwt");
 
   useEffect(() => {

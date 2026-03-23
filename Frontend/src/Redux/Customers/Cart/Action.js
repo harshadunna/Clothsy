@@ -19,11 +19,14 @@ export const addItemToCart = (reqData) => async (dispatch) => {
   try {
     const { data } = await api.put("/api/cart/add", reqData.data);
     dispatch({ type: ADD_ITEM_TO_CART_SUCCESS, payload: data });
+
+    return data; // <-- THIS IS THE MAGIC LINE. It tells React "I am finished!"
   } catch (error) {
     dispatch({
       type: ADD_ITEM_TO_CART_FAILURE,
       payload: error.response?.data?.message || error.message,
     });
+    throw error; // <-- Lets the UI know it failed
   }
 };
 
@@ -32,11 +35,14 @@ export const getCart = () => async (dispatch) => {
   try {
     const { data } = await api.get("/api/cart/");
     dispatch({ type: GET_CART_SUCCESS, payload: data });
+
+    return data; // <-- ADD THIS HERE TOO
   } catch (error) {
     dispatch({
       type: GET_CART_FAILURE,
       payload: error.response?.data?.message || error.message,
     });
+    throw error;
   }
 };
 

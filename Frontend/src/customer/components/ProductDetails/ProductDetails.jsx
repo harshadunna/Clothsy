@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 
 import ProductReviewCard from "./ProductReviewCard";
+import ProductCard from "../Product/ProductCard";
 import { findProductById } from "../../../Redux/Customers/Product/Action";
-import { addItemToCart } from "../../../Redux/Customers/Cart/Action";
+import { addItemToCart, getCart } from "../../../Redux/Customers/Cart/Action";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -52,30 +53,41 @@ const fadeUp = {
   show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
 };
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 24, scale: 0.95 },
+  visible: {
+    opacity: 1, y: 0, scale: 1,
+    transition: { type: "spring", stiffness: 120, damping: 15 },
+  },
+};
+
 export default function ProductDetails() {
   const [selectedSize, setSelectedSize] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [addingToCart, setAddingToCart] = useState(false);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { productId } = useParams();
 
-  const { customersProduct, auth } = useSelector((store) => store);
+  const customersProduct = useSelector((store) => store.customersProduct);
+  const auth = useSelector((store) => store.auth);
   const product = customersProduct?.product;
 
-  // Fetch product when productId changes
+  const similarProducts = customersProduct?.products?.content
+    ?.filter((p) => p.id !== product?.id)
+    ?.slice(0, 4) || [];
+
   useEffect(() => {
     if (productId) dispatch(findProductById(productId));
   }, [productId]);
 
-  // Clear product from state when leaving the page
   useEffect(() => {
     return () => {
       dispatch({ type: "RESET_PRODUCT" });
     };
   }, []);
 
-  // Set default selected size once product loads
   useEffect(() => {
     if (product?.sizes?.length > 0) {
       const firstAvailable = product.sizes.find((s) => s.quantity > 0);
@@ -83,24 +95,43 @@ export default function ProductDetails() {
     }
   }, [product]);
 
-  const handleAddToCart = (e) => {
+  // ── async so we wait for API before navigating ──
+  const handleAddToCart = async (e) => {
     e.preventDefault();
     if (!auth.user) {
       navigate("/login");
       return;
     }
     if (!selectedSize) return;
-    dispatch(addItemToCart({
-      data: {
-        productId: product.id,
-        size: selectedSize.name,
-        quantity: 1,
-      },
-    }));
-    navigate("/cart");
+
+    setAddingToCart(true);
+
+    try {
+      // 1. Await the PUT request so the DB fully saves the item
+      await dispatch(addItemToCart({
+        data: {
+          productId: product.id,
+          size: selectedSize.name,
+          quantity: 1,
+        },
+      }));
+
+      // 2. Await the GET request to pull the fresh cart into Redux
+      await dispatch(getCart());
+
+      // 3. ONLY navigate after both API calls are 100% complete
+      navigate("/cart");
+
+    } catch (error) {
+      console.error("Failed to add to cart:", error);
+      // Extract proper error message either from Axios response or Error object
+      const errorMessage = error.response?.data?.message || error.message || "Unknown error";
+      alert(`Error: Could not add item to cart.\nReason: ${errorMessage}`);
+    } finally {
+      setAddingToCart(false);
+    }
   };
 
-  // Loading state
   if (customersProduct?.loading || !product) {
     return (
       <div className="bg-gray-50 min-h-screen">
@@ -119,7 +150,11 @@ export default function ProductDetails() {
     );
   }
 
-  const images = product.imageUrl ? [product.imageUrl] : [];
+  const images = product.images?.length > 0
+    ? product.images
+    : product.imageUrl
+      ? [product.imageUrl]
+      : [];
 
   return (
     <div className="bg-gray-50 min-h-screen pb-20">
@@ -134,10 +169,7 @@ export default function ProductDetails() {
               </span>
             </li>
             <li><span className="mx-2 text-gray-300">/</span></li>
-            <li
-              className="capitalize cursor-pointer hover:text-indigo-600"
-              onClick={() => navigate(-1)}
-            >
+            <li className="capitalize cursor-pointer hover:text-indigo-600" onClick={() => navigate(-1)}>
               {product?.category?.name?.replace(/_/g, " ") || "Products"}
             </li>
             <li><span className="mx-2 text-gray-300">/</span></li>
@@ -156,11 +188,10 @@ export default function ProductDetails() {
                   variants={fadeUp}
                   key={index}
                   onClick={() => setActiveImageIndex(index)}
-                  className={`relative h-24 w-20 shrink-0 rounded-xl overflow-hidden bg-gray-100 transition-all ${
-                    activeImageIndex === index
+                  className={`relative h-24 w-20 shrink-0 rounded-xl overflow-hidden bg-gray-100 transition-all ${activeImageIndex === index
                       ? "ring-2 ring-indigo-600 ring-offset-2"
                       : "hover:opacity-80"
-                  }`}
+                    }`}
                 >
                   <img src={src} alt={`View ${index + 1}`} className="absolute inset-0 w-full h-full object-cover" />
                 </motion.button>
@@ -262,12 +293,23 @@ export default function ProductDetails() {
               )}
 
               <motion.button
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: addingToCart ? 1 : 1.01 }}
+                whileTap={{ scale: addingToCart ? 1 : 0.98 }}
                 type="submit"
-                className="mt-8 flex w-full items-center justify-center rounded-xl border border-transparent bg-indigo-600 px-8 py-4 text-base font-bold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all shadow-md shadow-indigo-600/20"
+                disabled={addingToCart}
+                className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl border border-transparent bg-indigo-600 px-8 py-4 text-base font-bold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all shadow-md shadow-indigo-600/20 disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                Add to Cart
+                {addingToCart ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Adding to Cart...
+                  </>
+                ) : (
+                  "Add to Cart"
+                )}
               </motion.button>
             </motion.form>
           </motion.div>
@@ -314,6 +356,43 @@ export default function ProductDetails() {
             </div>
           </motion.section>
         )}
+
+        {/* Similar Products */}
+        {similarProducts.length > 0 && (
+          <motion.section
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={staggerContainer}
+            className="mt-24 border-t border-gray-200 pt-16"
+          >
+            <motion.div variants={fadeUp} className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
+                You might also like
+              </h2>
+              <button
+                onClick={() => navigate(-1)}
+                className="hidden sm:block text-sm font-semibold text-indigo-600 hover:text-indigo-500 transition-colors"
+              >
+                View all &rarr;
+              </button>
+            </motion.div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+              {similarProducts.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  variants={fadeUp}
+                  custom={index}
+                  className="flex w-full h-full"
+                >
+                  <ProductCard product={item} />
+                </motion.div>
+              ))}
+            </div>
+          </motion.section>
+        )}
+
       </div>
     </div>
   );

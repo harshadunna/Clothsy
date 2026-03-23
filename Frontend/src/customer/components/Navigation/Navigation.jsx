@@ -17,26 +17,23 @@ export default function Navigation() {
   const navigate = useNavigate()
   const location = useLocation()
   const dispatch = useDispatch()
-  const { auth } = useSelector((store) => store)
+  const auth = useSelector((store) => store.auth);
+  const cart = useSelector((store) => store.cart);
   const jwt = localStorage.getItem("jwt")
 
   useEffect(() => {
-    if (jwt) {
-      dispatch(getUser(jwt))
-    }
+    if (jwt) dispatch(getUser(jwt))
   }, [jwt])
 
   const openAuthModel = location.pathname === "/login" || location.pathname === "/register"
-  const handleClose = () => {
-    navigate("/")
-  }
+  const handleClose = () => navigate("/")
 
-  const isLoggedIn = auth.user !== null;
-  const userInitial = auth.user?.firstName ? auth.user.firstName[0].toUpperCase() : "U";
-  const cartCount = 2;
+  const isLoggedIn = auth.user !== null
+  const userInitial = auth.user?.firstName ? auth.user.firstName[0].toUpperCase() : "U"
+  const cartCount = cart?.cartItems?.length || 0
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(logout())
     navigate("/")
   }
 
@@ -129,11 +126,12 @@ export default function Navigation() {
               </TabPanels>
             </TabGroup>
 
+            {/* ── Fix: page.id "/" was causing "//" ── */}
             <div className="space-y-4 border-t border-gray-100 px-4 py-6">
               {navigation.pages.map((page) => (
                 <Link
                   key={page.name}
-                  to={`/${page.id}`}
+                  to={page.id === "/" ? "/" : `/${page.id}`}
                   className="block text-sm font-medium text-gray-700 hover:text-[#c8742a] transition-colors"
                   onClick={() => setOpen(false)}
                 >
@@ -147,7 +145,7 @@ export default function Navigation() {
                 <>
                   <Link to="/account/profile" className="block text-sm font-medium text-gray-700 hover:text-[#c8742a]" onClick={() => setOpen(false)}>Profile</Link>
                   <Link to="/account/orders" className="block text-sm font-medium text-gray-700 hover:text-[#c8742a]" onClick={() => setOpen(false)}>My Orders</Link>
-                  <button onClick={handleLogout} className="block w-full text-left text-sm font-medium text-red-600 hover:text-red-700 transition-colors">Logout</button>
+                  <button onClick={() => { handleLogout(); setOpen(false); }} className="block w-full text-left text-sm font-medium text-red-600 hover:text-red-700 transition-colors">Logout</button>
                 </>
               ) : (
                 <>
@@ -162,7 +160,6 @@ export default function Navigation() {
 
       {/* ── Desktop Header ── */}
       <header className="relative z-40">
-        {/* Top announcement bar */}
         <p
           className="flex h-10 items-center justify-center px-4 text-sm font-medium text-white sm:px-6 lg:px-8"
           style={{ background: "linear-gradient(135deg, #d4832f, #c8742a)" }}
@@ -170,11 +167,10 @@ export default function Navigation() {
           Get free delivery on orders over ₹999
         </p>
 
-        {/* Sticky Nav Wrapper */}
         <div className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all">
           <nav aria-label="Top" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex h-16 items-center">
-              {/* Mobile menu button */}
+
               <button
                 type="button"
                 onClick={() => setOpen(true)}
@@ -193,9 +189,7 @@ export default function Navigation() {
                   >
                     S
                   </div>
-                  <span
-                    className="hidden sm:block font-black text-xl tracking-tight text-gray-900 transition-colors group-hover:text-[#c8742a]"
-                  >
+                  <span className="hidden sm:block font-black text-xl tracking-tight text-gray-900 transition-colors group-hover:text-[#c8742a]">
                     Shophive
                   </span>
                 </Link>
@@ -207,9 +201,7 @@ export default function Navigation() {
                   {navigation.categories.map((category) => (
                     <Popover key={category.name} className="flex">
                       <div className="relative flex">
-                        <PopoverButton
-                          className="group relative flex items-center justify-center text-sm font-semibold transition-colors duration-200 ease-out text-gray-700 hover:text-[#c8742a] data-open:text-[#c8742a] outline-none"
-                        >
+                        <PopoverButton className="group relative flex items-center justify-center text-sm font-semibold transition-colors duration-200 ease-out text-gray-700 hover:text-[#c8742a] data-open:text-[#c8742a] outline-none">
                           {category.name}
                           <span
                             aria-hidden="true"
@@ -224,7 +216,6 @@ export default function Navigation() {
                       >
                         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                           <div className="grid grid-cols-2 gap-x-8 gap-y-10 py-12">
-                            {/* Featured images */}
                             <div className="col-start-2 grid grid-cols-2 gap-x-8">
                               {category.featured.map((item) => (
                                 <div key={item.name} className="group relative text-base sm:text-sm">
@@ -247,7 +238,6 @@ export default function Navigation() {
                               ))}
                             </div>
 
-                            {/* Section links */}
                             <div className="row-start-1 grid grid-cols-3 gap-x-8 gap-y-8 text-sm">
                               {category.sections.map((section) => (
                                 <div key={section.name}>
@@ -275,10 +265,11 @@ export default function Navigation() {
                     </Popover>
                   ))}
 
+                  {/* ── Fix: page.id "/" was causing "//" ── */}
                   {navigation.pages.map((page) => (
                     <Link
                       key={page.name}
-                      to={`/${page.id}`}
+                      to={page.id === "/" ? "/" : `/${page.id}`}
                       className="flex items-center text-sm font-semibold text-gray-700 transition-colors hover:text-[#c8742a]"
                     >
                       {page.name}
@@ -289,13 +280,12 @@ export default function Navigation() {
 
               {/* Right side icons */}
               <div className="ml-auto flex items-center gap-2 sm:gap-4">
-                {/* Search */}
                 <button className="p-2 rounded-full text-gray-400 hover:text-[#c8742a] hover:bg-orange-50 transition-all duration-200">
                   <span className="sr-only">Search</span>
                   <MagnifyingGlassIcon className="size-5 sm:size-6" />
                 </button>
 
-                {/* Cart */}
+                {/* Cart — count from Redux */}
                 <Link
                   to="/cart"
                   className="relative p-2 rounded-full text-gray-400 hover:text-[#c8742a] hover:bg-orange-50 transition-all duration-200 flex items-center group"
@@ -311,7 +301,6 @@ export default function Navigation() {
                   )}
                 </Link>
 
-                {/* User Dropdown with Headless UI Menu */}
                 <div className="relative ml-2">
                   {isLoggedIn ? (
                     <Menu as="div" className="relative inline-block text-left">
@@ -328,8 +317,9 @@ export default function Navigation() {
                       >
                         <div className="px-4 py-3 border-b border-gray-50 bg-gray-50/50 rounded-t-2xl">
                           <p className="text-xs font-bold uppercase tracking-widest text-gray-500">
-                            My Account
+                            Hey, {auth.user?.firstName}
                           </p>
+                          <p className="text-xs text-gray-400 mt-0.5 truncate">{auth.user?.email}</p>
                         </div>
                         <div className="py-1">
                           <MenuItem>
@@ -363,10 +353,7 @@ export default function Navigation() {
                     </Menu>
                   ) : (
                     <div className="hidden lg:flex items-center gap-5">
-                      <Link
-                        to="/login"
-                        className="text-sm font-medium text-gray-700 hover:text-[#c8742a] transition-colors"
-                      >
+                      <Link to="/login" className="text-sm font-medium text-gray-700 hover:text-[#c8742a] transition-colors">
                         Sign in
                       </Link>
                       <Link
@@ -384,7 +371,8 @@ export default function Navigation() {
           </nav>
         </div>
       </header>
-      <AuthModel handleClose={handleClose} open={openAuthModel}/>
+
+      <AuthModel handleClose={handleClose} open={openAuthModel} />
     </div>
   )
 }

@@ -30,6 +30,7 @@ public class ProductServiceImplementation implements ProductService {
     @Override
     public Product createProduct(CreateProductRequest req) throws ProductException {
 
+        // ── Resolve or create Top Level Category (e.g. "Men") ──────────────
         Category topLevel = categoryRepository.findByName(req.getTopLevelCategory());
         if (topLevel == null) {
             Category newTopLevel = new Category();
@@ -38,6 +39,7 @@ public class ProductServiceImplementation implements ProductService {
             topLevel = categoryRepository.save(newTopLevel);
         }
 
+        // ── Resolve or create Second Level Category (e.g. "Clothing") ──────
         Category secondLevel = null;
         try {
             secondLevel = categoryRepository.findByNameAndParent(
@@ -54,6 +56,7 @@ public class ProductServiceImplementation implements ProductService {
             secondLevel = categoryRepository.save(newSecondLevel);
         }
 
+        // ── Resolve or create Third Level Category (e.g. "mens_kurta") ─────
         Category thirdLevel = null;
         try {
             thirdLevel = categoryRepository.findByNameAndParent(
@@ -72,6 +75,7 @@ public class ProductServiceImplementation implements ProductService {
 
         Set<Size> sizes = req.getSizes();
 
+        // ── Build and persist the Product entity ────────────────────────────
         Product product = new Product();
         product.setTitle(req.getTitle());
         product.setColor(req.getColor());
@@ -85,6 +89,11 @@ public class ProductServiceImplementation implements ProductService {
         product.setQuantity(req.getQuantity());
         product.setCategory(thirdLevel);
         product.setCreatedAt(LocalDateTime.now());
+
+        // ── Set multiple images if provided ─────────────────────────────────
+        if (req.getImages() != null && !req.getImages().isEmpty()) {
+            product.setImages(req.getImages());
+        }
 
         return productRepository.save(product);
     }
@@ -100,12 +109,36 @@ public class ProductServiceImplementation implements ProductService {
     @Override
     public Product updateProduct(Long productId, Product req) throws ProductException {
         Product product = findProductById(productId);
+
+        // ── Update quantity if provided ──────────────────────────────────────
         if (req.getQuantity() != 0) {
             product.setQuantity(req.getQuantity());
         }
+
+        // ── Update description if provided ───────────────────────────────────
         if (req.getDescription() != null) {
             product.setDescription(req.getDescription());
         }
+
+        // ── Update sizes if provided ─────────────────────────────────────────
+        if (req.getSizes() != null && !req.getSizes().isEmpty()) {
+            product.getSizes().clear();
+            product.getSizes().addAll(req.getSizes());
+        }
+
+        // ── Update single imageUrl if provided ───────────────────────────────
+        if (req.getImageUrl() != null) {
+            product.setImageUrl(req.getImageUrl());
+        }
+
+        // ── Update multiple images if provided ───────────────────────────────
+        // Uses clear() + addAll() instead of setImages() to avoid
+        // Hibernate's "collection no longer referenced" exception
+        if (req.getImages() != null) {
+            product.getImages().clear();
+            product.getImages().addAll(req.getImages());
+        }
+
         return productRepository.save(product);
     }
 
@@ -148,10 +181,12 @@ public class ProductServiceImplementation implements ProductService {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
+        // ── Fetch base filtered list from repository ──────────────────────────
         List<Product> products = productRepository.filterProducts(
                 category, minPrice, maxPrice, minDiscount, sort
         );
 
+        // ── Apply color filter ────────────────────────────────────────────────
         if (colors != null && !colors.isEmpty() && !(colors.size() == 1 && colors.get(0).isEmpty())) {
             products = products.stream()
                     .filter(p -> colors.stream()
@@ -159,6 +194,7 @@ public class ProductServiceImplementation implements ProductService {
                     .collect(Collectors.toList());
         }
 
+        // ── Apply size filter ─────────────────────────────────────────────────
         if (sizes != null && !sizes.isEmpty() && !(sizes.size() == 1 && sizes.get(0).isEmpty())) {
             products = products.stream()
                     .filter(p -> p.getSizes().stream()
@@ -166,6 +202,7 @@ public class ProductServiceImplementation implements ProductService {
                     .collect(Collectors.toList());
         }
 
+        // ── Apply stock filter ────────────────────────────────────────────────
         if (stock != null && !stock.isEmpty()) {
             if (stock.equals("in_stock")) {
                 products = products.stream()
@@ -178,6 +215,7 @@ public class ProductServiceImplementation implements ProductService {
             }
         }
 
+        // ── Paginate the filtered results manually ────────────────────────────
         int startIndex = (int) pageable.getOffset();
         int endIndex = Math.min(startIndex + pageable.getPageSize(), products.size());
         List<Product> pageContent = products.subList(startIndex, endIndex);

@@ -11,10 +11,14 @@ import api from "../../../config/api";
 export const findProducts = (reqData) => async (dispatch) => {
   dispatch({ type: FIND_PRODUCTS_BY_CATEGORY_REQUEST });
   try {
+    // FIX: Spring Boot expects comma-separated strings for lists.
+    // This prevents Axios from sending invalid 'color[]=red' arrays.
+    const formatArray = (arr) => Array.isArray(arr) ? arr.join(",") : arr;
+
     const { data } = await api.get("/api/products", {
       params: {
-        color: reqData.colors,
-        size: reqData.sizes,
+        color: formatArray(reqData.colors),
+        size: formatArray(reqData.sizes),
         minPrice: reqData.minPrice,
         maxPrice: reqData.maxPrice,
         minDiscount: reqData.minDiscount,

@@ -8,47 +8,31 @@ import org.harsha.backend.model.CartItem;
 import org.harsha.backend.model.Product;
 import org.harsha.backend.model.User;
 import org.harsha.backend.repository.CartItemRepository;
-
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
-/**
- * CartItemServiceImplementation
- *
- * Concrete implementation of {@link CartItemService}.
- * Handles all business logic for managing individual cart items,
- * including creation, updates, ownership validation, and removal.
- */
 @Service
 @RequiredArgsConstructor
+@Transactional // FIX: Ensures database flushes immediately so the frontend sees the new item on redirect
 public class CartItemServiceImplementation implements CartItemService {
 
     private final CartItemRepository cartItemRepository;
     private final UserService userService;
 
-    /**
-     * Creates a new cart item with default quantity of 1.
-     * Calculates both the original and discounted price on creation.
-     */
     @Override
     public CartItem createCartItem(CartItem cartItem) {
-
-        cartItem.setQuantity(1);
-        cartItem.setPrice(cartItem.getProduct().getPrice() * cartItem.getQuantity());
-        cartItem.setDiscountedPrice(cartItem.getProduct().getDiscountedPrice() * cartItem.getQuantity());
+        int quantity = cartItem.getQuantity() > 0 ? cartItem.getQuantity() : 1;
+        cartItem.setQuantity(quantity);
+        cartItem.setPrice(cartItem.getProduct().getPrice() * quantity);
+        cartItem.setDiscountedPrice(cartItem.getProduct().getDiscountedPrice() * quantity);
 
         return cartItemRepository.save(cartItem);
     }
 
-    /**
-     * Updates the quantity and recalculates prices for an existing cart item.
-     * Throws an exception if the requesting user does not own the cart item.
-     */
     @Override
-    public CartItem updateCartItem(Long userId, Long id, CartItem cartItem)
-            throws CartItemException, UserException {
-
+    public CartItem updateCartItem(Long userId, Long id, CartItem cartItem) throws CartItemException, UserException {
         CartItem existingItem = findCartItemById(id);
         User itemOwner = userService.findUserById(existingItem.getUserId());
 
@@ -63,23 +47,13 @@ public class CartItemServiceImplementation implements CartItemService {
         return cartItemRepository.save(existingItem);
     }
 
-    /**
-     * Checks whether a matching cart item already exists for the given
-     * cart, product, size, and user combination.
-     */
     @Override
     public CartItem isCartItemExist(Cart cart, Product product, String size, Long userId) {
         return cartItemRepository.isCartItemExist(cart, product, size, userId);
     }
 
-    /**
-     * Removes a cart item after verifying the requesting user owns it.
-     * Throws an exception if the user is not authorized to remove the item.
-     */
     @Override
-    public void removeCartItem(Long userId, Long cartItemId)
-            throws CartItemException, UserException {
-
+    public void removeCartItem(Long userId, Long cartItemId) throws CartItemException, UserException {
         CartItem cartItem = findCartItemById(cartItemId);
         User itemOwner = userService.findUserById(cartItem.getUserId());
 
@@ -90,19 +64,12 @@ public class CartItemServiceImplementation implements CartItemService {
         cartItemRepository.deleteById(cartItem.getId());
     }
 
-    /**
-     * Finds a cart item by its ID.
-     * Throws CartItemException if no item exists with the given ID.
-     */
     @Override
     public CartItem findCartItemById(Long cartItemId) throws CartItemException {
-
         Optional<CartItem> opt = cartItemRepository.findById(cartItemId);
-
         if (opt.isPresent()) {
             return opt.get();
         }
-
         throw new CartItemException("Cart item not found with id: " + cartItemId);
     }
 }

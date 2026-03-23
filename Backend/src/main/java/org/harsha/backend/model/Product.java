@@ -15,8 +15,6 @@ import org.harsha.backend.model.Rating;
 import org.harsha.backend.model.Review;
 import org.harsha.backend.model.Category;
 
-
-
 @Entity
 @Table(name = "products")
 @Data
@@ -36,7 +34,15 @@ public class Product {
     private int quantity;
     private String brand;
     private String color;
+
+    /** Primary image URL — kept for backward compatibility */
     private String imageUrl;
+
+    /** Multiple image URLs for the product gallery */
+    @ElementCollection
+    @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "image_url")
+    private List<String> images = new ArrayList<>();
 
     @ElementCollection
     private Set<Size> sizes = new HashSet<>();

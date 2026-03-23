@@ -38,7 +38,7 @@ const modalVariants = {
 
 export default function AuthModel({ handleClose, open }) {
   const location = useLocation();
-  const { auth } = useSelector((store) => store);
+  const auth = useSelector((store) => store.auth);
   const isLogin = location.pathname === "/login";
 
   useEffect(() => {
