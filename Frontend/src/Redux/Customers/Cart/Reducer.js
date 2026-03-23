@@ -22,11 +22,16 @@ const initialState = {
 
 const cartReducer = (state = initialState, action) => {
   switch (action.type) {
-    case ADD_ITEM_TO_CART_REQUEST:
+    // 1. ONLY trigger the global loading screen when initially fetching the full cart
     case GET_CART_REQUEST:
+      return { ...state, loading: true, error: null };
+
+    // 2. For adding, removing, or updating items, DO NOT set loading to true.
+    // This allows the Framer Motion animations to play and prevents the screen flash!
+    case ADD_ITEM_TO_CART_REQUEST:
     case REMOVE_CART_ITEM_REQUEST:
     case UPDATE_CART_ITEM_REQUEST:
-      return { ...state, loading: true, error: null };
+      return { ...state, error: null };
 
     case ADD_ITEM_TO_CART_SUCCESS:
       return {

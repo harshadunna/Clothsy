@@ -110,6 +110,7 @@ export default function CartItem({ item, showButton }) {
               {/* Qty Controls */}
               <div className="flex items-center rounded-xl overflow-hidden border" style={{ borderColor: "#e8ddd5" }}>
                 <button
+                  type="button" // <--- FIX 1
                   onClick={() => handleUpdate(-1)}
                   disabled={quantity <= 1}
                   className="w-9 h-9 flex items-center justify-center transition-colors"
@@ -131,6 +132,7 @@ export default function CartItem({ item, showButton }) {
                 </span>
 
                 <button
+                  type="button" // <--- FIX 2
                   onClick={() => handleUpdate(1)}
                   className="w-9 h-9 flex items-center justify-center transition-colors"
                   style={{ color: "#7a6a5a", background: "#fdf8f4" }}
@@ -143,6 +145,7 @@ export default function CartItem({ item, showButton }) {
 
               {/* Remove Button */}
               <motion.button
+                type="button" // <--- FIX 3
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleRemove}
