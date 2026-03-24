@@ -94,3 +94,13 @@ export const deleteAddress = (addressId) => async (dispatch) => {
     });
   }
 };
+
+export const updateAddress = (addressId, addressData) => async (dispatch) => {
+  dispatch({ type: "UPDATE_ADDRESS_REQUEST" });
+  try {
+    const { data } = await api.put(`/api/addresses/${addressId}`, addressData);
+    dispatch({ type: "UPDATE_ADDRESS_SUCCESS", payload: data });
+  } catch (error) {
+    dispatch({ type: "UPDATE_ADDRESS_FAILURE", payload: error.message });
+  }
+};

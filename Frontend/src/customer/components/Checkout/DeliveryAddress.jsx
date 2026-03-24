@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import AddressCard from "../Address/AddressCard";
 import { createOrder } from "../../../Redux/Customers/Order/Action";
+import { updateAddress } from "../../../Redux/Auth/Action"; // <-- Imported update action
 
 const inputClass = `
   w-full px-4 py-3 rounded-xl border text-sm font-medium outline-none transition-all duration-200 placeholder-gray-400 bg-white
@@ -11,7 +12,8 @@ const inputClass = `
 const inputStyle = { borderColor: "#e8ddd5", color: "#1a1109" };
 const inputFocusStyle = { borderColor: "#c8742a", boxShadow: "0 0 0 3px rgba(200,116,42,0.12)" };
 
-function FormInput({ label, name, id, autoComplete, type = "text", required = true, colSpan = 1, multiline = false }) {
+// Added defaultValue prop to pre-fill the form
+function FormInput({ label, name, id, autoComplete, type = "text", required = true, colSpan = 1, multiline = false, defaultValue = "" }) {
   const [focused, setFocused] = useState(false);
   return (
     <div className={colSpan === 2 ? "col-span-2" : "col-span-2 sm:col-span-1"}>
@@ -22,12 +24,14 @@ function FormInput({ label, name, id, autoComplete, type = "text", required = tr
         <textarea
           name={name} id={id} rows={3} required={required} autoComplete={autoComplete}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+          defaultValue={defaultValue} // <-- Added default value
           className={inputClass} style={focused ? { ...inputStyle, ...inputFocusStyle } : inputStyle}
         />
       ) : (
         <input
           type={type} name={name} id={id} required={required} autoComplete={autoComplete}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+          defaultValue={defaultValue} // <-- Added default value
           className={inputClass} style={focused ? { ...inputStyle, ...inputFocusStyle } : inputStyle}
         />
       )}
@@ -38,18 +42,19 @@ function FormInput({ label, name, id, autoComplete, type = "text", required = tr
 export default function DeliveryAddress({ handleNext }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  
+
   const { auth, order } = useSelector((store) => store);
-  
+
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [editingAddress, setEditingAddress] = useState(null); // <-- Added state for editing
 
   const savedAddresses = auth.user?.addresses || [];
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
-    
+
     const address = {
       firstName: data.get("firstName"),
       lastName: data.get("lastName"),
@@ -60,13 +65,32 @@ export default function DeliveryAddress({ handleNext }) {
       mobile: data.get("phoneNumber"),
     };
 
-    const reqData = { address, navigate };
-    dispatch(createOrder(reqData));
+    if (editingAddress) {
+      // If we are editing, update the address in the database
+      dispatch(updateAddress(editingAddress.id, address));
+      setEditingAddress(null);
+      setShowForm(false);
+    } else {
+      // If we are NOT editing, it's a new address. Save it and proceed to checkout.
+      const reqData = { address, navigate };
+      dispatch(createOrder(reqData));
+    }
   };
 
   const handleCreateOrder = (item) => {
-    const reqData = { address: item, navigate };
+    // Ensure we are passing exactly what the Action expects
+    const reqData = {
+      address: item,
+      navigate: navigate
+    };
+    console.log("Attempting to create order with address:", item.id);
     dispatch(createOrder(reqData));
+  };
+
+  // Triggers when the Edit button is clicked on the AddressCard
+  const handleEditClick = (address) => {
+    setEditingAddress(address);
+    setShowForm(true);
   };
 
   return (
@@ -96,7 +120,8 @@ export default function DeliveryAddress({ handleNext }) {
                     transition={{ duration: 0.2 }}
                     className="cursor-pointer"
                   >
-                    <AddressCard address={item} selected={isSelected} />
+                    {/* Pass the handleEditClick to the Card */}
+                    <AddressCard address={item} selected={isSelected} onEdit={handleEditClick} />
                     <AnimatePresence>
                       {isSelected && (
                         <motion.div
@@ -108,7 +133,7 @@ export default function DeliveryAddress({ handleNext }) {
                         >
                           <motion.button
                             type="button"
-                            disabled={order?.loading} // <--- Added optional chaining here
+                            disabled={order?.loading}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.97 }}
                             onClick={(e) => {
@@ -133,7 +158,10 @@ export default function DeliveryAddress({ handleNext }) {
 
           <div className="p-4 border-t" style={{ borderColor: "#f0e8e0" }}>
             <button
-              onClick={() => setShowForm((p) => !p)}
+              onClick={() => {
+                setEditingAddress(null); // Clear any edits if they click "New Address"
+                setShowForm((p) => !p);
+              }}
               className="flex items-center gap-2 text-sm font-bold transition-colors w-full"
               style={{ color: "#c8742a" }}
             >
@@ -142,13 +170,13 @@ export default function DeliveryAddress({ handleNext }) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d={showForm ? "M20 12H4" : "M12 4v16m8-8H4"} />
                 </svg>
               </div>
-              {showForm ? "Cancel" : "Add a new address"}
+              {showForm && !editingAddress ? "Cancel" : "Add a new address"}
             </button>
           </div>
         </div>
       </div>
 
-      {/* ── Right: New Address Form / Placeholder ── */}
+      {/* ── Right: Address Form / Placeholder ── */}
       <div className="lg:col-span-7">
         <AnimatePresence mode="wait">
           {showForm || savedAddresses.length === 0 ? (
@@ -163,32 +191,45 @@ export default function DeliveryAddress({ handleNext }) {
             >
               <div className="px-6 py-4 border-b" style={{ borderColor: "#f0e8e0", background: "linear-gradient(135deg, #fff9f4, #fff)" }}>
                 <h2 className="text-sm font-black uppercase tracking-widest" style={{ color: "#1a1109", fontFamily: "'Georgia', serif" }}>
-                  New Address
+                  {editingAddress ? "Update Address" : "New Address"}
                 </h2>
                 <p className="text-xs mt-0.5" style={{ color: "#9e8d7a" }}>
-                  Fill in the details below
+                  {editingAddress ? "Edit your details below" : "Fill in the details below"}
                 </p>
               </div>
-              <form onSubmit={handleSubmit} className="p-6">
+              {/* KEY is important here! It forces React to refresh the defaultValues when you switch between editing different addresses */}
+              <form key={editingAddress ? editingAddress.id : "new"} onSubmit={handleSubmit} className="p-6">
                 <div className="grid grid-cols-2 gap-4">
-                  <FormInput label="First Name" name="firstName" id="firstName" autoComplete="given-name" />
-                  <FormInput label="Last Name" name="lastName" id="lastName" autoComplete="family-name" />
-                  <FormInput label="Street Address" name="address" id="address" autoComplete="street-address" colSpan={2} multiline />
-                  <FormInput label="City" name="city" id="city" autoComplete="address-level2" />
-                  <FormInput label="State" name="state" id="state" autoComplete="address-level1" />
-                  <FormInput label="PIN Code" name="zip" id="zip" autoComplete="postal-code" />
-                  <FormInput label="Phone Number" name="phoneNumber" id="phoneNumber" autoComplete="tel" type="tel" />
+                  <FormInput label="First Name" name="firstName" id="firstName" defaultValue={editingAddress?.firstName} autoComplete="given-name" />
+                  <FormInput label="Last Name" name="lastName" id="lastName" defaultValue={editingAddress?.lastName} autoComplete="family-name" />
+                  <FormInput label="Street Address" name="address" id="address" defaultValue={editingAddress?.streetAddress} autoComplete="street-address" colSpan={2} multiline />
+                  <FormInput label="City" name="city" id="city" defaultValue={editingAddress?.city} autoComplete="address-level2" />
+                  <FormInput label="State" name="state" id="state" defaultValue={editingAddress?.state} autoComplete="address-level1" />
+                  <FormInput label="PIN Code" name="zip" id="zip" defaultValue={editingAddress?.zipCode} autoComplete="postal-code" />
+                  <FormInput label="Phone Number" name="phoneNumber" id="phoneNumber" defaultValue={editingAddress?.mobile} autoComplete="tel" type="tel" />
                 </div>
-                <motion.button
-                  disabled={order?.loading} // <--- Added optional chaining here
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
-                  type="submit"
-                  className="mt-6 w-full py-4 rounded-2xl text-sm font-black tracking-wider uppercase text-white disabled:opacity-70"
-                  style={{ background: "linear-gradient(135deg, #d4832f, #c8742a)", boxShadow: "0 6px 24px rgba(200,116,42,0.3)", letterSpacing: "0.06em" }}
-                >
-                  {order?.loading ? "Processing..." : "Save & Deliver Here →"} {/* <--- Added optional chaining here */}
-                </motion.button>
+                <div className="mt-6 flex gap-4">
+                  {editingAddress && (
+                    <button
+                      type="button"
+                      onClick={() => { setEditingAddress(null); setShowForm(false); }}
+                      className="w-1/3 py-4 rounded-2xl text-sm font-black tracking-wider uppercase transition-colors"
+                      style={{ color: "#7a6a5a", background: "#f5ede4" }}
+                    >
+                      Cancel
+                    </button>
+                  )}
+                  <motion.button
+                    disabled={order?.loading}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    type="submit"
+                    className={`py-4 rounded-2xl text-sm font-black tracking-wider uppercase text-white disabled:opacity-70 ${editingAddress ? 'w-2/3' : 'w-full'}`}
+                    style={{ background: "linear-gradient(135deg, #d4832f, #c8742a)", boxShadow: "0 6px 24px rgba(200,116,42,0.3)", letterSpacing: "0.06em" }}
+                  >
+                    {order?.loading ? "Processing..." : editingAddress ? "Update Address" : "Save & Deliver Here →"}
+                  </motion.button>
+                </div>
               </form>
             </motion.div>
           ) : (

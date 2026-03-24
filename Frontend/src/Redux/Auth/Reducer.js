@@ -5,6 +5,8 @@ import {
   LOGOUT,
   GET_ALL_CUSTOMERS_SUCCESS,
   DELETE_ADDRESS_REQUEST, DELETE_ADDRESS_SUCCESS, DELETE_ADDRESS_FAILURE,
+  // --- ADDED UPDATE IMPORTS ---
+  UPDATE_ADDRESS_REQUEST, UPDATE_ADDRESS_SUCCESS, UPDATE_ADDRESS_FAILURE,
 } from "./ActionTypes";
 
 const initialState = {
@@ -26,6 +28,7 @@ const authReducer = (state = initialState, action) => {
 
     // --- ANTI-GRAVITY FIX: ADDRESS ACTIONS ARE COMPLETELY SILENT ---
     case DELETE_ADDRESS_REQUEST:
+    case UPDATE_ADDRESS_REQUEST: // Added update request here
       return { ...state, error: null, isLoading: false }; // Force loading to false
 
     case REGISTER_SUCCESS:
@@ -71,7 +74,22 @@ const authReducer = (state = initialState, action) => {
         },
       };
 
+    // --- NEW: UPDATE ADDRESS SUCCESS ---
+    case UPDATE_ADDRESS_SUCCESS:
+      return {
+        ...state,
+        isLoading: false,
+        user: {
+          ...state.user,
+          // Map over the array: if the ID matches the updated one, swap it out. Otherwise, keep the old one.
+          addresses: (state.user?.addresses || []).map((addr) =>
+            addr.id === action.payload.id ? action.payload : addr
+          ),
+        },
+      };
+
     case DELETE_ADDRESS_FAILURE:
+    case UPDATE_ADDRESS_FAILURE: // Added update failure here
       return { ...state, isLoading: false, error: action.payload };
 
     case LOGOUT:

@@ -1,24 +1,23 @@
 import { useDispatch } from "react-redux";
 import { deleteAddress } from "../../../Redux/Auth/Action";
 
-export default function AddressCard({ address, selected = false, compact = false }) {
+export default function AddressCard({ address, selected = false, compact = false, onEdit }) {
   const dispatch = useDispatch();
 
   const handleDelete = (e) => {
-    e.stopPropagation(); // Prevents the card from being "selected" when clicking delete
+    e.stopPropagation(); 
     dispatch(deleteAddress(address.id));
   };
 
   const handleEdit = (e) => {
     e.stopPropagation();
-    // We will build the edit logic next!
-    console.log("Edit clicked for address:", address.id);
+    // This calls the function passed from DeliveryAddress.jsx
+    if (onEdit) onEdit(address); 
   };
 
   if (!address) return null;
 
   if (compact) {
-    // ... (Keep your existing compact return code here if you use it elsewhere)
     return null; 
   }
 
@@ -33,7 +32,6 @@ export default function AddressCard({ address, selected = false, compact = false
         background: "#fff",
       }}
     >
-      {/* Card Header */}
       <div
         className="px-5 py-3 flex items-center justify-between border-b"
         style={{
@@ -64,7 +62,6 @@ export default function AddressCard({ address, selected = false, compact = false
         </span>
       </div>
 
-      {/* Card Body */}
       <div className="px-5 py-4 space-y-1.5">
         <p className="text-xs leading-relaxed" style={{ color: "#7a6a5a" }}>
           {address.streetAddress}
@@ -82,7 +79,6 @@ export default function AddressCard({ address, selected = false, compact = false
             </p>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex gap-3">
             <button onClick={handleEdit} className="text-gray-400 hover:text-blue-600 transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
