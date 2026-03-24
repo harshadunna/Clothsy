@@ -109,6 +109,17 @@ public class OrderServiceImplementation implements OrderService {
     public Order deliveredOrder(Long orderId) throws OrderException {
         Order order = findOrderById(orderId);
         order.setOrderStatus("DELIVERED");
+
+        // Record the exact day the order arrived
+        order.setDeliveryDate(LocalDate.now());
+
+        // Also mark individual items as delivered and set their timestamps
+        for (OrderItem item : order.getOrderItems()) {
+            if (!"CANCELLED".equals(item.getItemStatus())) {
+                item.setItemStatus("DELIVERED");
+                item.setDeliveryDate(LocalDateTime.now());
+            }
+        }
         return orderRepository.save(order);
     }
 
@@ -157,14 +168,9 @@ public class OrderServiceImplementation implements OrderService {
 
                 item.setItemStatus("CANCELLED");
 
-                // --- THE RECALCULATION MATH ---
-                // Subtract this item's original price * quantity from the Order total
+                // Recalculate totals
                 order.setTotalPrice(order.getTotalPrice() - (item.getPrice() * item.getQuantity()));
-
-                // Subtract this item's discounted price * quantity from the Order total
                 order.setTotalDiscountedPrice(order.getTotalDiscountedPrice() - (item.getDiscountedPrice() * item.getQuantity()));
-
-                // Reduce the total item count
                 order.setTotalItem(order.getTotalItem() - item.getQuantity());
             }
 
@@ -174,10 +180,10 @@ public class OrderServiceImplementation implements OrderService {
             }
         }
 
-        // Recalculate the total discount based on the new prices
+        // Recalculate the total discount
         order.setDiscount((int) (order.getTotalPrice() - order.getTotalDiscountedPrice()));
 
-        // If the user canceled EVERY item in the order, mark the entire Order as CANCELLED
+        // If the user canceled EVERY item, mark the entire Order as CANCELLED
         if (allItemsCanceled || order.getTotalItem() <= 0) {
             order.setOrderStatus("CANCELLED");
             order.setTotalPrice(0);
@@ -185,7 +191,36 @@ public class OrderServiceImplementation implements OrderService {
             order.setDiscount(0);
         }
 
-        // Save and return the updated order
+        return orderRepository.save(order);
+    }
+
+    @Override
+    @Transactional
+    public Order returnOrderItems(Long orderId, List<Long> itemIdsToReturn) throws OrderException {
+        Order order = findOrderById(orderId);
+
+        for (OrderItem item : order.getOrderItems()) {
+            // Only process items that are requested AND currently marked as DELIVERED
+            if (itemIdsToReturn.contains(item.getId()) && "DELIVERED".equals(item.getItemStatus())) {
+
+                // Backend 7-Day Security Check
+                boolean isEligible = false;
+                if (item.getDeliveryDate() != null) {
+                    isEligible = item.getDeliveryDate().plusDays(7).isAfter(LocalDateTime.now());
+                } else if (order.getDeliveryDate() != null) {
+                    isEligible = order.getDeliveryDate().plusDays(7).isAfter(LocalDate.now());
+                }
+
+                // Allow return if within 7 days, or if legacy data has no delivery dates
+                if (isEligible || (item.getDeliveryDate() == null && order.getDeliveryDate() == null)) {
+                    item.setItemStatus("RETURN_REQUESTED");
+                }
+            }
+        }
+
+        // Optional: If you want the whole order to show as "Return Requested" when all items are returned
+        // you could add that logic here similar to the cancel logic above.
+
         return orderRepository.save(order);
     }
 }

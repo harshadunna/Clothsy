@@ -138,7 +138,7 @@ export default function OrderCard({ item, order }) {
                 whileTap={{ scale: 0.96 }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate(`/account/rate/${item?.product?.id}`);
+                  navigate(`/product/${item?.product?.id}/rate`);
                 }}
                 className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl transition-colors"
                 style={{ color: "#c8742a", background: "#fdf0e6" }}

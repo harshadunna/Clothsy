@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { RadioGroup } from "@headlessui/react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 
 import ProductReviewCard from "./ProductReviewCard";
-import ProductCard from "../Product/ProductCard";
 import { findProductById } from "../../../Redux/Customers/Product/Action";
 import { addItemToCart, getCart } from "../../../Redux/Customers/Cart/Action";
 
@@ -14,7 +13,12 @@ function classNames(...classes) {
 }
 
 const StarIcon = ({ filled }) => (
-  <svg className={`h-5 w-5 ${filled ? "text-yellow-400" : "text-gray-200"}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+  <svg
+    className={`h-5 w-5 ${filled ? "text-yellow-400" : "text-gray-200"}`}
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 20 20"
+    fill="currentColor"
+  >
     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
   </svg>
 );
@@ -22,7 +26,7 @@ const StarIcon = ({ filled }) => (
 const CustomRating = ({ value }) => (
   <div className="flex items-center">
     {[1, 2, 3, 4, 5].map((star) => (
-      <StarIcon key={star} filled={star <= value} />
+      <StarIcon key={star} filled={star <= Math.round(value)} />
     ))}
   </div>
 );
@@ -39,27 +43,9 @@ const ProgressBar = ({ label, percentage, count, colorClass }) => (
         className={`h-2.5 rounded-full ${colorClass}`}
       />
     </div>
-    <span className="w-10 text-sm text-gray-500 text-right">{count}k</span>
+    <span className="w-10 text-sm text-gray-500 text-right">{count}</span>
   </div>
 );
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.1 } },
-};
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 24, scale: 0.95 },
-  visible: {
-    opacity: 1, y: 0, scale: 1,
-    transition: { type: "spring", stiffness: 120, damping: 15 },
-  },
-};
 
 export default function ProductDetails() {
   const [selectedSize, setSelectedSize] = useState(null);
@@ -74,19 +60,9 @@ export default function ProductDetails() {
   const auth = useSelector((store) => store.auth);
   const product = customersProduct?.product;
 
-  const similarProducts = customersProduct?.products?.content
-    ?.filter((p) => p.id !== product?.id)
-    ?.slice(0, 4) || [];
-
   useEffect(() => {
     if (productId) dispatch(findProductById(productId));
-  }, [productId]);
-
-  useEffect(() => {
-    return () => {
-      dispatch({ type: "RESET_PRODUCT" });
-    };
-  }, []);
+  }, [productId, dispatch]);
 
   useEffect(() => {
     if (product?.sizes?.length > 0) {
@@ -95,7 +71,6 @@ export default function ProductDetails() {
     }
   }, [product]);
 
-  // ── async so we wait for API before navigating ──
   const handleAddToCart = async (e) => {
     e.preventDefault();
     if (!auth.user) {
@@ -103,296 +78,245 @@ export default function ProductDetails() {
       return;
     }
     if (!selectedSize) return;
-
     setAddingToCart(true);
-
     try {
-      // 1. Await the PUT request so the DB fully saves the item
-      await dispatch(addItemToCart({
-        data: {
-          productId: product.id,
-          size: selectedSize.name,
-          quantity: 1,
-        },
-      }));
-
-      // 2. Await the GET request to pull the fresh cart into Redux
+      await dispatch(
+        addItemToCart({
+          data: {
+            productId: product.id,
+            size: selectedSize.name,
+            quantity: 1,
+          },
+        })
+      );
       await dispatch(getCart());
-
-      // 3. ONLY navigate after both API calls are 100% complete
       navigate("/cart");
-
     } catch (error) {
       console.error("Failed to add to cart:", error);
-      // Extract proper error message either from Axios response or Error object
-      const errorMessage = error.response?.data?.message || error.message || "Unknown error";
-      alert(`Error: Could not add item to cart.\nReason: ${errorMessage}`);
     } finally {
       setAddingToCart(false);
     }
   };
 
+  // ---------------------------------------------------------------------------
+  // Rating Metrics
+  // FIX: reviews now carry a 'rating' field, so we derive all metrics from
+  // product.reviews instead of maintaining two separate arrays (ratings/reviews).
+  // Safe null checks prevent "undefined Reviews" flashing on first render.
+  // ---------------------------------------------------------------------------
+  const reviews = product?.reviews || [];
+  const totalReviews = reviews.length;
+
+  const averageRating =
+    totalReviews > 0
+      ? (
+          reviews.reduce((acc, r) => acc + (r.rating || 0), 0) / totalReviews
+        ).toFixed(1)
+      : 0;
+
+  /**
+   * FIX: Previously used product?.ratings (a separate entity list) for the
+   * progress bars. Now we read from product?.reviews since each review carries
+   * its own rating. This eliminates the mismatch between rating count and
+   * review count.
+   */
+  const getRatingCount = (star) =>
+    reviews.filter((r) => Math.round(r.rating) === star).length;
+
   if (customersProduct?.loading || !product) {
     return (
-      <div className="bg-gray-50 min-h-screen">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-          <div className="lg:grid lg:grid-cols-2 lg:gap-x-12 animate-pulse">
-            <div className="aspect-[4/5] rounded-2xl bg-gray-200" />
-            <div className="mt-10 lg:mt-0 space-y-4">
-              <div className="h-6 bg-gray-200 rounded w-1/3" />
-              <div className="h-10 bg-gray-200 rounded w-2/3" />
-              <div className="h-8 bg-gray-200 rounded w-1/4" />
-              <div className="h-32 bg-gray-200 rounded" />
-            </div>
-          </div>
-        </div>
+      <div className="bg-gray-50 min-h-screen flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-indigo-600"></div>
       </div>
     );
   }
 
-  const images = product.images?.length > 0
-    ? product.images
-    : product.imageUrl
+  const images =
+    product.images?.length > 0
+      ? product.images
+      : product.imageUrl
       ? [product.imageUrl]
       : [];
 
   return (
     <div className="bg-gray-50 min-h-screen pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-
-        {/* Breadcrumbs */}
-        <motion.nav initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex text-sm text-gray-500 mb-8">
-          <ol className="flex items-center space-x-2">
-            <li>
-              <span onClick={() => navigate("/")} className="hover:text-indigo-600 transition-colors cursor-pointer">
-                Home
-              </span>
-            </li>
-            <li><span className="mx-2 text-gray-300">/</span></li>
-            <li className="capitalize cursor-pointer hover:text-indigo-600" onClick={() => navigate(-1)}>
-              {product?.category?.name?.replace(/_/g, " ") || "Products"}
-            </li>
-            <li><span className="mx-2 text-gray-300">/</span></li>
-            <li className="text-gray-900 font-medium line-clamp-1">{product?.title}</li>
-          </ol>
-        </motion.nav>
-
-        {/* Main Product Layout */}
         <div className="lg:grid lg:grid-cols-2 lg:gap-x-12 xl:gap-x-16">
-
           {/* Image Gallery */}
-          <motion.div variants={staggerContainer} initial="hidden" animate="show" className="flex flex-col-reverse lg:flex-row gap-4 lg:gap-6">
+          <div className="flex flex-col-reverse lg:flex-row gap-4 lg:gap-6">
             <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 w-full lg:w-24 shrink-0">
               {images.map((src, index) => (
-                <motion.button
-                  variants={fadeUp}
+                <button
                   key={index}
                   onClick={() => setActiveImageIndex(index)}
-                  className={`relative h-24 w-20 shrink-0 rounded-xl overflow-hidden bg-gray-100 transition-all ${activeImageIndex === index
-                      ? "ring-2 ring-indigo-600 ring-offset-2"
-                      : "hover:opacity-80"
-                    }`}
+                  className={`relative h-24 w-20 shrink-0 rounded-xl overflow-hidden transition-all ${
+                    activeImageIndex === index ? "ring-2 ring-indigo-600" : ""
+                  }`}
                 >
-                  <img src={src} alt={`View ${index + 1}`} className="absolute inset-0 w-full h-full object-cover" />
-                </motion.button>
+                  <img
+                    src={src}
+                    alt="thumbnail"
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                </button>
               ))}
             </div>
-
-            <motion.div variants={fadeUp} className="w-full aspect-[4/5] lg:aspect-auto lg:h-[600px] rounded-2xl overflow-hidden bg-gray-100 shadow-sm relative">
-              <AnimatePresence mode="wait">
-                <motion.img
-                  key={activeImageIndex}
-                  initial={{ opacity: 0, scale: 1.02 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  src={images[activeImageIndex]}
-                  alt={product?.title}
-                  className="w-full h-full object-cover object-center"
-                />
-              </AnimatePresence>
-            </motion.div>
-          </motion.div>
+            <div className="w-full aspect-[4/5] rounded-2xl overflow-hidden shadow-sm">
+              <img
+                src={images[activeImageIndex]}
+                alt="main"
+                className="w-full h-full object-cover object-center"
+              />
+            </div>
+          </div>
 
           {/* Product Info */}
-          <motion.div variants={staggerContainer} initial="hidden" animate="show" className="mt-10 lg:mt-0 px-2 lg:px-0">
-            <motion.div variants={fadeUp}>
-              <h2 className="text-sm font-semibold text-indigo-600 tracking-wide uppercase">
-                {product?.brand}
-              </h2>
-              <h1 className="mt-2 text-3xl font-bold text-gray-900 tracking-tight sm:text-4xl">
-                {product?.title}
-              </h1>
-            </motion.div>
+          <div className="mt-10 lg:mt-0 px-2 lg:px-0">
+            <h2 className="text-sm font-semibold text-indigo-600 uppercase">
+              {product?.brand}
+            </h2>
+            <h1 className="mt-2 text-3xl font-bold text-gray-900 tracking-tight sm:text-4xl">
+              {product?.title}
+            </h1>
 
-            <motion.div variants={fadeUp} className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-end gap-3">
-                <p className="text-3xl font-bold text-gray-900">₹{product?.discountedPrice}</p>
-                <p className="text-lg text-gray-400 line-through mb-1">₹{product?.price}</p>
-                {product?.discountPercent > 0 && (
-                  <p className="text-sm font-semibold text-green-600 mb-1.5 bg-green-50 px-2 py-0.5 rounded-md">
-                    {product?.discountPercent}% OFF
-                  </p>
-                )}
+                <p className="text-3xl font-bold text-gray-900">
+                  ₹{product?.discountedPrice}
+                </p>
+                <p className="text-lg text-gray-400 line-through">
+                  ₹{product?.price}
+                </p>
+                <p className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-md">
+                  {product?.discountPercent}% OFF
+                </p>
               </div>
               <div className="flex items-center gap-2">
-                <CustomRating value={product?.numRatings || 0} />
+                <CustomRating value={averageRating} />
+                {/* FIX: Use totalReviews (safe) instead of product?.ratings?.length */}
                 <span className="text-sm text-indigo-600 font-medium">
-                  {product?.numRatings || 0} Reviews
+                  {totalReviews} {totalReviews === 1 ? "Rating" : "Ratings"}
                 </span>
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div variants={fadeUp} className="mt-8">
-              <p className="text-base text-gray-600 leading-relaxed">
-                {product?.description}
-              </p>
-            </motion.div>
+            <form
+              className="mt-10 border-t border-gray-200 pt-8"
+              onSubmit={handleAddToCart}
+            >
+              <RadioGroup value={selectedSize} onChange={setSelectedSize}>
+                <div className="grid grid-cols-5 gap-3">
+                  {product.sizes.map((size) => (
+                    <RadioGroup.Option
+                      key={size.name}
+                      value={size}
+                      disabled={size.quantity <= 0}
+                      className={({ checked }) =>
+                        classNames(
+                          size.quantity > 0
+                            ? "cursor-pointer bg-white"
+                            : "cursor-not-allowed bg-gray-50 text-gray-300",
+                          checked
+                            ? "ring-2 ring-indigo-600"
+                            : "ring-1 ring-gray-200",
+                          "relative flex items-center justify-center rounded-xl py-3 text-sm font-semibold uppercase"
+                        )
+                      }
+                    >
+                      <span>{size.name}</span>
+                    </RadioGroup.Option>
+                  ))}
+                </div>
+              </RadioGroup>
 
-            {/* Size Selector + Add to Cart */}
-            <motion.form variants={fadeUp} className="mt-10 border-t border-gray-200 pt-8" onSubmit={handleAddToCart}>
-              {product?.sizes?.length > 0 && (
-                <>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-medium text-gray-900">Select Size</h3>
-                    <span className="text-sm font-medium text-indigo-600 hover:text-indigo-500 cursor-pointer">
-                      Size guide
-                    </span>
-                  </div>
-                  <RadioGroup value={selectedSize} onChange={setSelectedSize}>
-                    <div className="grid grid-cols-5 gap-3">
-                      {product.sizes.map((size) => {
-                        const inStock = size.quantity > 0;
-                        return (
-                          <RadioGroup.Option
-                            key={size.name}
-                            value={size}
-                            disabled={!inStock}
-                            className={({ checked }) => classNames(
-                              inStock
-                                ? "cursor-pointer bg-white text-gray-900 shadow-sm hover:bg-gray-50"
-                                : "cursor-not-allowed bg-gray-50 text-gray-300",
-                              checked
-                                ? "ring-2 ring-indigo-600 ring-offset-1 bg-indigo-50/50"
-                                : "ring-1 ring-gray-200",
-                              "group relative flex items-center justify-center rounded-xl py-3 text-sm font-semibold uppercase transition-all outline-none"
-                            )}
-                          >
-                            <RadioGroup.Label as="span">{size.name}</RadioGroup.Label>
-                            {!inStock && (
-                              <svg className="absolute inset-0 h-full w-full stroke-2 text-gray-200" viewBox="0 0 100 100" preserveAspectRatio="none" stroke="currentColor">
-                                <line x1={0} y1={100} x2={100} y2={0} vectorEffect="non-scaling-stroke" />
-                              </svg>
-                            )}
-                          </RadioGroup.Option>
-                        );
-                      })}
-                    </div>
-                  </RadioGroup>
-                </>
-              )}
-
-              <motion.button
-                whileHover={{ scale: addingToCart ? 1 : 1.01 }}
-                whileTap={{ scale: addingToCart ? 1 : 0.98 }}
+              <button
                 type="submit"
                 disabled={addingToCart}
-                className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl border border-transparent bg-indigo-600 px-8 py-4 text-base font-bold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all shadow-md shadow-indigo-600/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-8 py-4 text-white font-bold hover:bg-indigo-700 disabled:opacity-70"
               >
-                {addingToCart ? (
-                  <>
-                    <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Adding to Cart...
-                  </>
-                ) : (
-                  "Add to Cart"
-                )}
-              </motion.button>
-            </motion.form>
-          </motion.div>
+                {addingToCart ? "Adding..." : "Add to Cart"}
+              </button>
+            </form>
+          </div>
         </div>
 
         {/* Reviews Section */}
-        {product?.reviews?.length > 0 && (
-          <motion.section
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={staggerContainer}
-            className="mt-24 border-t border-gray-200 pt-16"
-          >
-            <motion.h2 variants={fadeUp} className="text-2xl font-bold text-gray-900 tracking-tight">
+        <section className="mt-24 border-t border-gray-200 pt-16">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">
               Customer Reviews
-            </motion.h2>
+            </h2>
+            <button
+              onClick={() => navigate(`/product/${productId}/rate`)}
+              className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 transition-all"
+            >
+              Write a Review
+            </button>
+          </div>
 
-            <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-12">
-              <motion.div variants={fadeUp} className="lg:col-span-4 flex flex-col">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="text-5xl font-extrabold text-gray-900">
-                    {product?.numRatings || 0}
-                  </div>
-                  <div>
-                    <CustomRating value={product?.numRatings || 0} />
-                    <p className="text-sm text-gray-500 mt-1">
-                      Based on {product?.reviews?.length || 0} reviews
-                    </p>
-                  </div>
+          <div className="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-12">
+            {/* Summary Panel */}
+            <div className="lg:col-span-4">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="text-5xl font-extrabold text-gray-900">
+                  {averageRating}
                 </div>
-                <ProgressBar label="Excellent" percentage={70} count="30" colorClass="bg-green-500" />
-                <ProgressBar label="Very Good" percentage={15} count="6.4" colorClass="bg-green-400" />
-                <ProgressBar label="Good" percentage={8} count="3.4" colorClass="bg-yellow-400" />
-                <ProgressBar label="Average" percentage={5} count="2.1" colorClass="bg-orange-400" />
-                <ProgressBar label="Poor" percentage={2} count="0.9" colorClass="bg-red-500" />
-              </motion.div>
+                <div>
+                  <CustomRating value={averageRating} />
+                  {/* FIX: product?.reviews?.length replaced with totalReviews — safe, no flash */}
+                  <p className="text-sm text-gray-500 mt-1">
+                    {totalReviews} {totalReviews === 1 ? "Review" : "Reviews"}
+                  </p>
+                </div>
+              </div>
 
-              <motion.div variants={fadeUp} className="lg:col-span-8 space-y-6">
-                {product.reviews.map((review) => (
+              <ProgressBar
+                label="5 Star"
+                percentage={totalReviews ? (getRatingCount(5) / totalReviews) * 100 : 0}
+                count={getRatingCount(5)}
+                colorClass="bg-green-500"
+              />
+              <ProgressBar
+                label="4 Star"
+                percentage={totalReviews ? (getRatingCount(4) / totalReviews) * 100 : 0}
+                count={getRatingCount(4)}
+                colorClass="bg-green-400"
+              />
+              <ProgressBar
+                label="3 Star"
+                percentage={totalReviews ? (getRatingCount(3) / totalReviews) * 100 : 0}
+                count={getRatingCount(3)}
+                colorClass="bg-yellow-400"
+              />
+              <ProgressBar
+                label="2 Star"
+                percentage={totalReviews ? (getRatingCount(2) / totalReviews) * 100 : 0}
+                count={getRatingCount(2)}
+                colorClass="bg-orange-400"
+              />
+              <ProgressBar
+                label="1 Star"
+                percentage={totalReviews ? (getRatingCount(1) / totalReviews) * 100 : 0}
+                count={getRatingCount(1)}
+                colorClass="bg-red-500"
+              />
+            </div>
+
+            {/* Review Cards */}
+            <div className="lg:col-span-8 space-y-6">
+              {reviews.length === 0 ? (
+                <div className="text-center py-16 text-gray-400">
+                  <p className="text-lg font-medium">No reviews yet.</p>
+                  <p className="text-sm mt-1">Be the first to review this product!</p>
+                </div>
+              ) : (
+                reviews.map((review) => (
                   <ProductReviewCard key={review.id} item={review} />
-                ))}
-              </motion.div>
+                ))
+              )}
             </div>
-          </motion.section>
-        )}
-
-        {/* Similar Products */}
-        {similarProducts.length > 0 && (
-          <motion.section
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={staggerContainer}
-            className="mt-24 border-t border-gray-200 pt-16"
-          >
-            <motion.div variants={fadeUp} className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
-                You might also like
-              </h2>
-              <button
-                onClick={() => navigate(-1)}
-                className="hidden sm:block text-sm font-semibold text-indigo-600 hover:text-indigo-500 transition-colors"
-              >
-                View all &rarr;
-              </button>
-            </motion.div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-              {similarProducts.map((item, index) => (
-                <motion.div
-                  key={item.id}
-                  variants={fadeUp}
-                  custom={index}
-                  className="flex w-full h-full"
-                >
-                  <ProductCard product={item} />
-                </motion.div>
-              ))}
-            </div>
-          </motion.section>
-        )}
-
+          </div>
+        </section>
       </div>
     </div>
   );

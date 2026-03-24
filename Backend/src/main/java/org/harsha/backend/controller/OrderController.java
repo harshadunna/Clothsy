@@ -41,7 +41,7 @@ public class OrderController {
         Long addressId = body.get("addressId");
         Order order = orderService.createOrder(user, addressId);
 
-        return new ResponseEntity<>(order, HttpStatus.CREATED); // 201 Created is best practice for POST
+        return new ResponseEntity<>(order, HttpStatus.CREATED);
     }
 
     /**
@@ -65,7 +65,7 @@ public class OrderController {
             @PathVariable Long orderId,
             @RequestHeader("Authorization") String jwt) throws OrderException, UserException {
 
-        // We verify the user exists, but we don't strictly need to assign it to a variable
+        // Verify the user exists
         userService.findUserProfileByJwt(jwt);
         Order order = orderService.findOrderById(orderId);
 
@@ -82,11 +82,27 @@ public class OrderController {
             @RequestBody List<Long> itemIdsToCancel,
             @RequestHeader("Authorization") String jwt) throws OrderException, UserException {
 
-        // Verify user owns the token (security check)
+        // Verify user owns the token
         userService.findUserProfileByJwt(jwt);
 
-        // Call the new recalculation logic in your service
         Order updatedOrder = orderService.cancelOrderItems(orderId, itemIdsToCancel);
+        return new ResponseEntity<>(updatedOrder, HttpStatus.OK);
+    }
+
+    /**
+     * Requests a return for specific items within an order.
+     * Enforces the 7-day return policy on the backend.
+     */
+    @PutMapping("/{orderId}/return-items")
+    public ResponseEntity<Order> returnOrderItems(
+            @PathVariable Long orderId,
+            @RequestBody List<Long> itemIdsToReturn,
+            @RequestHeader("Authorization") String jwt) throws OrderException, UserException {
+
+        // Verify user owns the token
+        userService.findUserProfileByJwt(jwt);
+
+        Order updatedOrder = orderService.returnOrderItems(orderId, itemIdsToReturn);
         return new ResponseEntity<>(updatedOrder, HttpStatus.OK);
     }
 }

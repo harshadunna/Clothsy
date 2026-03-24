@@ -76,4 +76,6 @@ public interface OrderService {
      * @return The recalculated Order
      */
     Order cancelOrderItems(Long orderId, List<Long> itemIdsToCancel) throws OrderException;
+
+    Order returnOrderItems(Long orderId, List<Long> itemIdsToReturn) throws OrderException;
 }

@@ -132,8 +132,6 @@ public class ProductServiceImplementation implements ProductService {
         }
 
         // ── Update multiple images if provided ───────────────────────────────
-        // Uses clear() + addAll() instead of setImages() to avoid
-        // Hibernate's "collection no longer referenced" exception
         if (req.getImages() != null) {
             product.getImages().clear();
             product.getImages().addAll(req.getImages());
@@ -215,8 +213,14 @@ public class ProductServiceImplementation implements ProductService {
             }
         }
 
-        // ── Paginate the filtered results manually ────────────────────────────
+        // ── SAFE Pagination (Prevents 500 Internal Server Errors) ─────────────
         int startIndex = (int) pageable.getOffset();
+        
+        // If the calculated start index is beyond our list size, return an empty page
+        if (startIndex >= products.size()) {
+            return new PageImpl<>(List.of(), pageable, products.size());
+        }
+        
         int endIndex = Math.min(startIndex + pageable.getPageSize(), products.size());
         List<Product> pageContent = products.subList(startIndex, endIndex);
 

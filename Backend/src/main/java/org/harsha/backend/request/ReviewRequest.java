@@ -1,23 +1,21 @@
 package org.harsha.backend.request;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
- * ReviewRequest
+ * ReviewRequest DTO
  *
- * Request payload received from the client when submitting
- * a written review for a product.
+ * Carries the data submitted from the frontend when a user writes a review.
+ * Now includes 'rating' so a single API call saves both the review text
+ * and the star value — removing the need for a separate /api/ratings/create call.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class ReviewRequest {
 
-    /** ID of the product being reviewed */
     private Long productId;
 
-    /** Written review text submitted by the user */
     private String review;
+
+    /** Star rating 1–5 submitted alongside the review text. */
+    private double rating;
 }
