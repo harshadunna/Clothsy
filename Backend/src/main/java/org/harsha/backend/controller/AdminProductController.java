@@ -38,7 +38,7 @@ public class AdminProductController {
      * @param req product details from request body
      * @return the newly created Product
      */
-    @PostMapping("/")
+    @PostMapping
     public ResponseEntity<Product> createProduct(@RequestBody CreateProductRequest req)
             throws ProductException {
 

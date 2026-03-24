@@ -29,6 +29,7 @@ public class Product {
     private Long id;
 
     private String title;
+    @Column(columnDefinition = "TEXT")
     private String description;
     private int price;
     private int discountedPrice;
