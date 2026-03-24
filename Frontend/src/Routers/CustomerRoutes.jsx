@@ -1,7 +1,7 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 
-// Existing components — paths corrected to match actual file structure
+// Existing components
 import Navigation from "../customer/components/Navigation/Navigation";
 import Footer from "../customer/components/Footer/Footer";
 import HomePage from "../customer/pages/HomePage";
@@ -11,6 +11,7 @@ import Cart from "../customer/components/Cart/Cart";
 import Checkout from "../customer/components/Checkout/Checkout";
 import Order from "../customer/components/Order/Order";
 import OrderDetails from "../customer/components/Order/OrderDetails";
+import PaymentSuccess from "../customer/components/Payment/PaymentSuccess";
 
 // TODO: Create these files when needed
 // import { ThemeProvider } from '@mui/material/styles';
@@ -20,7 +21,6 @@ import OrderDetails from "../customer/components/Order/OrderDetails";
 // import TearmsCondition from "../Pages/TearmsCondition";
 // import Contact from "../Pages/Contact";
 // import SearchProduct from "../customer/components/Product/SearchProduct";
-// import PaymentSuccess from "../customer/components/PaymentSuccess/PaymentSuccess";
 // import RateProduct from "../customer/components/ReviewProduct/RateProduct";
 
 const CustomerRoutes = () => {
@@ -49,7 +49,9 @@ const CustomerRoutes = () => {
         {/* E-commerce Flow */}
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
-        {/* <Route path="/payment/:orderId" element={<PaymentSuccess />} /> */}
+        
+        {/* Set to match the exact URL Stripe redirects to */}
+        <Route path="/payment/success" element={<PaymentSuccess />} />
 
         {/* User Account & Orders */}
         <Route path="/account/orders" element={<Order />} />

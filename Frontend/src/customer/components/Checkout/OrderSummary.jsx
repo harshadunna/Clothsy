@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import CartItem from "../Cart/CartItem";
 import AddressCard from "../Address/AddressCard";
-import { getOrderById } from "../../../Redux/Customers/Order/Action";
+import { getOrderById, createPayment } from "../../../Redux/Customers/Order/Action";
 
 export default function OrderSummary({ handleNext }) {
   const dispatch = useDispatch();
@@ -31,7 +31,8 @@ export default function OrderSummary({ handleNext }) {
   ) ?? order?.shippingAddress;
 
   const handleCreatePayment = () => {
-    handleNext();
+    // Call our new Stripe API
+    dispatch(createPayment(orderId));
   };
 
   if (orderState?.loading || !order) {

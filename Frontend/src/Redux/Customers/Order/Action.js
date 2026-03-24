@@ -50,3 +50,22 @@ export const getOrderById = (orderId) => async (dispatch) => {
     throw error;
   }
 };
+
+export const createPayment = (orderId) => async (dispatch) => {
+  dispatch({ type: "CREATE_PAYMENT_REQUEST" });
+  try {
+    const { data } = await api.post(`/api/payments/${orderId}`);
+    
+    // If Stripe gives us a URL, immediately redirect the user's browser to it!
+    if (data.payment_url) {
+      window.location.href = data.payment_url;
+    }
+    
+    dispatch({ type: "CREATE_PAYMENT_SUCCESS", payload: data });
+  } catch (error) {
+    dispatch({
+      type: "CREATE_PAYMENT_FAILURE",
+      payload: error.response?.data?.message || error.message,
+    });
+  }
+};
