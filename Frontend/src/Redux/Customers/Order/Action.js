@@ -14,17 +14,13 @@ import {
 export const createOrder = (reqData) => async (dispatch) => {
   dispatch({ type: CREATE_ORDER_REQUEST });
   try {
-
+    console.log("Sending to backend:", { addressId: reqData.address.id });
     const { data } = await api.post("/api/orders/", { addressId: reqData.address.id });
 
     dispatch({ type: CREATE_ORDER_SUCCESS, payload: data });
 
-    if (data.shippingAddress) {
-      dispatch({
-        type: "ADD_NEW_ADDRESS_SUCCESS",
-        payload: data.shippingAddress,
-      });
-    }
+
+    // The saveAddress action already handles adding new addresses to the UI!
 
     if (data.id && reqData.navigate) {
       reqData.navigate(`/checkout?step=3&order_id=${data.id}`);
@@ -34,6 +30,21 @@ export const createOrder = (reqData) => async (dispatch) => {
   } catch (error) {
     dispatch({
       type: CREATE_ORDER_FAILURE,
+      payload: error.response?.data?.message || error.message,
+    });
+    throw error;
+  }
+};
+
+export const getOrderById = (orderId) => async (dispatch) => {
+  dispatch({ type: GET_ORDER_BY_ID_REQUEST });
+  try {
+    const { data } = await api.get(`/api/orders/${orderId}`);
+    dispatch({ type: GET_ORDER_BY_ID_SUCCESS, payload: data });
+    return data;
+  } catch (error) {
+    dispatch({
+      type: GET_ORDER_BY_ID_FAILURE,
       payload: error.response?.data?.message || error.message,
     });
     throw error;

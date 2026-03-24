@@ -1,36 +1,64 @@
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useDispatch, useSelector } from "react-redux";
 import CartItem from "../Cart/CartItem";
 import AddressCard from "../Address/AddressCard";
-
-const dummyOrder = {
-  id: 1,
-  shippingAddress: {
-    firstName: "John",
-    lastName: "Doe",
-    streetAddress: "123 MG Road",
-    city: "Mumbai",
-    state: "Maharashtra",
-    zipCode: "400001",
-    mobile: "9876543210",
-  },
-  orderItems: [
-    { id: 1, product: { title: "Women Floral Gown", brand: "DressBerry", price: 1999, discountedPrice: 996, discountPersent: 50, imageUrl: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=400&q=80" }, size: "M", quantity: 1 },
-    { id: 2, product: { title: "Yellow Anarkali Suit", brand: "Biba", price: 3000, discountedPrice: 1500, discountPersent: 50, imageUrl: "https://images.unsplash.com/photo-1619533394727-57d522857f89?auto=format&fit=crop&w=400&q=80" }, size: "S", quantity: 2 },
-  ],
-  totalItem: 3,
-  totalPrice: 4999,
-  discounte: 2503,
-  totalDiscountedPrice: 2496,
-};
+import { getOrderById } from "../../../Redux/Customers/Order/Action";
 
 export default function OrderSummary({ handleNext }) {
-  const order = dummyOrder;
+  const dispatch = useDispatch();
+  const location = useLocation();
+  const { order: orderState } = useSelector((store) => store);
+
+  const queryParams = new URLSearchParams(location.search);
+  const orderId = queryParams.get("order_id");
+
+  useEffect(() => {
+    if (orderId) {
+      dispatch(getOrderById(orderId));
+    }
+  }, [orderId, dispatch]);
+
+  const order = orderState?.order;
+
+  const discount = order?.discount ?? order?.discounte ?? 0;
+
+  const shippingAddress = (
+    order?.shippingAddress?.firstName
+      ? order.shippingAddress
+      : order?.user?.addresses?.find(a => a.id === order?.shippingAddress?.id)
+  ) ?? order?.shippingAddress;
 
   const handleCreatePayment = () => {
-    console.log("Payment for order:", order.id);
-    // TODO: dispatch(createPayment({ orderId: order.id, jwt }));
     handleNext();
   };
+
+  if (orderState?.loading || !order) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="flex flex-col items-center gap-4">
+          <div
+            className="w-10 h-10 rounded-full border-4 border-t-transparent animate-spin"
+            style={{ borderColor: "#e8ddd5", borderTopColor: "#c8742a" }}
+          />
+          <p className="text-sm font-bold" style={{ color: "#9e8d7a" }}>
+            Loading your order...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (orderState?.error) {
+    return (
+      <div className="bg-white rounded-2xl border p-10 text-center" style={{ borderColor: "#e8ddd5" }}>
+        <p className="text-sm font-bold text-red-500">
+          Failed to load order: {orderState.error}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -38,7 +66,7 @@ export default function OrderSummary({ handleNext }) {
       {/* ── Left: Address + Items ── */}
       <div className="lg:col-span-7 space-y-4">
 
-        {/* Delivery Address Card */}
+        {/* Delivery Address */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -47,7 +75,7 @@ export default function OrderSummary({ handleNext }) {
           style={{ borderColor: "#e8ddd5", boxShadow: "0 2px 20px rgba(200,116,42,0.06)" }}
         >
           <div
-            className="px-5 py-4 border-b flex items-center justify-between"
+            className="px-5 py-4 border-b"
             style={{ borderColor: "#f0e8e0", background: "linear-gradient(135deg, #fff9f4, #fff)" }}
           >
             <h2
@@ -58,7 +86,17 @@ export default function OrderSummary({ handleNext }) {
             </h2>
           </div>
           <div className="p-5">
-            <AddressCard address={order.shippingAddress} compact />
+            {/* properly uses the fallback shippingAddress variable! */}
+            {shippingAddress?.firstName ? (
+              <AddressCard
+                address={shippingAddress}
+                showActions={false}
+              />
+            ) : (
+              <p className="text-sm" style={{ color: "#9e8d7a" }}>
+                Address details not available.
+              </p>
+            )}
           </div>
         </motion.div>
 
@@ -69,13 +107,10 @@ export default function OrderSummary({ handleNext }) {
           transition={{ delay: 0.08, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           className="space-y-3"
         >
-          <p
-            className="text-xs font-black uppercase tracking-widest px-1"
-            style={{ color: "#9e8d7a" }}
-          >
+          <p className="text-xs font-black uppercase tracking-widest px-1" style={{ color: "#9e8d7a" }}>
             {order.totalItem} Items in this order
           </p>
-          {order.orderItems.map((item, i) => (
+          {order.orderItems?.map((item, i) => (
             <motion.div
               key={item.id}
               initial={{ opacity: 0, y: 12 }}
@@ -99,7 +134,6 @@ export default function OrderSummary({ handleNext }) {
           className="bg-white rounded-3xl border overflow-hidden"
           style={{ borderColor: "#e8ddd5", boxShadow: "0 8px 40px rgba(200,116,42,0.08)" }}
         >
-          {/* Header */}
           <div
             className="px-6 py-5 border-b"
             style={{ borderColor: "#f0e8e0", background: "linear-gradient(135deg, #fff9f4, #fff)" }}
@@ -115,7 +149,7 @@ export default function OrderSummary({ handleNext }) {
           <div className="px-6 py-5 space-y-4">
             {[
               { label: `Price (${order.totalItem} items)`, value: `₹${order.totalPrice}`, color: "#3d2e1e" },
-              { label: "Discount", value: `-₹${order.discounte}`, color: "#16a34a" },
+              { label: "Discount", value: `-₹${discount}`, color: "#16a34a" },
               { label: "Delivery", value: "FREE", color: "#16a34a" },
             ].map(({ label, value, color }) => (
               <div key={label} className="flex justify-between items-center text-sm">
@@ -131,16 +165,17 @@ export default function OrderSummary({ handleNext }) {
               </span>
             </div>
 
-            {/* Savings badge */}
-            <div
-              className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold"
-              style={{ background: "#f0faf4", color: "#16a34a" }}
-            >
-              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-              </svg>
-              You're saving ₹{order.discounte} on this order
-            </div>
+            {discount > 0 && (
+              <div
+                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold"
+                style={{ background: "#f0faf4", color: "#16a34a" }}
+              >
+                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                You're saving ₹{discount} on this order
+              </div>
+            )}
           </div>
 
           <div className="px-6 pb-6">

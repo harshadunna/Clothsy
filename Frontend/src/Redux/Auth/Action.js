@@ -76,22 +76,21 @@ export const logout = () => (dispatch) => {
 };
 
 export const deleteAddress = (addressId) => async (dispatch) => {
-  dispatch({ type: DELETE_ADDRESS_REQUEST });
+  dispatch({ type: "DELETE_ADDRESS_REQUEST" });
   try {
-    // 1. Call the backend
+    // Assuming your backend uses this standard endpoint for deleting addresses
     await api.delete(`/api/addresses/${addressId}`);
 
-    // 2. ONLY dispatch the success. 
-    // Do NOT call dispatch(getUser()) here, as that re-fetches everything 
-    // and can cause the component to reset and redirect you to Home.
-    dispatch({ type: DELETE_ADDRESS_SUCCESS, payload: addressId });
-
-    console.log("Address deleted successfully, UI should update silently.");
+    dispatch({
+      type: "DELETE_ADDRESS_SUCCESS",
+      payload: addressId
+    });
   } catch (error) {
     dispatch({
-      type: DELETE_ADDRESS_FAILURE,
-      payload: error.response?.data?.message || error.message,
+      type: "DELETE_ADDRESS_FAILURE",
+      payload: error.response?.data?.message || error.message
     });
+    console.error("Error deleting address:", error);
   }
 };
 
@@ -102,5 +101,16 @@ export const updateAddress = (addressId, addressData) => async (dispatch) => {
     dispatch({ type: "UPDATE_ADDRESS_SUCCESS", payload: data });
   } catch (error) {
     dispatch({ type: "UPDATE_ADDRESS_FAILURE", payload: error.message });
+  }
+};
+
+export const saveAddress = (addressData) => async (dispatch) => {
+  try {
+    const { data } = await api.post("/api/users/addresses", addressData);
+    dispatch({ type: "ADD_NEW_ADDRESS_SUCCESS", payload: data });
+    return data; // returns saved address with its ID
+  } catch (error) {
+    console.error("Failed to save address:", error);
+    throw error;
   }
 };

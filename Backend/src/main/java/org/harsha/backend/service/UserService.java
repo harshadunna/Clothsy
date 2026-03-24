@@ -1,6 +1,7 @@
 package org.harsha.backend.service;
 
 import org.harsha.backend.exception.UserException;
+import org.harsha.backend.model.Address;
 import org.harsha.backend.model.User;
 
 import java.util.List;
@@ -40,4 +41,6 @@ public interface UserService {
      * @return list of all User entities
      */
     List<User> findAllUsers();
+
+    Address addAddress(User user, Address address);
 }

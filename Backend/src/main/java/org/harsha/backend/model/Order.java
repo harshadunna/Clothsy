@@ -19,7 +19,7 @@ import java.util.List;
  * Relationships:
  * - Belongs to one User (Many-to-One)
  * - Contains multiple OrderItems (One-to-Many)
- * - Linked to one shipping Address (One-to-One)
+ * - Linked to one shipping Address (Many-to-One)
  * - Embeds PaymentDetails directly into the table
  *
  * Price fields reflect the total cost breakdown at the time of order placement.
@@ -56,8 +56,9 @@ public class Order {
     /** Expected or actual delivery date */
     private LocalDate deliveryDate;
 
-    /** Shipping address selected at checkout */
-    @OneToOne
+    /** Shipping address selected at checkout - FIXED TO MANY-TO-ONE */
+    @ManyToOne
+    @JoinColumn(name = "shipping_address_id")
     private Address shippingAddress;
 
     /**

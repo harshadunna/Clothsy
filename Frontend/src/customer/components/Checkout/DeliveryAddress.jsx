@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import AddressCard from "../Address/AddressCard";
 import { createOrder } from "../../../Redux/Customers/Order/Action";
-import { updateAddress } from "../../../Redux/Auth/Action"; // <-- Imported update action
+import { updateAddress, saveAddress, deleteAddress } from "../../../Redux/Auth/Action";
 
 const inputClass = `
   w-full px-4 py-3 rounded-xl border text-sm font-medium outline-none transition-all duration-200 placeholder-gray-400 bg-white
@@ -12,7 +12,6 @@ const inputClass = `
 const inputStyle = { borderColor: "#e8ddd5", color: "#1a1109" };
 const inputFocusStyle = { borderColor: "#c8742a", boxShadow: "0 0 0 3px rgba(200,116,42,0.12)" };
 
-// Added defaultValue prop to pre-fill the form
 function FormInput({ label, name, id, autoComplete, type = "text", required = true, colSpan = 1, multiline = false, defaultValue = "" }) {
   const [focused, setFocused] = useState(false);
   return (
@@ -24,14 +23,14 @@ function FormInput({ label, name, id, autoComplete, type = "text", required = tr
         <textarea
           name={name} id={id} rows={3} required={required} autoComplete={autoComplete}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-          defaultValue={defaultValue} // <-- Added default value
+          defaultValue={defaultValue}
           className={inputClass} style={focused ? { ...inputStyle, ...inputFocusStyle } : inputStyle}
         />
       ) : (
         <input
           type={type} name={name} id={id} required={required} autoComplete={autoComplete}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-          defaultValue={defaultValue} // <-- Added default value
+          defaultValue={defaultValue}
           className={inputClass} style={focused ? { ...inputStyle, ...inputFocusStyle } : inputStyle}
         />
       )}
@@ -47,11 +46,11 @@ export default function DeliveryAddress({ handleNext }) {
 
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [editingAddress, setEditingAddress] = useState(null); // <-- Added state for editing
+  const [editingAddress, setEditingAddress] = useState(null);
 
   const savedAddresses = auth.user?.addresses || [];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
 
@@ -66,31 +65,36 @@ export default function DeliveryAddress({ handleNext }) {
     };
 
     if (editingAddress) {
-      // If we are editing, update the address in the database
       dispatch(updateAddress(editingAddress.id, address));
       setEditingAddress(null);
       setShowForm(false);
     } else {
-      // If we are NOT editing, it's a new address. Save it and proceed to checkout.
-      const reqData = { address, navigate };
-      dispatch(createOrder(reqData));
+      try {
+        //  Step 1: Save address first to get its ID
+        const savedAddress = await dispatch(saveAddress(address));
+        // Step 2: Create order with the saved address ID
+        const reqData = { address: savedAddress, navigate };
+        dispatch(createOrder(reqData));
+      } catch (error) {
+        console.error("Failed to save address and create order:", error);
+      }
     }
   };
 
   const handleCreateOrder = (item) => {
-    // Ensure we are passing exactly what the Action expects
-    const reqData = {
-      address: item,
-      navigate: navigate
-    };
+    // Now, clicking "Deliver Here" will ALWAYS fire the checkout action properly.
+    const reqData = { address: item, navigate };
     console.log("Attempting to create order with address:", item.id);
     dispatch(createOrder(reqData));
   };
 
-  // Triggers when the Edit button is clicked on the AddressCard
   const handleEditClick = (address) => {
     setEditingAddress(address);
     setShowForm(true);
+  };
+
+  const handleDeleteClick = (addressId) => {
+    dispatch(deleteAddress(addressId));
   };
 
   return (
@@ -120,8 +124,12 @@ export default function DeliveryAddress({ handleNext }) {
                     transition={{ duration: 0.2 }}
                     className="cursor-pointer"
                   >
-                    {/* Pass the handleEditClick to the Card */}
-                    <AddressCard address={item} selected={isSelected} onEdit={handleEditClick} />
+                    <AddressCard
+                      address={item}
+                      selected={isSelected}
+                      onEdit={handleEditClick}
+                      onDelete={handleDeleteClick} /* <-- ADD THIS LINE */
+                    />
                     <AnimatePresence>
                       {isSelected && (
                         <motion.div
@@ -159,7 +167,7 @@ export default function DeliveryAddress({ handleNext }) {
           <div className="p-4 border-t" style={{ borderColor: "#f0e8e0" }}>
             <button
               onClick={() => {
-                setEditingAddress(null); // Clear any edits if they click "New Address"
+                setEditingAddress(null);
                 setShowForm((p) => !p);
               }}
               className="flex items-center gap-2 text-sm font-bold transition-colors w-full"
@@ -197,7 +205,6 @@ export default function DeliveryAddress({ handleNext }) {
                   {editingAddress ? "Edit your details below" : "Fill in the details below"}
                 </p>
               </div>
-              {/* KEY is important here! It forces React to refresh the defaultValues when you switch between editing different addresses */}
               <form key={editingAddress ? editingAddress.id : "new"} onSubmit={handleSubmit} className="p-6">
                 <div className="grid grid-cols-2 gap-4">
                   <FormInput label="First Name" name="firstName" id="firstName" defaultValue={editingAddress?.firstName} autoComplete="given-name" />

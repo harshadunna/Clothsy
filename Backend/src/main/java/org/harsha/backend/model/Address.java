@@ -6,16 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Address Entity
- *
- * Represents a physical address associated with a user.
- * Maps to the "addresses" table in the database.
- *
- * Used for shipping and billing purposes during checkout.
- * Each address belongs to exactly one user (Many-to-One),
- * and a user can have multiple addresses (One-to-Many on the User side).
- */
 @Entity
 @Table(name = "addresses")
 @Data
@@ -23,7 +13,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Address {
 
-    /** Auto-incremented primary key */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -36,11 +25,6 @@ public class Address {
     private String zipCode;
     private String mobile;
 
-    /**
-     * The user this address belongs to.
-     * Excluded from JSON serialization to prevent circular references
-     * (User → Address → User → ...).
-     */
     @ManyToOne
     @JoinColumn(name = "user_id")
     @JsonIgnore

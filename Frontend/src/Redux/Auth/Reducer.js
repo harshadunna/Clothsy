@@ -5,7 +5,6 @@ import {
   LOGOUT,
   GET_ALL_CUSTOMERS_SUCCESS,
   DELETE_ADDRESS_REQUEST, DELETE_ADDRESS_SUCCESS, DELETE_ADDRESS_FAILURE,
-  // --- ADDED UPDATE IMPORTS ---
   UPDATE_ADDRESS_REQUEST, UPDATE_ADDRESS_SUCCESS, UPDATE_ADDRESS_FAILURE,
 } from "./ActionTypes";
 
@@ -28,8 +27,8 @@ const authReducer = (state = initialState, action) => {
 
     // --- ANTI-GRAVITY FIX: ADDRESS ACTIONS ARE COMPLETELY SILENT ---
     case DELETE_ADDRESS_REQUEST:
-    case UPDATE_ADDRESS_REQUEST: // Added update request here
-      return { ...state, error: null, isLoading: false }; // Force loading to false
+    case UPDATE_ADDRESS_REQUEST:
+      return { ...state, error: null, isLoading: false };
 
     case REGISTER_SUCCESS:
     case LOGIN_SUCCESS:
@@ -89,7 +88,7 @@ const authReducer = (state = initialState, action) => {
       };
 
     case DELETE_ADDRESS_FAILURE:
-    case UPDATE_ADDRESS_FAILURE: // Added update failure here
+    case UPDATE_ADDRESS_FAILURE:
       return { ...state, isLoading: false, error: action.payload };
 
     case LOGOUT:
