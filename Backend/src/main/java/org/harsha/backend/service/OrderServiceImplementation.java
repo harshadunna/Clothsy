@@ -49,6 +49,7 @@ public class OrderServiceImplementation implements OrderService {
             orderItem.setSize(item.getSize());
             orderItem.setUserId(item.getUserId());
             orderItem.setDiscountedPrice(item.getDiscountedPrice());
+            orderItem.setItemStatus("PENDING"); // Initialize item status
 
             orderItems.add(orderItemRepository.save(orderItem));
         }
@@ -141,5 +142,50 @@ public class OrderServiceImplementation implements OrderService {
     public void deleteOrder(Long orderId) throws OrderException {
         findOrderById(orderId);
         orderRepository.deleteById(orderId);
+    }
+
+    @Override
+    @Transactional
+    public Order cancelOrderItems(Long orderId, List<Long> itemIdsToCancel) throws OrderException {
+        Order order = findOrderById(orderId);
+
+        boolean allItemsCanceled = true;
+
+        for (OrderItem item : order.getOrderItems()) {
+            // If this item is in the cancellation list and isn't already canceled
+            if (itemIdsToCancel.contains(item.getId()) && !"CANCELLED".equals(item.getItemStatus())) {
+
+                item.setItemStatus("CANCELLED");
+
+                // --- THE RECALCULATION MATH ---
+                // Subtract this item's original price * quantity from the Order total
+                order.setTotalPrice(order.getTotalPrice() - (item.getPrice() * item.getQuantity()));
+
+                // Subtract this item's discounted price * quantity from the Order total
+                order.setTotalDiscountedPrice(order.getTotalDiscountedPrice() - (item.getDiscountedPrice() * item.getQuantity()));
+
+                // Reduce the total item count
+                order.setTotalItem(order.getTotalItem() - item.getQuantity());
+            }
+
+            // Check if there are any items left that are NOT canceled
+            if (!"CANCELLED".equals(item.getItemStatus())) {
+                allItemsCanceled = false;
+            }
+        }
+
+        // Recalculate the total discount based on the new prices
+        order.setDiscount((int) (order.getTotalPrice() - order.getTotalDiscountedPrice()));
+
+        // If the user canceled EVERY item in the order, mark the entire Order as CANCELLED
+        if (allItemsCanceled || order.getTotalItem() <= 0) {
+            order.setOrderStatus("CANCELLED");
+            order.setTotalPrice(0);
+            order.setTotalDiscountedPrice(0);
+            order.setDiscount(0);
+        }
+
+        // Save and return the updated order
+        return orderRepository.save(order);
     }
 }

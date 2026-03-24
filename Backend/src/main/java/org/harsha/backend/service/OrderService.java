@@ -55,7 +55,7 @@ public interface OrderService {
     Order deliveredOrder(Long orderId) throws OrderException;
 
     /**
-     * Marks an order as CANCELLED.
+     * Marks an entire order as CANCELLED.
      */
     Order cancledOrder(Long orderId) throws OrderException;
 
@@ -68,4 +68,12 @@ public interface OrderService {
      * Permanently deletes an order from the system.
      */
     void deleteOrder(Long orderId) throws OrderException;
+
+    /**
+     * Partially (or fully) cancels specific items within an order and recalculates totals.
+     * * @param orderId The ID of the order
+     * @param itemIdsToCancel List of OrderItem IDs to cancel
+     * @return The recalculated Order
+     */
+    Order cancelOrderItems(Long orderId, List<Long> itemIdsToCancel) throws OrderException;
 }

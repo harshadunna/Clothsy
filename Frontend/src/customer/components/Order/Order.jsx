@@ -1,44 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import OrderCard from "./OrderCard";
+import api from "../../../config/api"; // Make sure this path points to your Axios config!
 
 const orderStatus = [
-  { label: "On The Way", value: "onTheWay" },
-  { label: "Delivered", value: "delivered" },
-  { label: "Cancelled", value: "cancelled" },
-  { label: "Returned", value: "returned" },
+  { label: "On The Way", value: "SHIPPED" },
+  { label: "Delivered", value: "DELIVERED" },
+  { label: "Cancelled", value: "CANCELLED" },
+  { label: "Returned", value: "RETURNED" },
 ];
-
-const dummyOrders = [
-  {
-    id: 1,
-    orderStatus: "DELIVERED",
-    orderItems: [
-      { id: 1, size: "M", price: 996, product: { id: 101, title: "Women Floral Gown", brand: "DressBerry", imageUrl: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=400&q=80" } },
-    ],
-  },
-  {
-    id: 2,
-    orderStatus: "ON_THE_WAY",
-    orderItems: [
-      { id: 2, size: "S", price: 1500, product: { id: 102, title: "Yellow Anarkali Suit", brand: "Biba", imageUrl: "https://images.unsplash.com/photo-1619533394727-57d522857f89?auto=format&fit=crop&w=400&q=80" } },
-    ],
-  },
-  {
-    id: 3,
-    orderStatus: "CANCELLED",
-    orderItems: [
-      { id: 3, size: "L", price: 2200, product: { id: 103, title: "Embroidered Kurta Set", brand: "W", imageUrl: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80" } },
-    ],
-  },
-];
-
-const statusValueMap = {
-  onTheWay: "ON_THE_WAY",
-  delivered: "DELIVERED",
-  cancelled: "CANCELLED",
-  returned: "RETURNED",
-};
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -53,8 +23,23 @@ const fadeUp = {
 export default function Order() {
   const [activeFilters, setActiveFilters] = useState([]);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const orders = dummyOrders; // replace with Redux: useSelector(store => store.order.orders)
+  // FETCH ORDERS FROM BACKEND
+  useEffect(() => {
+    api.get("/api/orders/user")
+      .then((res) => {
+        // Sort by newest first
+        const sortedOrders = res.data.sort((a, b) => b.id - a.id);
+        setOrders(sortedOrders);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error fetching orders:", err);
+        setLoading(false);
+      });
+  }, []);
 
   const toggleFilter = (value) => {
     setActiveFilters((prev) =>
@@ -62,14 +47,40 @@ export default function Order() {
     );
   };
 
-  const filteredOrders = orders.filter((o) => {
+  // FILTER LOGIC
+  // --- UPGRADED FILTER LOGIC ---
+  // We flatten all items first, then filter them individually!
+  const allItems = orders.flatMap((order) =>
+    order.orderItems.map((item) => ({ item, order }))
+  ).filter(({ item, order }) => {
+    // If no filters are selected, show everything
     if (activeFilters.length === 0) return true;
-    return activeFilters.some((f) => statusValueMap[f] === o.orderStatus);
+
+    // Check if the specific item is cancelled (or the whole order is cancelled)
+    const itemIsCancelled = item.itemStatus === "CANCELLED" || order.orderStatus === "CANCELLED";
+
+    // 1. Cancelled Filter
+    if (activeFilters.includes("CANCELLED") && itemIsCancelled) return true;
+
+    // 2. Shipped/On The Way Filter (Includes Placed, Confirmed, and Shipped items that ARE NOT cancelled)
+    if (activeFilters.includes("SHIPPED") && ["PLACED", "CONFIRMED", "SHIPPED"].includes(order.orderStatus) && !itemIsCancelled) return true;
+
+    // 3. Delivered Filter
+    if (activeFilters.includes("DELIVERED") && order.orderStatus === "DELIVERED" && !itemIsCancelled) return true;
+
+    // 4. Returned Filter
+    if (activeFilters.includes("RETURNED") && order.orderStatus === "RETURNED" && !itemIsCancelled) return true;
+
+    return false;
   });
 
-  const allItems = filteredOrders.flatMap((order) =>
-    order.orderItems.map((item) => ({ item, order }))
-  );
+  if (loading) {
+    return (
+      <div className="min-h-screen flex justify-center items-center" style={{ background: "linear-gradient(160deg, #fdf8f4 0%, #f5f0eb 100%)" }}>
+        <div className="w-12 h-12 rounded-full border-4 border-t-transparent animate-spin" style={{ borderColor: "#fdf0e6", borderTopColor: "#c8742a" }}></div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -93,11 +104,10 @@ export default function Order() {
               My Orders
             </h1>
             <p className="mt-1.5 text-sm" style={{ color: "#9e8d7a" }}>
-              {allItems.length} order{allItems.length !== 1 ? "s" : ""} found
+              {allItems.length} item{allItems.length !== 1 ? "s" : ""} found
             </p>
           </div>
 
-          {/* Mobile filter toggle */}
           <button
             onClick={() => setMobileFilterOpen((p) => !p)}
             className="lg:hidden flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl border"
@@ -154,9 +164,8 @@ export default function Order() {
                             className="flex items-center gap-3 cursor-pointer group"
                             onClick={() => toggleFilter(option.value)}
                           >
-                            {/* Custom checkbox */}
                             <div
-                              className="w-4.5 h-4.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all duration-200"
+                              className="w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all duration-200"
                               style={{
                                 borderColor: isChecked ? "#c8742a" : "#d9cfc6",
                                 background: isChecked ? "#c8742a" : "#fff",
@@ -182,7 +191,7 @@ export default function Order() {
                     {activeFilters.length > 0 && (
                       <button
                         onClick={() => setActiveFilters([])}
-                        className="mt-5 text-xs font-bold w-full text-center transition-colors"
+                        className="mt-5 text-xs font-bold w-full text-center transition-colors hover:text-gray-800"
                         style={{ color: "#b5a89a" }}
                       >
                         Clear all filters
@@ -241,7 +250,7 @@ export default function Order() {
                 {activeFilters.length > 0 && (
                   <button
                     onClick={() => setActiveFilters([])}
-                    className="mt-5 text-sm font-bold px-5 py-2.5 rounded-xl"
+                    className="mt-5 text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-[#fae6d5] transition-colors"
                     style={{ color: "#c8742a", background: "#fdf0e6" }}
                   >
                     Clear Filters

@@ -60,4 +60,7 @@ public class OrderItem {
 
     /** Expected delivery date for this specific item */
     private LocalDateTime deliveryDate;
+
+    /** Tracks the status of this specific item (e.g., PENDING, CONFIRMED, CANCELLED, RETURNED) */
+    private String itemStatus = "PENDING";
 }

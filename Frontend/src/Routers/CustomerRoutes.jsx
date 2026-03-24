@@ -12,6 +12,7 @@ import Checkout from "../customer/components/Checkout/Checkout";
 import Order from "../customer/components/Order/Order";
 import OrderDetails from "../customer/components/Order/OrderDetails";
 import PaymentSuccess from "../customer/components/Payment/PaymentSuccess";
+import PaymentCancel from "../customer/components/Payment/PaymentCancel";
 
 // TODO: Create these files when needed
 // import { ThemeProvider } from '@mui/material/styles';
@@ -52,6 +53,7 @@ const CustomerRoutes = () => {
         
         {/* Set to match the exact URL Stripe redirects to */}
         <Route path="/payment/success" element={<PaymentSuccess />} />
+        <Route path="/payment/cancel" element={<PaymentCancel />} />
 
         {/* User Account & Orders */}
         <Route path="/account/orders" element={<Order />} />

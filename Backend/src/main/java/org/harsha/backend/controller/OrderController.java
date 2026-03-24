@@ -29,21 +29,19 @@ public class OrderController {
 
     /**
      * Places a new order using an existing saved address.
-     *
-     * @param body map containing "addressId"
-     * @param jwt  Authorization header containing the Bearer token
-     * @return the newly created Order entity
      */
-    @PostMapping("/")
+    @PostMapping({"", "/"})
     public ResponseEntity<Order> createOrder(
             @RequestBody Map<String, Long> body,
             @RequestHeader("Authorization") String jwt) throws UserException {
 
         User user = userService.findUserProfileByJwt(jwt);
+
+        // Safely extract the addressId
         Long addressId = body.get("addressId");
         Order order = orderService.createOrder(user, addressId);
 
-        return ResponseEntity.ok(order);
+        return new ResponseEntity<>(order, HttpStatus.CREATED); // 201 Created is best practice for POST
     }
 
     /**
@@ -56,7 +54,7 @@ public class OrderController {
         User user = userService.findUserProfileByJwt(jwt);
         List<Order> orders = orderService.usersOrderHistory(user.getId());
 
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(orders);
+        return new ResponseEntity<>(orders, HttpStatus.OK);
     }
 
     /**
@@ -67,9 +65,28 @@ public class OrderController {
             @PathVariable Long orderId,
             @RequestHeader("Authorization") String jwt) throws OrderException, UserException {
 
+        // We verify the user exists, but we don't strictly need to assign it to a variable
         userService.findUserProfileByJwt(jwt);
         Order order = orderService.findOrderById(orderId);
 
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(order);
+        return new ResponseEntity<>(order, HttpStatus.OK);
+    }
+
+    /**
+     * Partially (or fully) cancels items within an order.
+     * Expects a JSON array of OrderItem IDs: [1, 5, 8]
+     */
+    @PutMapping("/{orderId}/cancel-items")
+    public ResponseEntity<Order> cancelOrderItems(
+            @PathVariable Long orderId,
+            @RequestBody List<Long> itemIdsToCancel,
+            @RequestHeader("Authorization") String jwt) throws OrderException, UserException {
+
+        // Verify user owns the token (security check)
+        userService.findUserProfileByJwt(jwt);
+
+        // Call the new recalculation logic in your service
+        Order updatedOrder = orderService.cancelOrderItems(orderId, itemIdsToCancel);
+        return new ResponseEntity<>(updatedOrder, HttpStatus.OK);
     }
 }
