@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import AdminSidebar from "./components/AdminSidebar";
 import AdminDashboard from "./components/AdminDashboard";
+import AdminAnalytics from "./components/AdminAnalytics";
 import CreateProduct from "./components/CreateProduct";
 import AdminOrders from "./components/AdminOrders";
 import AdminProducts from "./components/AdminProducts"; 
@@ -15,8 +16,9 @@ export default function AdminRoutes() {
       <div className="flex-1 overflow-y-auto">
         <Routes>
           <Route path="/" element={<AdminDashboard />} />
+          <Route path="/analytics" element={<AdminAnalytics />} />
           <Route path="/product/create" element={<CreateProduct />} />
-          <Route path="/product/update/:productId" element={<UpdateProduct />} /> {/* ➕ Add this route */}
+          <Route path="/product/update/:productId" element={<UpdateProduct />} />
           <Route path="/orders" element={<AdminOrders />} />
           <Route path="/products" element={<AdminProducts />} />
         </Routes>

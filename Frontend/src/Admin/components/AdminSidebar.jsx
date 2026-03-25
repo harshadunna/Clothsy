@@ -6,11 +6,13 @@ import {
   PlusCircleIcon, 
   ShoppingBagIcon, 
   UsersIcon,
+  ChartBarIcon,
   ArrowRightOnRectangleIcon 
 } from "@heroicons/react/24/outline";
 
 const menuItems = [
   { name: "Dashboard", path: "/admin", icon: HomeIcon },
+  { name: "Analytics", path: "/admin/analytics", icon: ChartBarIcon },
   { name: "Products", path: "/admin/products", icon: Squares2X2Icon },
   { name: "Add Product", path: "/admin/product/create", icon: PlusCircleIcon },
   { name: "Orders", path: "/admin/orders", icon: ShoppingBagIcon },
@@ -22,20 +24,18 @@ export default function AdminSidebar() {
   const location = useLocation();
 
   const handleLogout = () => {
-    // Add your logout logic here (clear localStorage, Redux, etc.)
+    localStorage.clear();
     navigate("/");
   };
 
   return (
     <div className="w-64 h-screen bg-white border-r flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20" style={{ borderColor: "#f0e8e0" }}>
-      {/* Brand Header */}
       <div className="h-20 flex items-center px-8 border-b" style={{ borderColor: "#f0e8e0" }}>
         <h1 className="text-2xl font-black tracking-tight" style={{ color: "#1a1109", fontFamily: "'Georgia', serif" }}>
           Shophive <span style={{ color: "#c8742a" }}>Admin</span>
         </h1>
       </div>
 
-      {/* Navigation Links */}
       <div className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
@@ -64,7 +64,6 @@ export default function AdminSidebar() {
         })}
       </div>
 
-      {/* Logout Button */}
       <div className="p-4 border-t" style={{ borderColor: "#f0e8e0" }}>
         <motion.button
           whileHover={{ x: 4 }}

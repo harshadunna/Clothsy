@@ -1,7 +1,10 @@
 package org.harsha.backend.controller;
 
 import com.stripe.Stripe;
+import com.stripe.exception.SignatureVerificationException;
+import com.stripe.model.Event;
 import com.stripe.model.checkout.Session;
+import com.stripe.net.Webhook;
 import com.stripe.param.checkout.SessionCreateParams;
 import org.harsha.backend.model.Order;
 import org.harsha.backend.service.OrderService;
@@ -22,65 +25,72 @@ public class PaymentController {
     @Value("${stripe.api.key}")
     private String stripeSecretKey;
 
+    @Value("${stripe.webhook.secret}")
+    private String endpointSecret;
+
     public PaymentController(OrderService orderService) {
         this.orderService = orderService;
     }
 
-    /**
-     * Creates a Stripe Checkout Session and returns the payment URL.
-     * Updated to include Metadata for better tracking in the Stripe Dashboard.
-     */
     @PostMapping("/{orderId}")
     public ResponseEntity<Map<String, String>> createPaymentLink(@PathVariable Long orderId,
                                                                  @RequestHeader("Authorization") String jwt) throws Exception {
-
         Order order = orderService.findOrderById(orderId);
-
         Stripe.apiKey = stripeSecretKey;
 
         SessionCreateParams params = SessionCreateParams.builder()
                 .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
                 .setMode(SessionCreateParams.Mode.PAYMENT)
-                // Success and Cancel URLs pointed to Vite port 5173
                 .setSuccessUrl("http://localhost:5173/payment/success?order_id=" + orderId)
                 .setCancelUrl("http://localhost:5173/payment/cancel?order_id=" + orderId)
-
-                // --- NEW: METADATA FOR STRIPE DASHBOARD ---
                 .putMetadata("order_id", orderId.toString())
-                .putMetadata("customer_email", order.getUser().getEmail())
-                .putMetadata("customer_name", order.getUser().getFirstName() + " " + order.getUser().getLastName())
-
                 .addLineItem(SessionCreateParams.LineItem.builder()
                         .setQuantity(1L)
                         .setPriceData(SessionCreateParams.LineItem.PriceData.builder()
                                 .setCurrency("inr")
-                                // Amount in paise (total * 100)
                                 .setUnitAmount((long) order.getTotalDiscountedPrice() * 100)
                                 .setProductData(SessionCreateParams.LineItem.PriceData.ProductData.builder()
                                         .setName("Order #" + orderId)
-                                        .setDescription("Payment for items in your Harsha Backend Shop cart")
                                         .build())
                                 .build())
                         .build())
                 .build();
 
         Session session = Session.create(params);
-
         Map<String, String> response = new HashMap<>();
         response.put("payment_url", session.getUrl());
-        response.put("session_id", session.getId());
-
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    /**
-     * Endpoint called by the React Success page to finalize the order in the database.
-     */
-    @GetMapping("/update_payment")
-    public ResponseEntity<String> updatePaymentStatus(@RequestParam("order_id") Long orderId) throws Exception {
-        // Marks order as PLACED and updates payment status to COMPLETED
-        orderService.placedOrder(orderId);
+    @PostMapping("/webhook")
+    public ResponseEntity<String> handleStripeWebhook(@RequestBody String payload,
+                                                      @RequestHeader("Stripe-Signature") String sigHeader) {
+        Event event;
+        try {
+            event = Webhook.constructEvent(payload, sigHeader, endpointSecret);
+        } catch (SignatureVerificationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Signature");
+        }
 
-        return new ResponseEntity<>("Payment status updated to PLACED successfully", HttpStatus.OK);
+        if ("checkout.session.completed".equals(event.getType())) {
+            Session session = (Session) event.getDataObjectDeserializer().getObject().get();
+
+            // 1. Get the ID from metadata
+            String orderIdStr = session.getMetadata().get("order_id");
+
+            if (orderIdStr != null) {
+                try {
+                    Long orderId = Long.parseLong(orderIdStr);
+                    // 2. Update the DB
+                    orderService.placedOrder(orderId);
+                    System.out.println("SUCCESS: Order #" + orderId + " is now marked as PLACED.");
+                } catch (Exception e) {
+                    // 3. Prevent the 500 error if the ID is missing from your DB
+                    System.err.println("WEBHOOK ALERT: Received payment for Order ID " + orderIdStr + " but it's not in our database.");
+                    return ResponseEntity.ok("Received but order not found");
+                }
+            }
+        }
+        return ResponseEntity.ok("Success");
     }
 }
