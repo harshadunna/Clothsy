@@ -1,7 +1,8 @@
 import { Route, Routes } from "react-router-dom";
 import AdminSidebar from "./components/AdminSidebar";
 import AdminDashboard from "./components/AdminDashboard";
-import CreateProduct from "./components/CreateProduct"; 
+import CreateProduct from "./components/CreateProduct";
+import AdminOrders from "./components/AdminOrders"; 
 
 export default function AdminRoutes() {
   return (
@@ -12,8 +13,10 @@ export default function AdminRoutes() {
       <div className="flex-1 overflow-y-auto">
         <Routes>
           <Route path="/" element={<AdminDashboard />} />
-          
           <Route path="/product/create" element={<CreateProduct />} />
+          
+          {/* Add the Orders Route */}
+          <Route path="/orders" element={<AdminOrders />} />
           
         </Routes>
       </div>

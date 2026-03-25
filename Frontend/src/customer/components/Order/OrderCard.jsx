@@ -32,20 +32,71 @@ const getStatusConfig = (status, dateString) => {
         </svg>
       ),
     },
-    RETURNED: {
-      label: "Returned",
-      sublabel: "This item has been returned",
+    RETURN_REQUESTED: {
+      label: "Return Requested",
+      sublabel: "Awaiting pickup",
       date: null,
-      dotColor: "#7c3aed",
-      bgColor: "#f5f3ff",
-      textColor: "#7c3aed",
+      dotColor: "#d97706", 
+      bgColor: "#fffbeb",
+      textColor: "#d97706",
       icon: (
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
     },
-    // Default for PLACED, CONFIRMED, SHIPPED, OUT_FOR_DELIVERY
+    RETURN_PICKED: {
+      label: "Picked Up",
+      sublabel: "Heading to warehouse",
+      date: null,
+      dotColor: "#4f46e5", 
+      bgColor: "#e0e7ff",
+      textColor: "#4f46e5",
+      icon: (
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        </svg>
+      ),
+    },
+    RETURN_RECEIVED: {
+      label: "Received",
+      sublabel: "Arrived at warehouse",
+      date: null,
+      dotColor: "#0d9488", 
+      bgColor: "#ccfbf1",
+      textColor: "#0d9488",
+      icon: (
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+      ),
+    },
+    REFUND_INITIATED: {
+      label: "Refund Initiated",
+      sublabel: "Processing your refund",
+      date: null,
+      dotColor: "#db2777", 
+      bgColor: "#fce7f3",
+      textColor: "#db2777",
+      icon: (
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z" />
+        </svg>
+      ),
+    },
+    REFUND_COMPLETED: {
+      label: "Refund Completed",
+      sublabel: "Refund sent to original payment",
+      date: null,
+      dotColor: "#059669",
+      bgColor: "#d1fae5",
+      textColor: "#059669",
+      icon: (
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+    },
     DEFAULT: {
       label: "On The Way",
       sublabel: `Status: ${status?.replace(/_/g, " ") || "PROCESSING"}`,
@@ -67,8 +118,12 @@ const getStatusConfig = (status, dateString) => {
 export default function OrderCard({ item, order }) {
   const navigate = useNavigate();
   
-  // Check the specific item's status first. If it's cancelled, use "CANCELLED", otherwise fall back to the overall order status.
-  const effectiveStatus = item?.itemStatus === "CANCELLED" ? "CANCELLED" : order?.orderStatus;
+  const returnStatuses = ["RETURN_REQUESTED", "RETURN_PICKED", "RETURN_RECEIVED", "REFUND_INITIATED", "REFUND_COMPLETED", "RETURNED"];
+  
+  const effectiveStatus = 
+    item?.itemStatus === "CANCELLED" ? "CANCELLED" : 
+    returnStatuses.includes(item?.itemStatus) ? item?.itemStatus :
+    order?.orderStatus;
   
   const status = getStatusConfig(effectiveStatus, order?.createdAt);
   const isDelivered = effectiveStatus === "DELIVERED";

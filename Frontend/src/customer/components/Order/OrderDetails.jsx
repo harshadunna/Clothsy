@@ -5,18 +5,6 @@ import OrderTracker from "./OrderTracker";
 import AddressCard from "../Address/AddressCard";
 import api from "../../../config/api";
 
-const getStepIndex = (status) => {
-  switch (status) {
-    case "PLACED": return 1;
-    case "CONFIRMED": return 2;
-    case "SHIPPED": return 3;
-    case "OUT_FOR_DELIVERY": return 4;
-    case "DELIVERED": return 5;
-    default: return 0;
-  }
-};
-
-// Helper function to calculate 7-day return window
 const checkReturnEligibility = (deliveryDateString) => {
   if (!deliveryDateString) return { isEligible: true, daysLeft: 7 };
   const deliveryDate = new Date(deliveryDateString);
@@ -28,6 +16,18 @@ const checkReturnEligibility = (deliveryDateString) => {
     isEligible: daysLeft >= 0,
     daysLeft: daysLeft < 0 ? 0 : daysLeft,
   };
+};
+
+const getReturnBadgeConfig = (status) => {
+  switch (status) {
+    case "RETURN_REQUESTED": return { text: "Return Requested", bg: "bg-purple-600" };
+    case "RETURN_PICKED": return { text: "Picked Up", bg: "bg-indigo-600" };
+    case "RETURN_RECEIVED": return { text: "Warehouse Received", bg: "bg-teal-600" };
+    case "REFUND_INITIATED": return { text: "Refund Initiated", bg: "bg-pink-600" };
+    case "REFUND_COMPLETED": return { text: "Refund Completed", bg: "bg-emerald-600" };
+    case "RETURNED": return { text: "Returned", bg: "bg-purple-600" };
+    default: return null;
+  }
 };
 
 const fadeUp = {
@@ -45,12 +45,10 @@ export default function OrderDetails() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Cancel Modal State
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [selectedItemsToCancel, setSelectedItemsToCancel] = useState([]);
   const [cancelLoading, setCancelLoading] = useState(false);
 
-  // Return Modal State
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [selectedItemsToReturn, setSelectedItemsToReturn] = useState([]);
   const [returnLoading, setReturnLoading] = useState(false);
@@ -110,13 +108,11 @@ export default function OrderDetails() {
     );
   }
 
-  const activeStep = getStepIndex(order?.orderStatus);
   const isDelivered = order?.orderStatus === "DELIVERED";
   const isFullyCancelled = order?.orderStatus === "CANCELLED";
 
   const eligibleItemsForCancellation = order?.orderItems?.filter(item => item.itemStatus !== "CANCELLED" && item.itemStatus !== "DELIVERED") || [];
   
-  // Filter for items that are delivered, not already returned, and within 7 days
   const eligibleItemsForReturn = order?.orderItems?.filter(item => {
     if (item.itemStatus !== "DELIVERED") return false;
     const { isEligible } = checkReturnEligibility(item.deliveryDate || order.deliveryDate);
@@ -126,7 +122,6 @@ export default function OrderDetails() {
   return (
     <div className="min-h-screen pb-24 relative" style={{ background: "linear-gradient(160deg, #fdf8f4 0%, #f5f0eb 100%)" }}>
       
-      {/* ── CANCELLATION MODAL ── */}
       <AnimatePresence>
         {isCancelModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
@@ -158,7 +153,6 @@ export default function OrderDetails() {
         )}
       </AnimatePresence>
 
-      {/* ── RETURN MODAL ── */}
       <AnimatePresence>
         {isReturnModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
@@ -221,33 +215,45 @@ export default function OrderDetails() {
               <button onClick={() => setIsReturnModalOpen(true)} className="text-xs font-bold px-4 py-2 rounded-xl text-purple-600 bg-purple-50 border border-purple-200 hover:bg-purple-100">Request Return</button>
             )}
           </div>
-          <div className="px-6 py-8 overflow-x-auto"><OrderTracker activeStep={activeStep} /></div>
+          <div className="px-6 py-8 overflow-x-auto">
+            <OrderTracker status={order?.orderStatus} />
+          </div>
         </motion.div>
 
         <div className="space-y-4">
           {order?.orderItems?.map((item, i) => {
             const isItemCancelled = item.itemStatus === "CANCELLED";
-            const isReturnRequested = item.itemStatus === "RETURN_REQUESTED";
+            const returnBadge = getReturnBadgeConfig(item.itemStatus);
             const { isEligible, daysLeft } = checkReturnEligibility(item.deliveryDate || order?.deliveryDate);
             
             return (
               <motion.div key={item.id || i} variants={fadeUp} initial="hidden" animate="show" custom={3 + i} className={`bg-white rounded-2xl border overflow-hidden ${isItemCancelled ? 'opacity-70 grayscale-[30%]' : ''}`} style={{ borderColor: "#e8ddd5" }}>
                 <div className="flex flex-col sm:flex-row relative">
+                  
                   {isItemCancelled && <div className="absolute top-4 left-4 z-10 bg-red-600 text-white text-[10px] font-black uppercase px-3 py-1 rounded-full shadow-md">Cancelled</div>}
-                  {isReturnRequested && <div className="absolute top-4 left-4 z-10 bg-purple-600 text-white text-[10px] font-black uppercase px-3 py-1 rounded-full shadow-md">Return Requested</div>}
+                  {returnBadge && <div className={`absolute top-4 left-4 z-10 ${returnBadge.bg} text-white text-[10px] font-black uppercase px-3 py-1 rounded-full shadow-md`}>{returnBadge.text}</div>}
 
-                  <div className="w-full sm:w-36 h-44 sm:h-auto shrink-0 overflow-hidden" style={{ background: "#f9f3ed" }}>
+                  <div 
+                    onClick={() => navigate(`/product/${item?.product?.id}`)} 
+                    className="w-full sm:w-36 h-44 sm:h-auto shrink-0 overflow-hidden cursor-pointer" 
+                    style={{ background: "#f9f3ed" }}
+                  >
                     <img src={item?.product?.imageUrl} alt={item?.product?.title} className="w-full h-full object-cover object-top hover:scale-105 transition-transform" />
                   </div>
+                  
                   <div className="flex-1 p-5 flex flex-col sm:flex-row justify-between gap-4">
                     <div className="space-y-2">
                       <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "#c8742a" }}>{item?.product?.brand}</p>
-                      <h3 className={`font-bold text-base leading-snug ${isItemCancelled ? 'text-gray-500 line-through' : 'text-[#1a1109]'}`}>{item?.product?.title}</h3>
+                      <h3 
+                        onClick={() => navigate(`/product/${item?.product?.id}`)} 
+                        className={`font-bold text-base leading-snug cursor-pointer hover:underline ${isItemCancelled ? 'text-gray-500 line-through' : 'text-[#1a1109]'}`}
+                      >
+                        {item?.product?.title}
+                      </h3>
                       <div className="flex items-center gap-3 pt-1">
                         <p className={`font-black text-lg ${isItemCancelled ? 'text-gray-400 line-through' : 'text-[#1a1109]'}`}>₹{item?.discountedPrice || item?.price}</p>
                       </div>
                       
-                      {/* Dynamic Delivery / Return Status text */}
                       {item.itemStatus === "DELIVERED" && (
                         <p className={`text-xs font-bold ${isEligible ? 'text-green-600' : 'text-gray-400'}`}>
                           {isEligible ? `Return eligible for ${daysLeft} more days` : "Return window closed"}

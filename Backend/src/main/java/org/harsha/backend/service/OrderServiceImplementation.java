@@ -198,6 +198,7 @@ public class OrderServiceImplementation implements OrderService {
     @Transactional
     public Order returnOrderItems(Long orderId, List<Long> itemIdsToReturn) throws OrderException {
         Order order = findOrderById(orderId);
+        boolean hasReturnRequest = false;
 
         for (OrderItem item : order.getOrderItems()) {
             // Only process items that are requested AND currently marked as DELIVERED
@@ -211,15 +212,89 @@ public class OrderServiceImplementation implements OrderService {
                     isEligible = order.getDeliveryDate().plusDays(7).isAfter(LocalDate.now());
                 }
 
-                // Allow return if within 7 days, or if legacy data has no delivery dates
+                // Process the return if eligible or if legacy data is missing timestamps
                 if (isEligible || (item.getDeliveryDate() == null && order.getDeliveryDate() == null)) {
                     item.setItemStatus("RETURN_REQUESTED");
+                    hasReturnRequest = true;
                 }
             }
         }
 
-        // Optional: If you want the whole order to show as "Return Requested" when all items are returned
-        // you could add that logic here similar to the cancel logic above.
+        // Escalate the status to the parent Order so the Admin Dashboard catches it immediately
+        if (hasReturnRequest) {
+            order.setOrderStatus("RETURN_REQUESTED");
+        }
+
+        return orderRepository.save(order);
+    }
+
+    @Override
+    public Order returnPickedOrder(Long orderId) throws OrderException {
+        Order order = findOrderById(orderId);
+        order.setOrderStatus("RETURN_PICKED");
+
+        for (OrderItem item : order.getOrderItems()) {
+            if ("RETURN_REQUESTED".equals(item.getItemStatus())) {
+                item.setItemStatus("RETURN_PICKED");
+            }
+        }
+        return orderRepository.save(order);
+    }
+
+    @Override
+    public Order returnReceivedOrder(Long orderId) throws OrderException {
+        Order order = findOrderById(orderId);
+        order.setOrderStatus("RETURN_RECEIVED");
+
+        for (OrderItem item : order.getOrderItems()) {
+            if ("RETURN_PICKED".equals(item.getItemStatus())) {
+                item.setItemStatus("RETURN_RECEIVED");
+            }
+        }
+        return orderRepository.save(order);
+    }
+
+    @Override
+    public Order refundInitiatedOrder(Long orderId) throws OrderException {
+        Order order = findOrderById(orderId);
+        order.setOrderStatus("REFUND_INITIATED");
+
+        for (OrderItem item : order.getOrderItems()) {
+            if ("RETURN_RECEIVED".equals(item.getItemStatus())) {
+                item.setItemStatus("REFUND_INITIATED");
+            }
+        }
+        return orderRepository.save(order);
+    }
+
+    @Override
+    @Transactional
+    public Order refundCompletedOrder(Long orderId) throws OrderException {
+        Order order = findOrderById(orderId);
+
+        boolean allRefundedOrCancelled = true;
+        boolean hasKeptItems = false;
+
+        for (OrderItem item : order.getOrderItems()) {
+            if ("REFUND_INITIATED".equals(item.getItemStatus())) {
+                item.setItemStatus("REFUND_COMPLETED");
+            }
+
+            String status = item.getItemStatus();
+            if (!"REFUND_COMPLETED".equals(status) && !"CANCELLED".equals(status)) {
+                allRefundedOrCancelled = false;
+            }
+            if ("DELIVERED".equals(status)) {
+                hasKeptItems = true;
+            }
+        }
+
+        // Parent Order Status Resolution
+        if (allRefundedOrCancelled) {
+            order.setOrderStatus("REFUND_COMPLETED");
+        } else if (hasKeptItems) {
+            order.setOrderStatus("DELIVERED"); // Revert back so the customer's kept items are accurate
+        }
 
         return orderRepository.save(order);
     }

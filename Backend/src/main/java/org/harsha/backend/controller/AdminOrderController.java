@@ -35,7 +35,7 @@ public class AdminOrderController {
      *
      * @return list of all Order entities
      */
-    @GetMapping("/")
+    @GetMapping({"", "/"})
     public ResponseEntity<List<Order>> getAllOrders() {
 
         List<Order> orders = orderService.getAllOrders();
@@ -121,5 +121,41 @@ public class AdminOrderController {
         orderService.deleteOrder(orderId);
         return ResponseEntity.status(HttpStatus.ACCEPTED)
                 .body(new ApiResponse("Order deleted successfully", true));
+    }
+
+    @PutMapping("/{orderId}/return-picked")
+    public ResponseEntity<Order> returnPickedOrder(
+            @PathVariable Long orderId,
+            @RequestHeader("Authorization") String jwt) throws OrderException {
+
+        Order order = orderService.returnPickedOrder(orderId);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(order);
+    }
+
+    @PutMapping("/{orderId}/return-received")
+    public ResponseEntity<Order> returnReceivedOrder(
+            @PathVariable Long orderId,
+            @RequestHeader("Authorization") String jwt) throws OrderException {
+
+        Order order = orderService.returnReceivedOrder(orderId);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(order);
+    }
+
+    @PutMapping("/{orderId}/refund-initiated")
+    public ResponseEntity<Order> refundInitiatedOrder(
+            @PathVariable Long orderId,
+            @RequestHeader("Authorization") String jwt) throws OrderException {
+
+        Order order = orderService.refundInitiatedOrder(orderId);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(order);
+    }
+
+    @PutMapping("/{orderId}/refund-completed")
+    public ResponseEntity<Order> refundCompletedOrder(
+            @PathVariable Long orderId,
+            @RequestHeader("Authorization") String jwt) throws OrderException {
+
+        Order order = orderService.refundCompletedOrder(orderId);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(order);
     }
 }
