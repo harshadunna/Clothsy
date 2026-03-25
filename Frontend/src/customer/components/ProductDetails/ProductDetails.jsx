@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { RadioGroup } from "@headlessui/react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
+import { CheckCircleIcon, ShoppingBagIcon, BoltIcon } from "@heroicons/react/24/solid"; // ➕ Imported icons
 
 import ProductReviewCard from "./ProductReviewCard";
 import { findProductById } from "../../../Redux/Customers/Product/Action";
@@ -51,6 +52,7 @@ export default function ProductDetails() {
   const [selectedSize, setSelectedSize] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [showToast, setShowToast] = useState(false); // ➕ State for success notification
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -59,6 +61,11 @@ export default function ProductDetails() {
   const customersProduct = useSelector((store) => store.customersProduct);
   const auth = useSelector((store) => store.auth);
   const product = customersProduct?.product;
+
+  // ── FIX: Scroll to top when this component mounts ──
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [productId]);
 
   useEffect(() => {
     if (productId) dispatch(findProductById(productId));
@@ -71,13 +78,14 @@ export default function ProductDetails() {
     }
   }, [product]);
 
-  const handleAddToCart = async (e) => {
-    e.preventDefault();
+  // ── FIX: Split into two actions (Add vs Buy) ──
+  const handleAddToCart = async (shouldRedirect = false) => {
     if (!auth.user) {
       navigate("/login");
       return;
     }
-    if (!selectedSize) return;
+    if (!selectedSize || product.quantity <= 0 || selectedSize.quantity <= 0) return;
+    
     setAddingToCart(true);
     try {
       await dispatch(
@@ -89,8 +97,15 @@ export default function ProductDetails() {
           },
         })
       );
-      await dispatch(getCart());
-      navigate("/cart");
+      await dispatch(getCart()); // Updates the Navbar badge instantly
+      
+      if (shouldRedirect) {
+        navigate("/cart"); // Buy Now route
+      } else {
+        // Add to Cart route (Show toast, stay on page)
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+      }
     } catch (error) {
       console.error("Failed to add to cart:", error);
     } finally {
@@ -98,12 +113,6 @@ export default function ProductDetails() {
     }
   };
 
-  // ---------------------------------------------------------------------------
-  // Rating Metrics
-  // FIX: reviews now carry a 'rating' field, so we derive all metrics from
-  // product.reviews instead of maintaining two separate arrays (ratings/reviews).
-  // Safe null checks prevent "undefined Reviews" flashing on first render.
-  // ---------------------------------------------------------------------------
   const reviews = product?.reviews || [];
   const totalReviews = reviews.length;
 
@@ -114,12 +123,6 @@ export default function ProductDetails() {
         ).toFixed(1)
       : 0;
 
-  /**
-   * FIX: Previously used product?.ratings (a separate entity list) for the
-   * progress bars. Now we read from product?.reviews since each review carries
-   * its own rating. This eliminates the mismatch between rating count and
-   * review count.
-   */
   const getRatingCount = (star) =>
     reviews.filter((r) => Math.round(r.rating) === star).length;
 
@@ -138,10 +141,29 @@ export default function ProductDetails() {
       ? [product.imageUrl]
       : [];
 
+  const isOutOfStock = product.quantity <= 0;
+
   return (
-    <div className="bg-gray-50 min-h-screen pb-20">
+    <div className="bg-gray-50 min-h-screen pb-20 relative">
+      
+      {/* ── Toast Notification ── */}
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            className="fixed top-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl"
+          >
+            <CheckCircleIcon className="w-6 h-6 text-green-400" />
+            <span className="font-medium text-sm">Added to your cart!</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         <div className="lg:grid lg:grid-cols-2 lg:gap-x-12 xl:gap-x-16">
+          
           {/* Image Gallery */}
           <div className="flex flex-col-reverse lg:flex-row gap-4 lg:gap-6">
             <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 w-full lg:w-24 shrink-0">
@@ -193,50 +215,66 @@ export default function ProductDetails() {
               </div>
               <div className="flex items-center gap-2">
                 <CustomRating value={averageRating} />
-                {/* FIX: Use totalReviews (safe) instead of product?.ratings?.length */}
                 <span className="text-sm text-indigo-600 font-medium">
                   {totalReviews} {totalReviews === 1 ? "Rating" : "Ratings"}
                 </span>
               </div>
             </div>
 
-            <form
-              className="mt-10 border-t border-gray-200 pt-8"
-              onSubmit={handleAddToCart}
-            >
+            <div className="mt-10 border-t border-gray-200 pt-8">
               <RadioGroup value={selectedSize} onChange={setSelectedSize}>
                 <div className="grid grid-cols-5 gap-3">
                   {product.sizes.map((size) => (
                     <RadioGroup.Option
                       key={size.name}
                       value={size}
-                      disabled={size.quantity <= 0}
+                      disabled={size.quantity <= 0 || isOutOfStock}
                       className={({ checked }) =>
                         classNames(
-                          size.quantity > 0
+                          size.quantity > 0 && !isOutOfStock
                             ? "cursor-pointer bg-white"
                             : "cursor-not-allowed bg-gray-50 text-gray-300",
-                          checked
+                          checked && size.quantity > 0 && !isOutOfStock
                             ? "ring-2 ring-indigo-600"
                             : "ring-1 ring-gray-200",
-                          "relative flex items-center justify-center rounded-xl py-3 text-sm font-semibold uppercase"
+                          "relative flex items-center justify-center rounded-xl py-3 text-sm font-semibold uppercase transition-all duration-200"
                         )
                       }
                     >
-                      <span>{size.name}</span>
+                      <span className={size.quantity <= 0 || isOutOfStock ? "line-through opacity-50" : ""}>
+                        {size.name}
+                      </span>
                     </RadioGroup.Option>
                   ))}
                 </div>
               </RadioGroup>
 
-              <button
-                type="submit"
-                disabled={addingToCart}
-                className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-8 py-4 text-white font-bold hover:bg-indigo-700 disabled:opacity-70"
-              >
-                {addingToCart ? "Adding..." : "Add to Cart"}
-              </button>
-            </form>
+              {/* ── Dual Buttons for E-commerce Best Practices ── */}
+              {isOutOfStock ? (
+                <div className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-gray-200 px-8 py-4 text-gray-500 font-bold cursor-not-allowed">
+                  Out of Stock
+                </div>
+              ) : (
+                <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <button
+                    onClick={() => handleAddToCart(false)}
+                    disabled={addingToCart || (selectedSize && selectedSize.quantity <= 0)}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-indigo-600 bg-white px-8 py-3.5 text-indigo-600 font-bold hover:bg-indigo-50 transition-colors disabled:opacity-50"
+                  >
+                    <ShoppingBagIcon className="w-5 h-5" />
+                    Add to Cart
+                  </button>
+                  <button
+                    onClick={() => handleAddToCart(true)}
+                    disabled={addingToCart || (selectedSize && selectedSize.quantity <= 0)}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-8 py-3.5 text-white font-bold hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                  >
+                    <BoltIcon className="w-5 h-5" />
+                    Buy Now
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -255,7 +293,6 @@ export default function ProductDetails() {
           </div>
 
           <div className="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-12">
-            {/* Summary Panel */}
             <div className="lg:col-span-4">
               <div className="flex items-center gap-4 mb-6">
                 <div className="text-5xl font-extrabold text-gray-900">
@@ -263,46 +300,19 @@ export default function ProductDetails() {
                 </div>
                 <div>
                   <CustomRating value={averageRating} />
-                  {/* FIX: product?.reviews?.length replaced with totalReviews — safe, no flash */}
                   <p className="text-sm text-gray-500 mt-1">
                     {totalReviews} {totalReviews === 1 ? "Review" : "Reviews"}
                   </p>
                 </div>
               </div>
 
-              <ProgressBar
-                label="5 Star"
-                percentage={totalReviews ? (getRatingCount(5) / totalReviews) * 100 : 0}
-                count={getRatingCount(5)}
-                colorClass="bg-green-500"
-              />
-              <ProgressBar
-                label="4 Star"
-                percentage={totalReviews ? (getRatingCount(4) / totalReviews) * 100 : 0}
-                count={getRatingCount(4)}
-                colorClass="bg-green-400"
-              />
-              <ProgressBar
-                label="3 Star"
-                percentage={totalReviews ? (getRatingCount(3) / totalReviews) * 100 : 0}
-                count={getRatingCount(3)}
-                colorClass="bg-yellow-400"
-              />
-              <ProgressBar
-                label="2 Star"
-                percentage={totalReviews ? (getRatingCount(2) / totalReviews) * 100 : 0}
-                count={getRatingCount(2)}
-                colorClass="bg-orange-400"
-              />
-              <ProgressBar
-                label="1 Star"
-                percentage={totalReviews ? (getRatingCount(1) / totalReviews) * 100 : 0}
-                count={getRatingCount(1)}
-                colorClass="bg-red-500"
-              />
+              <ProgressBar label="5 Star" percentage={totalReviews ? (getRatingCount(5) / totalReviews) * 100 : 0} count={getRatingCount(5)} colorClass="bg-green-500" />
+              <ProgressBar label="4 Star" percentage={totalReviews ? (getRatingCount(4) / totalReviews) * 100 : 0} count={getRatingCount(4)} colorClass="bg-green-400" />
+              <ProgressBar label="3 Star" percentage={totalReviews ? (getRatingCount(3) / totalReviews) * 100 : 0} count={getRatingCount(3)} colorClass="bg-yellow-400" />
+              <ProgressBar label="2 Star" percentage={totalReviews ? (getRatingCount(2) / totalReviews) * 100 : 0} count={getRatingCount(2)} colorClass="bg-orange-400" />
+              <ProgressBar label="1 Star" percentage={totalReviews ? (getRatingCount(1) / totalReviews) * 100 : 0} count={getRatingCount(1)} colorClass="bg-red-500" />
             </div>
 
-            {/* Review Cards */}
             <div className="lg:col-span-8 space-y-6">
               {reviews.length === 0 ? (
                 <div className="text-center py-16 text-gray-400">

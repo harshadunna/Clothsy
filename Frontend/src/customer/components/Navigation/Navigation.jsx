@@ -2,6 +2,7 @@ import { Fragment, useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { logout, getUser } from '../../../Redux/Auth/Action'
+import { getCart } from '../../../Redux/Customers/Cart/Action' // ➕ Added getCart import
 import {
   Dialog, DialogBackdrop, DialogPanel,
   Popover, PopoverButton, PopoverGroup, PopoverPanel,
@@ -21,9 +22,13 @@ export default function Navigation() {
   const cart = useSelector((store) => store.cart);
   const jwt = localStorage.getItem("jwt")
 
+  // ── FIX: Fetch the user AND their cart when the app loads ──
   useEffect(() => {
-    if (jwt) dispatch(getUser(jwt))
-  }, [jwt])
+    if (jwt) {
+      dispatch(getUser(jwt));
+      dispatch(getCart()); // Fetch cart so the badge shows immediately
+    }
+  }, [jwt, dispatch])
 
   const openAuthModel = location.pathname === "/login" || location.pathname === "/register"
   const handleClose = () => navigate("/")
@@ -126,7 +131,6 @@ export default function Navigation() {
               </TabPanels>
             </TabGroup>
 
-            {/* ── Fix: page.id "/" was causing "//" ── */}
             <div className="space-y-4 border-t border-gray-100 px-4 py-6">
               {navigation.pages.map((page) => (
                 <Link
@@ -265,7 +269,6 @@ export default function Navigation() {
                     </Popover>
                   ))}
 
-                  {/* ── Fix: page.id "/" was causing "//" ── */}
                   {navigation.pages.map((page) => (
                     <Link
                       key={page.name}

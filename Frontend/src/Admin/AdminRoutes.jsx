@@ -4,6 +4,7 @@ import AdminDashboard from "./components/AdminDashboard";
 import CreateProduct from "./components/CreateProduct";
 import AdminOrders from "./components/AdminOrders";
 import AdminProducts from "./components/AdminProducts"; 
+import UpdateProduct from "./components/UpdateProduct";
 
 export default function AdminRoutes() {
   return (
@@ -15,6 +16,7 @@ export default function AdminRoutes() {
         <Routes>
           <Route path="/" element={<AdminDashboard />} />
           <Route path="/product/create" element={<CreateProduct />} />
+          <Route path="/product/update/:productId" element={<UpdateProduct />} /> {/* ➕ Add this route */}
           <Route path="/orders" element={<AdminOrders />} />
           <Route path="/products" element={<AdminProducts />} />
         </Routes>

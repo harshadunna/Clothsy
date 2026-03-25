@@ -110,28 +110,26 @@ public class ProductServiceImplementation implements ProductService {
     public Product updateProduct(Long productId, Product req) throws ProductException {
         Product product = findProductById(productId);
 
-        // ── Update quantity if provided ──────────────────────────────────────
-        if (req.getQuantity() != 0) {
-            product.setQuantity(req.getQuantity());
-        }
+        // ── Update Text Fields ─────────────────────────────────────────────
+        if (req.getTitle() != null) product.setTitle(req.getTitle());
+        if (req.getDescription() != null) product.setDescription(req.getDescription());
+        if (req.getBrand() != null) product.setBrand(req.getBrand());
+        if (req.getColor() != null) product.setColor(req.getColor());
+        if (req.getImageUrl() != null) product.setImageUrl(req.getImageUrl());
 
-        // ── Update description if provided ───────────────────────────────────
-        if (req.getDescription() != null) {
-            product.setDescription(req.getDescription());
-        }
+        // ── Update Pricing & Inventory (Now safely allows 0 for Out of Stock) ──
+        product.setPrice(req.getPrice());
+        product.setDiscountedPrice(req.getDiscountedPrice());
+        product.setDiscountPercent(req.getDiscountPercent());
+        product.setQuantity(req.getQuantity());
 
-        // ── Update sizes if provided ─────────────────────────────────────────
-        if (req.getSizes() != null && !req.getSizes().isEmpty()) {
+        // ── Update Sizes ───────────────────────────────────────────────────
+        if (req.getSizes() != null) {
             product.getSizes().clear();
             product.getSizes().addAll(req.getSizes());
         }
 
-        // ── Update single imageUrl if provided ───────────────────────────────
-        if (req.getImageUrl() != null) {
-            product.setImageUrl(req.getImageUrl());
-        }
-
-        // ── Update multiple images if provided ───────────────────────────────
+        // ── Update Multiple Images ─────────────────────────────────────────
         if (req.getImages() != null) {
             product.getImages().clear();
             product.getImages().addAll(req.getImages());
