@@ -1,5 +1,6 @@
 package org.harsha.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -11,10 +12,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.harsha.backend.model.Size;
-import org.harsha.backend.model.Rating;
-import org.harsha.backend.model.Review;
-import org.harsha.backend.model.Category;
 
 @Entity
 @Table(name = "products")
@@ -29,8 +26,10 @@ public class Product {
     private Long id;
 
     private String title;
+
     @Column(columnDefinition = "TEXT")
     private String description;
+
     private int price;
     private int discountedPrice;
     private int discountPercent;
@@ -38,10 +37,8 @@ public class Product {
     private String brand;
     private String color;
 
-    /** Primary image URL — kept for backward compatibility */
     private String imageUrl;
 
-    /** Multiple image URLs for the product gallery */
     @ElementCollection
     @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "image_url")
@@ -55,6 +52,19 @@ public class Product {
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Review> reviews = new ArrayList<>();
+
+    // ── NEW CASCADE RELATIONSHIPS ──────────────────────────────────────────
+    // These tell the database to automatically clean up carts and past orders
+    // if the admin decides to permanently delete a product.
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<CartItem> cartItems = new ArrayList<>();
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<OrderItem> orderItems = new ArrayList<>();
+    // ───────────────────────────────────────────────────────────────────────
 
     private int numRatings;
 
