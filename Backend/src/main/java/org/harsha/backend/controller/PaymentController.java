@@ -9,6 +9,7 @@ import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import com.stripe.param.checkout.SessionCreateParams;
 import org.harsha.backend.model.Order;
+import org.harsha.backend.service.EmailApiService;
 import org.harsha.backend.service.OrderService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,7 @@ import java.util.Map;
 public class PaymentController {
 
     private final OrderService orderService;
+    private final EmailApiService emailApiService; // ── 1. INJECT EMAIL SERVICE ──
 
     @Value("${stripe.api.key}")
     private String stripeSecretKey;
@@ -30,8 +32,10 @@ public class PaymentController {
     @Value("${stripe.webhook.secret}")
     private String endpointSecret;
 
-    public PaymentController(OrderService orderService) {
+    // ── 2. UPDATE CONSTRUCTOR ──
+    public PaymentController(OrderService orderService, EmailApiService emailApiService) {
         this.orderService = orderService;
+        this.emailApiService = emailApiService;
     }
 
     @PostMapping("/{orderId}")
@@ -82,14 +86,14 @@ public class PaymentController {
             try {
                 String orderIdStr = null;
 
-                // 1. Try standard Stripe Deserialization
+                // Try standard Stripe Deserialization
                 if (event.getDataObjectDeserializer().getObject().isPresent()) {
                     Session session = (Session) event.getDataObjectDeserializer().getObject().get();
                     if (session.getMetadata() != null) {
                         orderIdStr = session.getMetadata().get("order_id");
                     }
                 }
-                // 2. FALLBACK: If API versions mismatch, parse the raw JSON directly
+                // FALLBACK: Parse the raw JSON directly
                 else {
                     ObjectMapper mapper = new ObjectMapper();
                     JsonNode node = mapper.readTree(event.getDataObjectDeserializer().getRawJson());
@@ -98,18 +102,23 @@ public class PaymentController {
                     }
                 }
 
-                // 3. Process the Order
+                // Process the Order
                 if (orderIdStr != null) {
                     Long orderId = Long.parseLong(orderIdStr);
-                    orderService.placedOrder(orderId);
+
+                    // ── 3. CAPTURE THE UPDATED ORDER OBJECT ──
+                    Order confirmedOrder = orderService.placedOrder(orderId);
                     System.out.println("SUCCESS: Order #" + orderId + " is now marked as PLACED. Inventory deducted.");
+
+                    // ── 4. FIRE THE EMAIL API ──
+                    emailApiService.sendOrderUpdateEmail(confirmedOrder, "PLACED");
+
                 } else {
                     System.err.println("WEBHOOK ALERT: Session completed but no order_id found in metadata.");
                 }
 
             } catch (Exception e) {
                 System.err.println("WEBHOOK ERROR processing session: " + e.getMessage());
-                // We return OK so Stripe doesn't infinitely retry a broken payload
                 return ResponseEntity.ok("Processed with internal errors");
             }
         }

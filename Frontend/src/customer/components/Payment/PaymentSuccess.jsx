@@ -1,11 +1,27 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useDispatch } from "react-redux"; // ➕ Added
 import api from "../../../config/api";
+import { clearCart } from "../../../Redux/Customers/Cart/Action"; // ➕ Added
+
+const checkReturnEligibility = (deliveryDateString) => {
+  if (!deliveryDateString) return { isEligible: true, daysLeft: 7 };
+  const deliveryDate = new Date(deliveryDateString);
+  const today = new Date();
+  const diffTime = today - deliveryDate;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const daysLeft = 7 - diffDays;
+  return {
+    isEligible: daysLeft >= 0,
+    daysLeft: daysLeft < 0 ? 0 : daysLeft,
+  };
+};
 
 export default function PaymentSuccess() {
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch(); // ➕ Added
   const [status, setStatus] = useState("updating");
   const [orderData, setOrderData] = useState(null);
 
@@ -13,13 +29,13 @@ export default function PaymentSuccess() {
   const orderId = queryParams.get("order_id");
 
   useEffect(() => {
+    // 1. Instantly clear the cart in Redux state when success page mounts
+    dispatch(clearCart());
+
     if (orderId) {
-      // ── SECURE FLOW ──
-      // We no longer call update_payment from the frontend.
-      // The Stripe Webhook handles the database update securely.
       const fetchOrderDetails = async () => {
         try {
-          // We wait 1.5 seconds to ensure the Webhook has processed the "Success" signal
+          // 2. Wait 1.5s to ensure the Stripe Webhook has finished updating the DB
           setTimeout(async () => {
             try {
               const res = await api.get(`/api/orders/${orderId}`);
@@ -37,10 +53,9 @@ export default function PaymentSuccess() {
 
       fetchOrderDetails();
     }
-  }, [orderId]);
+  }, [orderId, dispatch]);
 
   const steps = ["Placed", "Confirmed", "Shipped", "Out for Delivery", "Delivered"];
-  // Since the webhook just marked it as PLACED/CONFIRMED, we show the second step
   const currentStepIndex = 1;
 
   const getExpectedDelivery = () => {
@@ -78,15 +93,15 @@ export default function PaymentSuccess() {
           <div className="flex flex-col items-center py-20">
             <div className="w-16 h-16 rounded-full border-4 border-t-transparent animate-spin mb-6" style={{ borderColor: "#fdf0e6", borderTopColor: "#c8742a" }} />
             <h1 className="text-xl font-bold text-gray-700">Securing your order...</h1>
-            <p className="text-sm text-gray-400 mt-2 text-center px-4">We are verifying your payment with Stripe. One moment please.</p>
+            <p className="text-sm text-gray-400 mt-2 text-center px-4">Verifying your payment with Stripe.</p>
           </div>
         ) : status === "error" ? (
           <div className="flex flex-col items-center py-20">
             <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6">
                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </div>
-            <h1 className="text-xl font-bold text-gray-900 text-center">We couldn't find your order details.</h1>
-            <p className="text-sm text-gray-500 mt-2 text-center max-w-xs">Don't worry, if your payment was successful, your order will appear in your account shortly.</p>
+            <h1 className="text-xl font-bold text-gray-900 text-center">Order processing...</h1>
+            <p className="text-sm text-gray-500 mt-2 text-center max-w-xs">If payment was successful, your order will appear in your account history shortly.</p>
             <button onClick={() => navigate("/account/orders")} className="mt-8 text-indigo-600 font-bold hover:underline">Go to My Orders &rarr;</button>
           </div>
         ) : (
@@ -107,10 +122,10 @@ export default function PaymentSuccess() {
               Order <span className="font-bold text-[#c8742a]">#{orderId}</span> placed on {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </p>
             <p className="text-gray-400 text-xs mb-8 text-center print:hidden">
-              A confirmation email will be sent to your registered email address.
+              A confirmation email will be sent shortly.
             </p>
 
-            {/* --- ANIMATED TRACKER --- */}
+            {/* Tracker */}
             <div className="w-full max-w-2xl relative mb-20 px-2 sm:px-6 print:hidden">
               <div className="absolute left-[10%] right-[10%] top-5 h-1.5 bg-gray-100 rounded-full"></div>
               <motion.div
@@ -143,7 +158,7 @@ export default function PaymentSuccess() {
               </div>
             </div>
 
-            {/* --- DELIVERY BANNER --- */}
+            {/* Delivery Banner */}
             <motion.div
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
               className="w-full bg-[#fff9f4] border border-[#fdf0e6] rounded-2xl p-4 mb-8 flex items-center justify-center gap-3 text-[#c8742a]"
@@ -152,13 +167,13 @@ export default function PaymentSuccess() {
               <p className="font-semibold text-sm sm:text-base">Expected Delivery: <span className="font-black">{getExpectedDelivery()}</span></p>
             </motion.div>
 
-            {/* --- ORDER DETAILS --- */}
+            {/* Summary Grid */}
             <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
               <div className="lg:col-span-2 space-y-4">
                 <h3 className="text-lg font-bold text-gray-900 border-b pb-2">Items in this order</h3>
                 <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar print:max-h-none print:overflow-visible">
                   {orderData?.orderItems?.map((item, index) => (
-                    <div key={index} className="flex gap-4 p-3 bg-white border border-gray-100 rounded-xl transition-all">
+                    <div key={index} className="flex gap-4 p-3 bg-white border border-gray-100 rounded-xl">
                       <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-50 border border-gray-100">
                         <img src={item?.product?.imageUrl} alt="product" className="w-full h-full object-cover object-top" />
                       </div>
@@ -193,8 +208,8 @@ export default function PaymentSuccess() {
 
                 {orderData?.shippingAddress && (
                   <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                    <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2 text-gray-400">
-                      Shipping Address
+                    <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2 text-gray-400 uppercase tracking-widest">
+                      Address
                     </h3>
                     <div className="text-sm text-gray-600 space-y-1">
                       <p className="font-bold text-gray-900">{orderData.shippingAddress.firstName} {orderData.shippingAddress.lastName}</p>

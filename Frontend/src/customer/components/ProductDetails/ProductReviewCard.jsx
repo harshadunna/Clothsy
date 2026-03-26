@@ -15,7 +15,7 @@ const StarIcon = ({ filled }) => (
 const CustomRating = ({ value }) => (
   <div className="flex items-center gap-0.5">
     {[1, 2, 3, 4, 5].map((star) => (
-      <StarIcon key={star} filled={star <= Math.round(value)} />
+      <StarIcon key={star} filled={star <= Math.round(Number(value))} />
     ))}
   </div>
 );
@@ -32,13 +32,8 @@ const ProductReviewCard = ({ item }) => {
       })
     : "Recent";
 
-  /**
-   * FIX: Use item.rating directly from the Review entity.
-   * Previously this was hardcoded to 5, which was wrong for every review
-   * that wasn't actually 5 stars. Now that the Review entity has a 'rating'
-   * field, we read it here. Falls back to 0 if somehow missing.
-   */
-  const ratingValue = item?.rating || 0;
+  // Forced Number conversion to handle double/float from backend
+  const ratingValue = Number(item?.rating || 0);
 
   return (
     <motion.div

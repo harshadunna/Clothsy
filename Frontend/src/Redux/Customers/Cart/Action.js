@@ -12,6 +12,7 @@ import {
   UPDATE_CART_ITEM_REQUEST,
   UPDATE_CART_ITEM_SUCCESS,
   UPDATE_CART_ITEM_FAILURE,
+  CLEAR_CART,
 } from "./ActionType";
 
 export const addItemToCart = (reqData) => async (dispatch) => {
@@ -74,3 +75,5 @@ export const updateCartItem = (reqData) => async (dispatch) => {
     });
   }
 };
+
+export const clearCart = () => ({ type: CLEAR_CART });

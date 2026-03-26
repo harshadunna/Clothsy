@@ -11,6 +11,7 @@ import {
   UPDATE_CART_ITEM_REQUEST,
   UPDATE_CART_ITEM_SUCCESS,
   UPDATE_CART_ITEM_FAILURE,
+  CLEAR_CART,
 } from "./ActionType";
 
 const initialState = {
@@ -22,12 +23,9 @@ const initialState = {
 
 const cartReducer = (state = initialState, action) => {
   switch (action.type) {
-    // 1. ONLY trigger the global loading screen when initially fetching the full cart
     case GET_CART_REQUEST:
       return { ...state, loading: true, error: null };
 
-    // 2. For adding, removing, or updating items, DO NOT set loading to true.
-    // This allows the Framer Motion animations to play and prevents the screen flash!
     case ADD_ITEM_TO_CART_REQUEST:
     case REMOVE_CART_ITEM_REQUEST:
     case UPDATE_CART_ITEM_REQUEST:
@@ -69,6 +67,9 @@ const cartReducer = (state = initialState, action) => {
     case REMOVE_CART_ITEM_FAILURE:
     case UPDATE_CART_ITEM_FAILURE:
       return { ...state, loading: false, error: action.payload };
+
+    case CLEAR_CART:
+      return { ...initialState };
 
     default:
       return state;
