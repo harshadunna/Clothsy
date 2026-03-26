@@ -6,6 +6,7 @@ import org.harsha.backend.model.*;
 import org.harsha.backend.repository.AddressRepository;
 import org.harsha.backend.repository.OrderItemRepository;
 import org.harsha.backend.repository.OrderRepository;
+import org.harsha.backend.repository.ProductRepository;
 import org.harsha.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,20 +28,17 @@ public class OrderServiceImplementation implements OrderService {
     private final UserRepository userRepository;
     private final OrderItemService orderItemService;
     private final OrderItemRepository orderItemRepository;
+    private final ProductRepository productRepository;
 
     @Override
-    @Transactional // Keeps the database safe during complex saves
+    @Transactional
     public Order createOrder(User user, Long addressId) {
-
-        // 1. Look up existing address — never create a new one here
         Address shippingAddress = addressRepository.findById(addressId)
                 .orElseThrow(() -> new RuntimeException("Address not found with id: " + addressId));
 
-        // 2. Fetch the user's current cart
         Cart cart = cartService.findUserCart(user.getId());
         List<OrderItem> orderItems = new ArrayList<>();
 
-        // 3. Convert each cart item into an order item snapshot
         for (CartItem item : cart.getCartItems()) {
             OrderItem orderItem = new OrderItem();
             orderItem.setPrice(item.getPrice());
@@ -49,12 +47,11 @@ public class OrderServiceImplementation implements OrderService {
             orderItem.setSize(item.getSize());
             orderItem.setUserId(item.getUserId());
             orderItem.setDiscountedPrice(item.getDiscountedPrice());
-            orderItem.setItemStatus("PENDING"); // Initialize item status
+            orderItem.setItemStatus("PENDING");
 
             orderItems.add(orderItemRepository.save(orderItem));
         }
 
-        // 4. Build the order with cart totals
         Order order = new Order();
         order.setUser(user);
         order.setOrderItems(orderItems);
@@ -67,14 +64,10 @@ public class OrderServiceImplementation implements OrderService {
         order.setOrderStatus("PENDING");
         order.getPaymentDetails().setStatus("PENDING");
         order.setCreatedAt(LocalDateTime.now());
-
-        // 5. Generate unique Order ID to prevent database crashes
         order.setOrderId(UUID.randomUUID().toString());
 
-        // 6. Save the order
         Order savedOrder = orderRepository.save(order);
 
-        // 7. Link each order item back to the saved order
         for (OrderItem item : orderItems) {
             item.setOrder(savedOrder);
             orderItemRepository.save(item);
@@ -84,10 +77,27 @@ public class OrderServiceImplementation implements OrderService {
     }
 
     @Override
+    @Transactional
     public Order placedOrder(Long orderId) throws OrderException {
         Order order = findOrderById(orderId);
         order.setOrderStatus("PLACED");
         order.getPaymentDetails().setStatus("COMPLETED");
+
+        for (OrderItem item : order.getOrderItems()) {
+            Product product = item.getProduct();
+            if (product != null) {
+                product.setQuantity(Math.max(0, product.getQuantity() - item.getQuantity()));
+
+                String purchasedSize = item.getSize();
+                for (Size sizeObj : product.getSizes()) {
+                    if (sizeObj.getName().equalsIgnoreCase(purchasedSize)) {
+                        sizeObj.setQuantity(Math.max(0, sizeObj.getQuantity() - item.getQuantity()));
+                        break;
+                    }
+                }
+                productRepository.save(product);
+            }
+        }
         return orderRepository.save(order);
     }
 
@@ -109,11 +119,8 @@ public class OrderServiceImplementation implements OrderService {
     public Order deliveredOrder(Long orderId) throws OrderException {
         Order order = findOrderById(orderId);
         order.setOrderStatus("DELIVERED");
-
-        // Record the exact day the order arrived
         order.setDeliveryDate(LocalDate.now());
 
-        // Also mark individual items as delivered and set their timestamps
         for (OrderItem item : order.getOrderItems()) {
             if (!"CANCELLED".equals(item.getItemStatus())) {
                 item.setItemStatus("DELIVERED");
@@ -124,9 +131,29 @@ public class OrderServiceImplementation implements OrderService {
     }
 
     @Override
+    @Transactional
     public Order cancledOrder(Long orderId) throws OrderException {
         Order order = findOrderById(orderId);
         order.setOrderStatus("CANCELLED");
+
+        for (OrderItem item : order.getOrderItems()) {
+            if (!"CANCELLED".equals(item.getItemStatus())) {
+                item.setItemStatus("CANCELLED");
+                Product product = item.getProduct();
+                if (product != null) {
+                    product.setQuantity(product.getQuantity() + item.getQuantity());
+
+                    String canceledSize = item.getSize();
+                    for (Size sizeObj : product.getSizes()) {
+                        if (sizeObj.getName().equalsIgnoreCase(canceledSize)) {
+                            sizeObj.setQuantity(sizeObj.getQuantity() + item.getQuantity());
+                            break;
+                        }
+                    }
+                    productRepository.save(product);
+                }
+            }
+        }
         return orderRepository.save(order);
     }
 
@@ -159,31 +186,38 @@ public class OrderServiceImplementation implements OrderService {
     @Transactional
     public Order cancelOrderItems(Long orderId, List<Long> itemIdsToCancel) throws OrderException {
         Order order = findOrderById(orderId);
-
         boolean allItemsCanceled = true;
 
         for (OrderItem item : order.getOrderItems()) {
-            // If this item is in the cancellation list and isn't already canceled
             if (itemIdsToCancel.contains(item.getId()) && !"CANCELLED".equals(item.getItemStatus())) {
-
                 item.setItemStatus("CANCELLED");
 
-                // Recalculate totals
+                Product product = item.getProduct();
+                if (product != null) {
+                    product.setQuantity(product.getQuantity() + item.getQuantity());
+
+                    String canceledSize = item.getSize();
+                    for (Size sizeObj : product.getSizes()) {
+                        if (sizeObj.getName().equalsIgnoreCase(canceledSize)) {
+                            sizeObj.setQuantity(sizeObj.getQuantity() + item.getQuantity());
+                            break;
+                        }
+                    }
+                    productRepository.save(product);
+                }
+
                 order.setTotalPrice(order.getTotalPrice() - (item.getPrice() * item.getQuantity()));
                 order.setTotalDiscountedPrice(order.getTotalDiscountedPrice() - (item.getDiscountedPrice() * item.getQuantity()));
                 order.setTotalItem(order.getTotalItem() - item.getQuantity());
             }
 
-            // Check if there are any items left that are NOT canceled
             if (!"CANCELLED".equals(item.getItemStatus())) {
                 allItemsCanceled = false;
             }
         }
 
-        // Recalculate the total discount
         order.setDiscount((int) (order.getTotalPrice() - order.getTotalDiscountedPrice()));
 
-        // If the user canceled EVERY item, mark the entire Order as CANCELLED
         if (allItemsCanceled || order.getTotalItem() <= 0) {
             order.setOrderStatus("CANCELLED");
             order.setTotalPrice(0);
@@ -201,10 +235,7 @@ public class OrderServiceImplementation implements OrderService {
         boolean hasReturnRequest = false;
 
         for (OrderItem item : order.getOrderItems()) {
-            // Only process items that are requested AND currently marked as DELIVERED
             if (itemIdsToReturn.contains(item.getId()) && "DELIVERED".equals(item.getItemStatus())) {
-
-                // Backend 7-Day Security Check
                 boolean isEligible = false;
                 if (item.getDeliveryDate() != null) {
                     isEligible = item.getDeliveryDate().plusDays(7).isAfter(LocalDateTime.now());
@@ -212,7 +243,6 @@ public class OrderServiceImplementation implements OrderService {
                     isEligible = order.getDeliveryDate().plusDays(7).isAfter(LocalDate.now());
                 }
 
-                // Process the return if eligible or if legacy data is missing timestamps
                 if (isEligible || (item.getDeliveryDate() == null && order.getDeliveryDate() == null)) {
                     item.setItemStatus("RETURN_REQUESTED");
                     hasReturnRequest = true;
@@ -220,7 +250,6 @@ public class OrderServiceImplementation implements OrderService {
             }
         }
 
-        // Escalate the status to the parent Order so the Admin Dashboard catches it immediately
         if (hasReturnRequest) {
             order.setOrderStatus("RETURN_REQUESTED");
         }
@@ -278,6 +307,20 @@ public class OrderServiceImplementation implements OrderService {
         for (OrderItem item : order.getOrderItems()) {
             if ("REFUND_INITIATED".equals(item.getItemStatus())) {
                 item.setItemStatus("REFUND_COMPLETED");
+
+                Product product = item.getProduct();
+                if (product != null) {
+                    product.setQuantity(product.getQuantity() + item.getQuantity());
+
+                    String refundedSize = item.getSize();
+                    for (Size sizeObj : product.getSizes()) {
+                        if (sizeObj.getName().equalsIgnoreCase(refundedSize)) {
+                            sizeObj.setQuantity(sizeObj.getQuantity() + item.getQuantity());
+                            break;
+                        }
+                    }
+                    productRepository.save(product);
+                }
             }
 
             String status = item.getItemStatus();
@@ -289,11 +332,10 @@ public class OrderServiceImplementation implements OrderService {
             }
         }
 
-        // Parent Order Status Resolution
         if (allRefundedOrCancelled) {
             order.setOrderStatus("REFUND_COMPLETED");
         } else if (hasKeptItems) {
-            order.setOrderStatus("DELIVERED"); // Revert back so the customer's kept items are accurate
+            order.setOrderStatus("DELIVERED");
         }
 
         return orderRepository.save(order);

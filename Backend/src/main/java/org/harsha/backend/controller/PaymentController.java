@@ -1,5 +1,7 @@
 package org.harsha.backend.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.Stripe;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
@@ -69,26 +71,46 @@ public class PaymentController {
         try {
             event = Webhook.constructEvent(payload, sigHeader, endpointSecret);
         } catch (SignatureVerificationException e) {
+            System.err.println("Webhook signature verification failed.");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Signature");
+        } catch (Exception e) {
+            System.err.println("Webhook payload parsing failed.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Webhook Error");
         }
 
         if ("checkout.session.completed".equals(event.getType())) {
-            Session session = (Session) event.getDataObjectDeserializer().getObject().get();
+            try {
+                String orderIdStr = null;
 
-            // 1. Get the ID from metadata
-            String orderIdStr = session.getMetadata().get("order_id");
-
-            if (orderIdStr != null) {
-                try {
-                    Long orderId = Long.parseLong(orderIdStr);
-                    // 2. Update the DB
-                    orderService.placedOrder(orderId);
-                    System.out.println("SUCCESS: Order #" + orderId + " is now marked as PLACED.");
-                } catch (Exception e) {
-                    // 3. Prevent the 500 error if the ID is missing from your DB
-                    System.err.println("WEBHOOK ALERT: Received payment for Order ID " + orderIdStr + " but it's not in our database.");
-                    return ResponseEntity.ok("Received but order not found");
+                // 1. Try standard Stripe Deserialization
+                if (event.getDataObjectDeserializer().getObject().isPresent()) {
+                    Session session = (Session) event.getDataObjectDeserializer().getObject().get();
+                    if (session.getMetadata() != null) {
+                        orderIdStr = session.getMetadata().get("order_id");
+                    }
                 }
+                // 2. FALLBACK: If API versions mismatch, parse the raw JSON directly
+                else {
+                    ObjectMapper mapper = new ObjectMapper();
+                    JsonNode node = mapper.readTree(event.getDataObjectDeserializer().getRawJson());
+                    if (node.has("metadata") && node.get("metadata").has("order_id")) {
+                        orderIdStr = node.get("metadata").get("order_id").asText();
+                    }
+                }
+
+                // 3. Process the Order
+                if (orderIdStr != null) {
+                    Long orderId = Long.parseLong(orderIdStr);
+                    orderService.placedOrder(orderId);
+                    System.out.println("SUCCESS: Order #" + orderId + " is now marked as PLACED. Inventory deducted.");
+                } else {
+                    System.err.println("WEBHOOK ALERT: Session completed but no order_id found in metadata.");
+                }
+
+            } catch (Exception e) {
+                System.err.println("WEBHOOK ERROR processing session: " + e.getMessage());
+                // We return OK so Stripe doesn't infinitely retry a broken payload
+                return ResponseEntity.ok("Processed with internal errors");
             }
         }
         return ResponseEntity.ok("Success");
