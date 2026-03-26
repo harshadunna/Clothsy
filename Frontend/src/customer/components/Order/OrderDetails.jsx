@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { DocumentTextIcon } from "@heroicons/react/24/outline"; // ── IMPORTED ICON ──
 import OrderTracker from "./OrderTracker";
 import AddressCard from "../Address/AddressCard";
 import api from "../../../config/api";
@@ -45,6 +46,9 @@ export default function OrderDetails() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // ── NEW: Downloading State ──
+  const [downloading, setDownloading] = useState(false);
+
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [selectedItemsToCancel, setSelectedItemsToCancel] = useState([]);
   const [cancelLoading, setCancelLoading] = useState(false);
@@ -69,6 +73,29 @@ export default function OrderDetails() {
   useEffect(() => {
     fetchOrder();
   }, [orderId]);
+
+  // ── NEW: Download Invoice Function ──
+  const handleDownloadInvoice = async () => {
+    setDownloading(true);
+    try {
+      const response = await api.get(`/api/orders/${orderId}/invoice`, {
+        responseType: 'blob' // Crucial for handling binary data (PDF)
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Invoice_Order_${orderId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Failed to download invoice:", error);
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const handleCancelSubmit = async () => {
     if (selectedItemsToCancel.length === 0) return;
@@ -186,14 +213,31 @@ export default function OrderDetails() {
       </AnimatePresence>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 space-y-6">
-        <motion.div variants={fadeUp} initial="hidden" animate="show" custom={0}>
-          <div className="flex items-center gap-3 mb-1">
-            <button onClick={() => navigate("/account/orders")} className="flex items-center gap-1.5 text-sm font-bold transition-colors" style={{ color: "#c8742a" }}>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
-              My Orders
-            </button>
+        
+        {/* ── UPDATED HEADER WITH INVOICE BUTTON ── */}
+        <motion.div variants={fadeUp} initial="hidden" animate="show" custom={0} className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <button onClick={() => navigate("/account/orders")} className="flex items-center gap-1.5 text-sm font-bold transition-colors hover:underline" style={{ color: "#c8742a" }}>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
+                My Orders
+              </button>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight" style={{ color: "#1a1109", fontFamily: "'Georgia', serif" }}>Order #{order?.id}</h1>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight" style={{ color: "#1a1109", fontFamily: "'Georgia', serif" }}>Order #{order?.id}</h1>
+
+          <button 
+            onClick={handleDownloadInvoice} 
+            disabled={downloading || isFullyCancelled}
+            className="flex items-center justify-center sm:justify-start gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-[#1a1109] bg-white border-2 border-[#1a1109] hover:bg-[#1a1109] hover:text-white transition-colors disabled:opacity-50"
+          >
+            {downloading ? (
+              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <DocumentTextIcon className="w-5 h-5" />
+            )}
+            {downloading ? "Generating..." : "Download Invoice"}
+          </button>
         </motion.div>
 
         <motion.div variants={fadeUp} initial="hidden" animate="show" custom={1} className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: "#e8ddd5", boxShadow: "0 2px 20px rgba(200,116,42,0.06)" }}>

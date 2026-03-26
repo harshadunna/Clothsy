@@ -10,6 +10,9 @@ import org.harsha.backend.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.harsha.backend.service.InvoiceService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
 import java.util.List;
 import java.util.Map;
@@ -26,6 +29,7 @@ public class OrderController {
 
     private final OrderService orderService;
     private final UserService userService;
+    private final InvoiceService invoiceService;
 
     /**
      * Places a new order using an existing saved address.
@@ -104,5 +108,29 @@ public class OrderController {
 
         Order updatedOrder = orderService.returnOrderItems(orderId, itemIdsToReturn);
         return new ResponseEntity<>(updatedOrder, HttpStatus.OK);
+    }
+
+    /**
+     * Downloads the PDF Invoice for a specific order.
+     */
+    @GetMapping("/{orderId}/invoice")
+    public ResponseEntity<byte[]> downloadInvoice(
+            @PathVariable Long orderId,
+            @RequestHeader("Authorization") String jwt) throws Exception {
+
+        // 1. Verify user and get order
+        userService.findUserProfileByJwt(jwt);
+        Order order = orderService.findOrderById(orderId);
+
+        // 2. Generate PDF
+        byte[] pdfBytes = invoiceService.generateInvoicePdf(order);
+
+        // 3. Set headers for file download
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "Invoice_Order_" + orderId + ".pdf");
+        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+        return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
     }
 }

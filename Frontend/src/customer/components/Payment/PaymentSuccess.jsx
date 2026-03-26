@@ -1,27 +1,14 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { useDispatch } from "react-redux"; // ➕ Added
+import { motion } from "framer-motion";
+import { useDispatch } from "react-redux";
 import api from "../../../config/api";
-import { clearCart } from "../../../Redux/Customers/Cart/Action"; // ➕ Added
-
-const checkReturnEligibility = (deliveryDateString) => {
-  if (!deliveryDateString) return { isEligible: true, daysLeft: 7 };
-  const deliveryDate = new Date(deliveryDateString);
-  const today = new Date();
-  const diffTime = today - deliveryDate;
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  const daysLeft = 7 - diffDays;
-  return {
-    isEligible: daysLeft >= 0,
-    daysLeft: daysLeft < 0 ? 0 : daysLeft,
-  };
-};
+import { clearCart } from "../../../Redux/Customers/Cart/Action";
 
 export default function PaymentSuccess() {
   const location = useLocation();
   const navigate = useNavigate();
-  const dispatch = useDispatch(); // ➕ Added
+  const dispatch = useDispatch();
   const [status, setStatus] = useState("updating");
   const [orderData, setOrderData] = useState(null);
 
@@ -29,7 +16,7 @@ export default function PaymentSuccess() {
   const orderId = queryParams.get("order_id");
 
   useEffect(() => {
-    // 1. Instantly clear the cart in Redux state when success page mounts
+    // 1. Instantly trigger the clearCart action which drops the DB and Redux state
     dispatch(clearCart());
 
     if (orderId) {

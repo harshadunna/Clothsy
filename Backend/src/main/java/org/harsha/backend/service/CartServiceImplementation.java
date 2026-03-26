@@ -6,6 +6,7 @@ import org.harsha.backend.model.Cart;
 import org.harsha.backend.model.CartItem;
 import org.harsha.backend.model.Product;
 import org.harsha.backend.model.User;
+import org.harsha.backend.repository.CartItemRepository; // ── ADDED
 import org.harsha.backend.repository.CartRepository;
 import org.harsha.backend.request.AddItemRequest;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ public class CartServiceImplementation implements CartService {
     private final CartItemService cartItemService;
     private final ProductService productService;
     private final UserService userService;
+    private final CartItemRepository cartItemRepository; // ── ADDED
 
     @Override
     public Cart createCart(User user) {
@@ -37,8 +39,7 @@ public class CartServiceImplementation implements CartService {
         int totalDiscountedPrice = 0;
         int totalItem = 0;
 
-        // Safely loop through items without crashing if it's completely empty
-        if (cart.getCartItems() != null) {
+        if (cart != null && cart.getCartItems() != null) {
             for (CartItem item : cart.getCartItems()) {
                 totalPrice += item.getPrice();
                 totalDiscountedPrice += item.getDiscountedPrice();
@@ -51,13 +52,11 @@ public class CartServiceImplementation implements CartService {
         cart.setDiscount(totalPrice - totalDiscountedPrice);
         cart.setTotalItem(totalItem);
 
-        // THE GOLDEN RULE: Never call cartRepository.save(cart) in a GET request!
-        // We just return the dynamically calculated cart to the frontend.
         return cart;
     }
 
     @Override
-    @Transactional // Force Spring to lock the database and save everything together
+    @Transactional
     public CartItem addCartItem(Long userId, AddItemRequest req) throws ProductException {
         if (req.getProductId() == null) {
             throw new ProductException("Product ID cannot be null when adding to cart");
@@ -88,22 +87,42 @@ public class CartServiceImplementation implements CartService {
         cartItem.setUserId(userId);
         cartItem.setSize(req.getSize());
 
-        // Calculate prices properly
         cartItem.setPrice(req.getQuantity() * product.getPrice());
         cartItem.setDiscountedPrice(req.getQuantity() * product.getDiscountedPrice());
 
-        // 1. Save the item to the database
         CartItem createdCartItem = cartItemService.createCartItem(cartItem);
 
-        // 2. Attach the item to the cart in memory safely
         if (cart.getCartItems() == null) {
             cart.setCartItems(new HashSet<>());
         }
         cart.getCartItems().add(createdCartItem);
 
-        // 3. Save the cart so the relationship is permanently locked
         cartRepository.save(cart);
 
         return createdCartItem;
+    }
+
+    // ── NEW: Method to fully clear the cart from the database ──
+    @Override
+    @Transactional
+    public void clearCart(Long userId) {
+        Cart cart = cartRepository.findByUserId(userId);
+        if (cart != null && cart.getCartItems() != null) {
+
+            // 1. Delete all the CartItems from the database first
+            for (CartItem item : cart.getCartItems()) {
+                cartItemRepository.delete(item);
+            }
+
+            // 2. Empty the memory Set and reset totals to 0
+            cart.getCartItems().clear();
+            cart.setTotalItem(0);
+            cart.setTotalPrice(0);
+            cart.setTotalDiscountedPrice(0);
+            cart.setDiscount(0);
+
+            // 3. Save the empty cart
+            cartRepository.save(cart);
+        }
     }
 }

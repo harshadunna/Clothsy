@@ -12,7 +12,7 @@ import {
   UPDATE_CART_ITEM_REQUEST,
   UPDATE_CART_ITEM_SUCCESS,
   UPDATE_CART_ITEM_FAILURE,
-  CLEAR_CART,
+  CLEAR_CART, // Make sure this is exported in your ActionType.js
 } from "./ActionType";
 
 export const addItemToCart = (reqData) => async (dispatch) => {
@@ -20,14 +20,13 @@ export const addItemToCart = (reqData) => async (dispatch) => {
   try {
     const { data } = await api.put("/api/cart/add", reqData.data);
     dispatch({ type: ADD_ITEM_TO_CART_SUCCESS, payload: data });
-
-    return data; // <-- THIS IS THE MAGIC LINE. It tells React "I am finished!"
+    return data;
   } catch (error) {
     dispatch({
       type: ADD_ITEM_TO_CART_FAILURE,
       payload: error.response?.data?.message || error.message,
     });
-    throw error; // <-- Lets the UI know it failed
+    throw error;
   }
 };
 
@@ -36,8 +35,7 @@ export const getCart = () => async (dispatch) => {
   try {
     const { data } = await api.get("/api/cart/");
     dispatch({ type: GET_CART_SUCCESS, payload: data });
-
-    return data; // <-- ADD THIS HERE TOO
+    return data;
   } catch (error) {
     dispatch({
       type: GET_CART_FAILURE,
@@ -76,4 +74,16 @@ export const updateCartItem = (reqData) => async (dispatch) => {
   }
 };
 
-export const clearCart = () => ({ type: CLEAR_CART });
+// ── NEW: Updated clearCart thunk to hit the backend ──
+export const clearCart = () => async (dispatch) => {
+  dispatch({ type: CLEAR_CART }); // Instantly clear UI
+  try {
+    await api.delete("/api/cart/clear"); // Delete from DB
+    
+    // Re-fetch the empty cart from the backend to ensure Redux is fully synced
+    const { data } = await api.get("/api/cart/");
+    dispatch({ type: GET_CART_SUCCESS, payload: data });
+  } catch (error) {
+    console.error("Failed to clear cart on backend:", error);
+  }
+};
