@@ -149,7 +149,8 @@ export default function Order() {
                 <AnimatePresence mode="popLayout">
                   {allItems.map(({ item, order }) => (
                     <motion.div key={`${order.id}-${item.id}`} variants={fadeUp} layout>
-                      <OrderCard item={item} order={order} />
+                      {/* Make sure you have OrderCard.jsx in the same folder! */}
+                      <OrderCard item={item} order={order} /> 
                     </motion.div>
                   ))}
                 </AnimatePresence>
