@@ -1,5 +1,6 @@
 import React from "react";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 
 // Components
 import Navigation from "../customer/components/Navigation/Navigation";
@@ -13,38 +14,77 @@ import Order from "../customer/components/Order/Order";
 import OrderDetails from "../customer/components/Order/OrderDetails";
 import PaymentSuccess from "../customer/components/Payment/PaymentSuccess";
 import PaymentCancel from "../customer/components/Payment/PaymentCancel";
-import RateProduct from "../customer/components/ProductDetails/RateProduct"; 
+import RateProduct from "../customer/components/ProductDetails/RateProduct";
+import Wishlist from "../customer/pages/Wishlist";
+import Profile from "../customer/components/Account/Profile";
+import NotFound from "../customer/pages/NotFound";
+
+// ── Page transition wrapper ──
+const PageTransition = ({ children }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 18 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -10 }}
+    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+  >
+    {children}
+  </motion.div>
+);
 
 const CustomerRoutes = () => {
+  const location = useLocation();
+
   return (
     <div>
       <Navigation />
-      <Routes>
-        <Route path="/login" element={<HomePage />} />
-        <Route path="/register" element={<HomePage />} />
-        <Route path="/" element={<HomePage />} />
-        <Route path="/home" element={<HomePage />} />
 
-        <Route path="/product/:productId/rate" element={<RateProduct />} />
-        <Route path="/product/:productId" element={<ProductDetails />} />
-        
-        {/* ── NEW: Global Search Route ── */}
-        <Route path="/products" element={<Product />} />
-        
-        {/* Generic Category Route */}
-        <Route path="/:levelOne/:levelTwo/:levelThree" element={<Product />} />
+      <AnimatePresence mode="wait" initial={false}>
+        <Routes location={location} key={location.pathname}>
+          <Route path="/login" element={<PageTransition><HomePage /></PageTransition>} />
+          <Route path="/register" element={<PageTransition><HomePage /></PageTransition>} />
+          <Route path="/" element={<PageTransition><HomePage /></PageTransition>} />
+          <Route path="/home" element={<PageTransition><HomePage /></PageTransition>} />
 
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/checkout" element={<Checkout />} />
-        
-        <Route path="/payment/success" element={<PaymentSuccess />} />
-        <Route path="/payment/cancel" element={<PaymentCancel />} />
+          <Route path="/product/:productId/rate" element={<PageTransition><RateProduct /></PageTransition>} />
+          <Route path="/product/:productId" element={<PageTransition><ProductDetails /></PageTransition>} />
 
-        <Route path="/account/orders" element={<Order />} />
-        <Route path="/account/order/:orderId" element={<OrderDetails />} />
-        
-        <Route path="/account/rate/:productId" element={<RateProduct />} />
-      </Routes>
+          <Route path="/products" element={<PageTransition><Product /></PageTransition>} />
+          <Route path="/:levelOne/:levelTwo/:levelThree" element={<PageTransition><Product /></PageTransition>} />
+
+          <Route path="/wishlist" element={<PageTransition><Wishlist /></PageTransition>} />
+          <Route path="/cart" element={<PageTransition><Cart /></PageTransition>} />
+          <Route path="/checkout" element={<PageTransition><Checkout /></PageTransition>} />
+
+          <Route path="/payment/success" element={<PageTransition><PaymentSuccess /></PageTransition>} />
+          <Route path="/payment/cancel" element={<PageTransition><PaymentCancel /></PageTransition>} />
+
+          <Route path="/account/profile" element={<PageTransition><Profile /></PageTransition>} />
+          <Route path="/account/orders" element={<PageTransition><Profile /></PageTransition>} />
+          
+          <Route path="/account/order/:orderId" element={<PageTransition><OrderDetails /></PageTransition>} />
+          
+          {/* ── FIXED THE CLOSING TAGS BELOW ── */}
+          <Route 
+            path="/account/rate/:productId" 
+            element={
+              <PageTransition>
+                <RateProduct />
+              </PageTransition>
+            } 
+          />
+
+          {/* ── 404 FALLBACK ── */}
+          <Route
+            path="*"
+            element={
+              <PageTransition>
+                <NotFound />
+              </PageTransition>
+            }
+          />
+        </Routes>
+      </AnimatePresence>
+
       <Footer />
     </div>
   );

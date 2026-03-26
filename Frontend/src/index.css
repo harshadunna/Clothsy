@@ -1,18 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400..700&family=Inter:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ── GLOBAL BODY SETTINGS ── */
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  background-color: #fff8f5;
+  color: #231a11;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  min-height: 100%;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* ── HEADINGS ── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Newsreader', serif;
+}
+
+/* ── ICONS ── */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ── SEARCH INPUT (EXPAND ANIMATION) ── */
+.search-line-input {
+  width: 0px;
+  padding: 0px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s ease;
+  background: transparent;
+}
+
+.search-line-input:focus {
+  width: 250px;
+  padding-left: 8px;
+  padding-right: 8px;
+  border-bottom-color: #8f4a00;
+  outline: none;
+}
+
+@media (min-width: 768px) {
+  .search-line-input:focus {
+    width: 320px;
+  }
+}
+
+/* ── SCROLLBAR STYLING (MODERN LOOK) ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #fff8f5;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #8f4a00;
+  border-radius: 10px;
+}
+
+/* ── BUTTON BASE STYLE ── */
+.btn-primary {
+  @apply bg-[#8f4a00] text-white px-4 py-2 rounded-md transition-all duration-300;
+}
+
+.btn-primary:hover {
+  @apply bg-[#6e3900];
+}
+
+/* ── INPUT FIELD GLOBAL STYLE ── */
+.input-field {
+  @apply border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#8f4a00];
+}
+
+/* ── CARD STYLE ── */
+.card {
+  @apply bg-white rounded-xl shadow-md p-4 transition-all duration-300;
+}
+
+.card:hover {
+  @apply shadow-lg;
 }

@@ -1,10 +1,79 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        "error": "#ba1a1a",
+        "surface-dim": "#ead7c9",
+        "surface": "#fff8f5",
+        "surface-tint": "#924c00",
+        "on-error": "#ffffff",
+        "background": "#fff8f5",
+        "surface-container": "#feeadc",
+        "secondary-container": "#fdc7a0",
+        "outline": "#877366",
+        "surface-container-high": "#f8e5d6",
+        "secondary-fixed": "#ffdcc4",
+        "primary-fixed-dim": "#ffb781",
+        "tertiary-fixed": "#bde9ff",
+        "inverse-surface": "#3a2e25",
+        "surface-container-highest": "#f2dfd1",
+        "primary": "#8f4a00",
+        "on-tertiary-fixed": "#001f2a",
+        "on-secondary": "#ffffff",
+        "error-container": "#ffdad6",
+        "primary-container": "#af6016",
+        "on-background": "#231a11",
+        "outline-variant": "#dac2b3",
+        "secondary-fixed-dim": "#f1bc96",
+        "on-primary-container": "#fffbff",
+        "surface-container-low": "#fff1e8",
+        "surface-bright": "#fff8f5",
+        "primary-fixed": "#ffdcc4",
+        "secondary": "#7e5537",
+        "on-primary-fixed-variant": "#6f3800",
+        "on-surface-variant": "#544338",
+        "on-tertiary-fixed-variant": "#004d64",
+        "surface-variant": "#f2dfd1",
+        "tertiary-container": "#007ea2",
+        "tertiary": "#006481",
+        "on-tertiary-container": "#fbfdff",
+        "tertiary-fixed-dim": "#68d3ff",
+        "on-tertiary": "#ffffff",
+        "inverse-primary": "#ffb781",
+        "surface-container-lowest": "#ffffff",
+        "on-secondary-container": "#785132",
+        "on-error-container": "#93000a",
+        "on-secondary-fixed-variant": "#633e21",
+        "on-surface": "#231a11",
+        "on-primary-fixed": "#2f1400",
+        "on-primary": "#ffffff",
+        "inverse-on-surface": "#ffeee1",
+        "on-secondary-fixed": "#2f1400"
+      },
+      fontFamily: {
+        "headline": ["Newsreader", "serif"],
+        "body": ["Inter", "sans-serif"],
+        "label": ["Inter", "sans-serif"]
+      },
+      borderRadius: {
+        "DEFAULT": "0px",
+        "none": "0px",
+        "sm": "0px",
+        "md": "0px",
+        "lg": "0px",
+        "xl": "0px",
+        "2xl": "0px",
+        "3xl": "0px",
+        "full": "0px"
+      },
+      boxShadow: {
+        'ambient': '0 20px 80px rgba(35, 26, 17, 0.06)',
+      }
+    },
   },
   plugins: [],
 }

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 
 const StarIcon = ({ filled }) => (
   <svg
-    className={`h-4 w-4 sm:h-5 sm:w-5 ${filled ? "text-yellow-400" : "text-gray-200"}`}
+    className={`h-4 w-4 ${filled ? "text-[#8F4A00]" : "text-stone-200"}`}
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 20 20"
     fill="currentColor"
@@ -22,17 +22,15 @@ const CustomRating = ({ value }) => (
 
 const ProductReviewCard = ({ item }) => {
   const authorName = item?.user?.firstName || "Customer";
-  const initial = authorName.charAt(0).toUpperCase();
-
+  
   const date = item?.createdAt
     ? new Date(item.createdAt).toLocaleDateString("en-IN", {
         year: "numeric",
-        month: "short",
+        month: "long",
         day: "numeric",
       })
-    : "Recent";
+    : "Recent Archive";
 
-  // Forced Number conversion to handle double/float from backend
   const ratingValue = Number(item?.rating || 0);
 
   return (
@@ -40,35 +38,32 @@ const ProductReviewCard = ({ item }) => {
       initial={{ opacity: 0, y: 15 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="p-5 sm:p-6 bg-white rounded-2xl border border-gray-100 shadow-sm"
+      className="py-8 border-t border-outline-variant/30 bg-transparent"
     >
-      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-        {/* Avatar */}
-        <div className="shrink-0">
-          <div className="h-12 w-12 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-lg">
-            {initial}
+      <div className="flex flex-col sm:flex-row gap-6 lg:gap-12">
+        {/* Left: Meta Data */}
+        <div className="sm:w-1/3 shrink-0 space-y-3">
+          <h4 className="font-label uppercase tracking-widest text-[0.6875rem] font-bold text-on-surface">
+            {authorName}
+          </h4>
+          <p className="font-body text-xs text-on-surface-variant uppercase tracking-wider">
+            {date}
+          </p>
+          <div className="flex items-center gap-2 pt-1">
+            <CustomRating value={ratingValue} />
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 space-y-2">
-          <div className="flex items-start justify-between gap-2 flex-wrap">
-            <div>
-              <h4 className="font-bold text-gray-900">{authorName}</h4>
-              <p className="text-xs text-gray-500">{date}</p>
-            </div>
-            <div className="flex flex-col items-end gap-1">
-              <CustomRating value={ratingValue} />
-              {ratingValue > 0 && (
-                <span className="text-xs text-gray-400">{ratingValue} / 5</span>
-              )}
-            </div>
-          </div>
-
+        {/* Right: Review Narrative */}
+        <div className="sm:w-2/3">
           {item?.review ? (
-            <p className="text-gray-600 text-sm leading-relaxed">{item.review}</p>
+            <p className="font-editorial leading-relaxed tracking-[0.05em] text-on-background text-[0.9375rem]">
+              "{item.review}"
+            </p>
           ) : (
-            <p className="text-gray-400 text-sm italic">No written review.</p>
+            <p className="text-on-surface-variant text-sm italic tracking-widest">
+              Verified Purchase.
+            </p>
           )}
         </div>
       </div>

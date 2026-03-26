@@ -3,33 +3,34 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { logout, getUser } from '../../../Redux/Auth/Action'
 import { getCart } from '../../../Redux/Customers/Cart/Action'
+import { getWishlist } from '../../../Redux/Customers/Wishlist/Action'
 import {
   Dialog, DialogBackdrop, DialogPanel,
-  Popover, PopoverButton, PopoverGroup, PopoverPanel,
   Tab, TabGroup, TabList, TabPanel, TabPanels,
   Menu, MenuButton, MenuItem, MenuItems
 } from '@headlessui/react'
-import { Bars3Icon, MagnifyingGlassIcon, ShoppingBagIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { navigation } from './navigationMenu'
 import AuthModel from '../Auth/AuthModel'
 
 export default function Navigation() {
   const [open, setOpen] = useState(false)
-  
-  // ── NEW: Global Search State ──
   const [searchInput, setSearchInput] = useState("")
 
   const navigate = useNavigate()
   const location = useLocation()
   const dispatch = useDispatch()
+  
   const auth = useSelector((store) => store.auth);
   const cart = useSelector((store) => store.cart);
+  const { wishlist } = useSelector((store) => store.wishlist); 
+
   const jwt = localStorage.getItem("jwt")
 
   useEffect(() => {
     if (jwt) {
       dispatch(getUser(jwt));
       dispatch(getCart());
+      dispatch(getWishlist());
     }
   }, [jwt, dispatch])
 
@@ -37,60 +38,58 @@ export default function Navigation() {
   const handleClose = () => navigate("/")
 
   const isLoggedIn = auth.user !== null
-  const userInitial = auth.user?.firstName ? auth.user.firstName[0].toUpperCase() : "U"
   const cartCount = cart?.cartItems?.length || 0
+  const wishlistCount = wishlist?.products?.length || 0; 
 
   const handleLogout = () => {
     dispatch(logout())
     navigate("/")
   }
 
-  // ── NEW: Handle Global Search Submit ──
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchInput.trim()) {
-      // Routes the user to the generic products page with the search query
       navigate(`/products?search=${searchInput.trim()}`);
-      setSearchInput(""); // Clear the input
-      setOpen(false); // Close mobile menu if it's open
+      setSearchInput(""); 
+      setOpen(false); 
     }
   };
 
   return (
-    <div className="bg-white">
-
-      {/* ── Mobile Menu ── */}
-      <Dialog open={open} onClose={setOpen} className="relative z-50 lg:hidden">
+    <div className="bg-background">
+      
+      {/* ── Mobile Menu (Kept functional for responsiveness, restyled) ── */}
+      <Dialog open={open} onClose={setOpen} className="relative z-[100] lg:hidden">
         <DialogBackdrop transition className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 data-closed:opacity-0" />
-        <div className="fixed inset-0 z-50 flex">
-          <DialogPanel transition className="relative flex w-full max-w-xs transform flex-col overflow-y-auto bg-white pb-12 shadow-2xl transition duration-300 data-closed:-translate-x-full">
-            <div className="flex px-4 pt-5 pb-2">
-              <button onClick={() => setOpen(false)} className="relative -m-2 inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:text-gray-600 transition-colors">
-                <XMarkIcon className="size-6" />
+        <div className="fixed inset-0 z-[100] flex">
+          <DialogPanel transition className="relative flex w-full max-w-xs transform flex-col overflow-y-auto bg-surface pb-12 shadow-2xl transition duration-300 data-closed:-translate-x-full border-r border-outline-variant/30">
+            <div className="flex px-4 pt-5 pb-2 justify-end">
+              <button onClick={() => setOpen(false)} className="p-2 text-on-surface-variant hover:text-primary transition-colors">
+                <span className="material-symbols-outlined">close</span>
               </button>
             </div>
 
-            {/* ── NEW: Mobile Search Bar ── */}
-            <div className="px-4 mt-2 mb-4">
-              <form onSubmit={handleSearchSubmit} className="relative flex items-center">
+            {/* Mobile Search */}
+            <div className="px-6 mt-2 mb-6">
+              <form onSubmit={handleSearchSubmit} className="relative flex items-center border-b border-outline-variant/50 focus-within:border-primary transition-colors">
                 <input
                   type="text"
-                  placeholder="Search Clothsy..."
+                  placeholder="Search the archive..."
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8742a] focus:border-transparent transition-all"
+                  className="w-full py-3 bg-transparent text-sm focus:outline-none focus:ring-0 border-none placeholder:text-outline placeholder:italic font-body"
                 />
-                <button type="submit" className="absolute right-3 p-1 text-gray-400 hover:text-[#c8742a]">
-                  <MagnifyingGlassIcon className="h-5 w-5" />
+                <button type="submit" className="absolute right-0 p-1 text-outline hover:text-primary">
+                  <span className="material-symbols-outlined text-[20px]">search</span>
                 </button>
               </form>
             </div>
 
             <TabGroup className="mt-2">
-              <div className="border-b border-gray-100">
-                <TabList className="-mb-px flex space-x-8 px-4">
+              <div className="border-b border-outline-variant/30">
+                <TabList className="-mb-px flex space-x-8 px-6">
                   {navigation.categories.map((category) => (
-                    <Tab key={category.name} className="flex-1 border-b-2 border-transparent px-1 py-4 text-base font-medium whitespace-nowrap text-gray-900 transition-colors outline-none data-selected:border-[#c8742a] data-selected:text-[#c8742a]">
+                    <Tab key={category.name} className="flex-1 border-b-2 border-transparent py-4 font-label text-[10px] uppercase tracking-widest font-bold whitespace-nowrap text-on-surface-variant transition-colors outline-none data-selected:border-primary data-selected:text-primary">
                       {category.name}
                     </Tab>
                   ))}
@@ -98,28 +97,14 @@ export default function Navigation() {
               </div>
               <TabPanels as={Fragment}>
                 {navigation.categories.map((category) => (
-                  <TabPanel key={category.name} className="space-y-10 px-4 pt-10 pb-8">
-                    <div className="grid grid-cols-2 gap-x-4">
-                      {category.featured.map((item) => (
-                        <div key={item.name} className="group relative text-sm">
-                          <div className="overflow-hidden rounded-xl bg-gray-100 aspect-square">
-                            <img alt={item.imageAlt} src={item.imageSrc} className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-110" />
-                          </div>
-                          <Link to={`/${category.id}`} className="mt-4 block font-semibold text-gray-900" onClick={() => setOpen(false)}>
-                            <span className="absolute inset-0 z-10" />
-                            {item.name}
-                          </Link>
-                          <p className="mt-1 text-[#c8742a] font-medium text-xs uppercase tracking-wide">Shop now</p>
-                        </div>
-                      ))}
-                    </div>
+                  <TabPanel key={category.name} className="space-y-10 px-6 pt-10 pb-8">
                     {category.sections.map((section) => (
                       <div key={section.name}>
-                        <p className="font-bold text-xs uppercase tracking-widest text-gray-900">{section.name}</p>
+                        <p className="font-label text-[10px] uppercase tracking-[0.2em] font-bold text-outline">{section.name}</p>
                         <ul className="mt-4 flex flex-col space-y-4">
                           {section.items.map((item) => (
                             <li key={item.name} className="flow-root">
-                              <Link to={`/${category.id}/${section.id}/${item.id}`} className="text-sm text-gray-500 hover:text-[#c8742a] transition-colors" onClick={() => setOpen(false)}>
+                              <Link to={`/${category.id}/${section.id}/${item.id}`} className="font-headline text-xl italic text-on-surface hover:text-primary transition-colors" onClick={() => setOpen(false)}>
                                 {item.name}
                               </Link>
                             </li>
@@ -132,194 +117,169 @@ export default function Navigation() {
               </TabPanels>
             </TabGroup>
 
-            <div className="space-y-4 border-t border-gray-100 px-4 py-6">
+            <div className="space-y-4 border-t border-outline-variant/30 px-6 py-6">
               {navigation.pages.map((page) => (
-                <Link key={page.name} to={page.id === "/" ? "/" : `/${page.id}`} className="block text-sm font-medium text-gray-700 hover:text-[#c8742a] transition-colors" onClick={() => setOpen(false)}>
+                <Link key={page.name} to={page.id === "/" ? "/" : `/${page.id}`} className="block font-label text-xs uppercase tracking-widest text-on-surface hover:text-primary transition-colors" onClick={() => setOpen(false)}>
                   {page.name}
                 </Link>
               ))}
-            </div>
-
-            <div className="space-y-4 border-t border-gray-100 px-4 py-6 bg-gray-50/50">
-              {isLoggedIn ? (
-                <>
-                  <Link to="/account/profile" className="block text-sm font-medium text-gray-700 hover:text-[#c8742a]" onClick={() => setOpen(false)}>Profile</Link>
-                  <Link to="/account/orders" className="block text-sm font-medium text-gray-700 hover:text-[#c8742a]" onClick={() => setOpen(false)}>My Orders</Link>
-                  <button onClick={() => { handleLogout(); setOpen(false); }} className="block w-full text-left text-sm font-medium text-red-600 hover:text-red-700 transition-colors">Logout</button>
-                </>
-              ) : (
-                <>
-                  <Link to="/login" className="block text-sm font-medium text-gray-700 hover:text-[#c8742a]" onClick={() => setOpen(false)}>Sign in</Link>
-                  <Link to="/register" className="block text-sm font-medium text-[#c8742a] hover:text-[#b06524]" onClick={() => setOpen(false)}>Create account</Link>
-                </>
-              )}
             </div>
           </DialogPanel>
         </div>
       </Dialog>
 
-      {/* ── Desktop Header ── */}
-      <header className="relative z-40">
-        <p className="flex h-10 items-center justify-center px-4 text-sm font-medium text-white sm:px-6 lg:px-8" style={{ background: "linear-gradient(135deg, #d4832f, #c8742a)" }}>
-          Get free delivery on orders over ₹999
-        </p>
+      {/* ── Desktop Architectural Header ── */}
+      <nav className="fixed top-0 w-full z-50 rounded-none border-b border-outline-variant/20 bg-surface/80 backdrop-blur-xl transition-all duration-300">
+        <div className="flex justify-between items-center px-6 md:px-12 h-20 w-full max-w-[1440px] mx-auto">
+          
+          {/* Mobile Hamburger */}
+          <button type="button" onClick={() => setOpen(true)} className="lg:hidden p-2 -ml-2 text-on-surface-variant hover:text-primary">
+            <span className="material-symbols-outlined">menu</span>
+          </button>
 
-        <div className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all">
-          <nav aria-label="Top" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex h-16 items-center">
+          {/* Brand Logo */}
+          <Link to="/" className="text-2xl lg:text-3xl font-black tracking-tighter text-on-surface hover:text-primary transition-colors" style={{ fontFamily: "'Newsreader', serif" }}>
+            CLOTHSY
+          </Link>
 
-              <button type="button" onClick={() => setOpen(true)} className="relative rounded-md bg-transparent p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-all lg:hidden">
-                <Bars3Icon className="size-6" />
-              </button>
-
-              {/* Logo */}
-              <div className="ml-4 flex lg:ml-0">
-                <Link to="/" className="flex items-center gap-2 group">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-white text-lg shadow-md transition-transform duration-300 group-hover:scale-105" style={{ background: "linear-gradient(135deg, #d4832f, #c8742a)" }}>
-                    S
-                  </div>
-                  <span className="hidden sm:block font-black text-xl tracking-tight text-gray-900 transition-colors group-hover:text-[#c8742a]">
-                    Clothsy
-                  </span>
-                </Link>
-              </div>
-
-              {/* Desktop Flyout menus */}
-              <PopoverGroup className="hidden lg:ml-12 lg:block lg:self-stretch">
-                <div className="flex h-full space-x-8">
-                  {navigation.categories.map((category) => (
-                    <Popover key={category.name} className="flex">
-                      <div className="relative flex">
-                        <PopoverButton className="group relative flex items-center justify-center text-sm font-semibold transition-colors duration-200 ease-out text-gray-700 hover:text-[#c8742a] data-open:text-[#c8742a] outline-none">
-                          {category.name}
-                          <span className="absolute inset-x-0 -bottom-px z-30 h-0.5 transition duration-300 ease-out scale-x-0 group-data-open:scale-x-100 bg-[#c8742a]" />
-                        </PopoverButton>
+          {/* Navigation Links with Mega Menu Triggers */}
+          <div className="hidden lg:flex items-center space-x-12 h-full">
+            {navigation.categories.map((category) => (
+              <div key={category.name} className="group/menu h-full flex items-center">
+                <span className="font-label uppercase tracking-[0.15em] text-[10px] text-on-surface-variant hover:text-primary transition-colors duration-300 border-b border-transparent hover:border-primary pb-1 cursor-pointer">
+                  {category.name}
+                </span>
+                
+                {/* ── Editorial Mega Menu Dropdown ── */}
+                <div className="absolute top-20 left-0 w-full bg-surface-bright/95 backdrop-blur-2xl opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all duration-500 border-t border-outline-variant/20 shadow-2xl">
+                  <div className="max-w-[1440px] mx-auto grid grid-cols-12 gap-8 p-12">
+                    
+                    {/* Sub-categories */}
+                    {category.sections.map((section, idx) => (
+                      <div key={section.name} className="col-span-3 space-y-4">
+                        <h4 className="font-label text-[10px] tracking-[0.2em] uppercase font-bold text-outline">{section.name}</h4>
+                        <ul className="space-y-2">
+                          {section.items.map((item) => (
+                            <li key={item.name}>
+                              <Link to={`/${category.id}/${section.id}/${item.id}`} className="font-headline text-2xl hover:text-primary transition-colors text-on-surface italic block py-1">
+                                {item.name}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
-
-                      <PopoverPanel transition className="absolute inset-x-0 top-full z-20 bg-white/95 backdrop-blur-md text-sm text-gray-500 shadow-2xl ring-1 ring-black/5 origin-top data-closed:-translate-y-2 data-closed:opacity-0 data-enter:duration-300 data-leave:duration-200">
-                        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                          <div className="grid grid-cols-2 gap-x-8 gap-y-10 py-12">
-                            <div className="col-start-2 grid grid-cols-2 gap-x-8">
-                              {category.featured.map((item) => (
-                                <div key={item.name} className="group relative text-base sm:text-sm">
-                                  <div className="overflow-hidden rounded-2xl bg-gray-100 shadow-sm aspect-square">
-                                    <img alt={item.imageAlt} src={item.imageSrc} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                                  </div>
-                                  <Link to={`/${category.id}`} className="mt-4 block font-bold text-gray-900 group-hover:text-[#c8742a] transition-colors">
-                                    <span className="absolute inset-0 z-10" />
-                                    {item.name}
-                                  </Link>
-                                  <p className="mt-1 font-medium text-[#c8742a] text-xs uppercase tracking-wide">Shop now &rarr;</p>
-                                </div>
-                              ))}
-                            </div>
-
-                            <div className="row-start-1 grid grid-cols-3 gap-x-8 gap-y-8 text-sm">
-                              {category.sections.map((section) => (
-                                <div key={section.name}>
-                                  <p className="font-bold text-xs uppercase tracking-widest text-gray-900 mb-4">{section.name}</p>
-                                  <ul className="space-y-3">
-                                    {section.items.map((item) => (
-                                      <li key={item.name}>
-                                        <Link to={`/${category.id}/${section.id}/${item.id}`} className="text-gray-500 hover:text-[#c8742a] transition-colors font-medium relative w-fit block after:block after:content-[''] after:absolute after:h-[1px] after:bg-[#c8742a] after:w-full after:scale-x-0 after:hover:scale-x-100 after:transition after:duration-300 after:origin-left">
-                                          {item.name}
-                                        </Link>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              ))}
-                            </div>
+                    ))}
+                    
+                    {/* Featured Imagery (Bento Box style) */}
+                    <div className="col-span-6 grid grid-cols-2 gap-4">
+                      {category.featured.map((item, idx) => (
+                        <div key={item.name} className="relative overflow-hidden group/img aspect-[4/3]">
+                          <img src={item.imageSrc} alt={item.imageAlt} className="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-105" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
+                          <div className="absolute bottom-6 left-6 text-white">
+                            <p className="font-label text-[8px] tracking-[0.2em] uppercase text-white/80 mb-1">{idx === 0 ? "Featured" : "New Arrival"}</p>
+                            <Link to={`/${category.id}`} className="font-headline text-2xl italic hover:text-primary-fixed transition-colors">
+                              {item.name}
+                            </Link>
                           </div>
                         </div>
-                      </PopoverPanel>
-                    </Popover>
-                  ))}
-
-                  {navigation.pages.map((page) => (
-                    <Link key={page.name} to={page.id === "/" ? "/" : `/${page.id}`} className="flex items-center text-sm font-semibold text-gray-700 transition-colors hover:text-[#c8742a]">
-                      {page.name}
-                    </Link>
-                  ))}
-                </div>
-              </PopoverGroup>
-
-              {/* Right side icons */}
-              <div className="ml-auto flex items-center gap-2 sm:gap-4">
-                
-                {/* ── NEW: Desktop Search Bar ── */}
-                <form onSubmit={handleSearchSubmit} className="hidden lg:flex relative items-center">
-                  <input
-                    type="text"
-                    placeholder="Search Clothsy..."
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    className="w-48 xl:w-64 pl-4 pr-10 py-1.5 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8742a] focus:border-transparent transition-all bg-gray-50/50 hover:bg-white"
-                  />
-                  <button type="submit" className="absolute right-2 p-1 text-gray-400 hover:text-[#c8742a]">
-                    <MagnifyingGlassIcon className="h-5 w-5" />
-                  </button>
-                </form>
-
-                {/* Cart — count from Redux */}
-                <Link to="/cart" className="relative p-2 rounded-full text-gray-400 hover:text-[#c8742a] hover:bg-orange-50 transition-all duration-200 flex items-center group">
-                  <ShoppingBagIcon className="size-5 sm:size-6 transition-transform group-hover:scale-110" />
-                  {cartCount > 0 && (
-                    <span className="absolute top-1 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 rounded-full shadow-sm" style={{ background: "linear-gradient(135deg, #d4832f, #c8742a)" }}>
-                      {cartCount}
-                    </span>
-                  )}
-                </Link>
-
-                <div className="relative ml-2">
-                  {isLoggedIn ? (
-                    <Menu as="div" className="relative inline-block text-left">
-                      <MenuButton className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-black text-white shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 outline-none ring-2 ring-transparent focus:ring-orange-200" style={{ background: "linear-gradient(135deg, #d4832f, #c8742a)" }}>
-                        {userInitial}
-                      </MenuButton>
-
-                      <MenuItems transition className="absolute right-0 z-50 mt-3 w-56 origin-top-right rounded-2xl bg-white shadow-xl ring-1 ring-black/5 transition focus:outline-none data-closed:scale-95 data-closed:opacity-0 data-enter:duration-200 data-leave:duration-100">
-                        <div className="px-4 py-3 border-b border-gray-50 bg-gray-50/50 rounded-t-2xl">
-                          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Hey, {auth.user?.firstName}</p>
-                          <p className="text-xs text-gray-400 mt-0.5 truncate">{auth.user?.email}</p>
-                        </div>
-                        <div className="py-1">
-                          <MenuItem>
-                            <Link to="/account/profile" className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-orange-50 hover:text-[#c8742a] transition-colors data-focus:bg-orange-50 data-focus:text-[#c8742a]">
-                              <svg className="w-4 h-4 text-[#c8742a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                              Profile
-                            </Link>
-                          </MenuItem>
-                          <MenuItem>
-                            <Link to="/account/orders" className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-orange-50 hover:text-[#c8742a] transition-colors data-focus:bg-orange-50 data-focus:text-[#c8742a]">
-                              <svg className="w-4 h-4 text-[#c8742a]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-                              My Orders
-                            </Link>
-                          </MenuItem>
-                        </div>
-                        <div className="border-t border-gray-50 py-1">
-                          <MenuItem>
-                            <button onClick={handleLogout} className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors data-focus:bg-red-50">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                              Logout
-                            </button>
-                          </MenuItem>
-                        </div>
-                      </MenuItems>
-                    </Menu>
-                  ) : (
-                    <div className="hidden lg:flex items-center gap-5">
-                      <Link to="/login" className="text-sm font-medium text-gray-700 hover:text-[#c8742a] transition-colors">Sign in</Link>
-                      <Link to="/register" className="text-sm font-semibold px-5 py-2.5 rounded-full text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200" style={{ background: "linear-gradient(135deg, #d4832f, #c8742a)" }}>Create account</Link>
+                      ))}
                     </div>
-                  )}
+
+                  </div>
                 </div>
               </div>
-            </div>
-          </nav>
-        </div>
-      </header>
+            ))}
 
+            {navigation.pages.map((page) => (
+              <Link key={page.name} to={page.id === "/" ? "/" : `/${page.id}`} className="font-label uppercase tracking-[0.15em] text-[10px] text-on-surface-variant hover:text-primary transition-colors duration-300 border-b border-transparent hover:border-primary pb-1">
+                {page.name}
+              </Link>
+            ))}
+          </div>
+
+          {/* Actions & Search */}
+          <div className="flex items-center space-x-4 md:space-x-6">
+            
+            {/* Expanding Search Bar */}
+            <form onSubmit={handleSearchSubmit} className="hidden md:flex relative items-center group">
+              <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors cursor-pointer" onClick={() => document.getElementById('desktop-search').focus()}>
+                search
+              </span>
+              <input 
+                id="desktop-search"
+                type="text" 
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Search the collection..." 
+                className="search-line-input bg-transparent font-body text-sm placeholder:text-outline placeholder:italic transition-all duration-500 border-t-0 border-l-0 border-r-0 ring-0 focus:ring-0 ml-1"
+              />
+            </form>
+
+            {/* Wishlist */}
+            <Link to="/wishlist" className="relative opacity-80 hover:opacity-100 transition-opacity text-on-surface hover:text-primary hidden sm:block">
+              <span className="material-symbols-outlined">favorite</span>
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 -right-1 text-[9px] bg-primary text-on-primary w-4 h-4 flex items-center justify-center font-bold rounded-none">
+                  {wishlistCount}
+                </span>
+              )}
+            </Link>
+
+            {/* Cart */}
+            <Link to="/cart" className="relative opacity-80 hover:opacity-100 transition-opacity text-on-surface hover:text-primary">
+              <span className="material-symbols-outlined">shopping_bag</span>
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 text-[9px] bg-primary text-on-primary w-4 h-4 flex items-center justify-center font-bold rounded-none">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+
+            {/* User Account / Auth Dropdown */}
+            {isLoggedIn ? (
+              <Menu as="div" className="relative inline-block text-left">
+                <MenuButton className="flex items-center opacity-80 hover:opacity-100 transition-opacity text-on-surface hover:text-primary outline-none">
+                  <span className="material-symbols-outlined">person</span>
+                </MenuButton>
+
+                <MenuItems transition className="absolute right-0 z-50 mt-6 w-56 origin-top-right bg-surface border border-outline-variant/30 shadow-2xl focus:outline-none data-closed:scale-95 data-closed:opacity-0 data-enter:duration-200 data-leave:duration-100">
+                  <div className="px-6 py-5 border-b border-outline-variant/30 bg-surface-container-low">
+                    <p className="font-label text-[10px] font-bold uppercase tracking-widest text-on-surface">Hey, {auth.user?.firstName}</p>
+                    <p className="text-xs text-on-surface-variant mt-1 truncate">{auth.user?.email}</p>
+                  </div>
+                  <div className="py-2">
+                    <MenuItem>
+                      <Link to="/account/profile" className="flex items-center gap-3 px-6 py-3 text-sm font-medium text-on-surface hover:bg-surface-container hover:text-primary transition-colors">
+                        Profile
+                      </Link>
+                    </MenuItem>
+                    <MenuItem>
+                      <Link to="/account/orders" className="flex items-center gap-3 px-6 py-3 text-sm font-medium text-on-surface hover:bg-surface-container hover:text-primary transition-colors">
+                        My Orders
+                      </Link>
+                    </MenuItem>
+                  </div>
+                  <div className="border-t border-outline-variant/30 py-2">
+                    <MenuItem>
+                      <button onClick={handleLogout} className="flex w-full items-center gap-3 px-6 py-3 text-sm font-bold text-error hover:bg-error-container transition-colors">
+                        Logout
+                      </button>
+                    </MenuItem>
+                  </div>
+                </MenuItems>
+              </Menu>
+            ) : (
+              <button onClick={() => navigate('/login')} className="opacity-80 hover:opacity-100 transition-opacity text-on-surface hover:text-primary flex items-center">
+                <span className="material-symbols-outlined">person</span>
+              </button>
+            )}
+
+          </div>
+        </div>
+      </nav>
+
+      {/* Auth Modal Container */}
       <AuthModel handleClose={handleClose} open={openAuthModel} />
     </div>
   )

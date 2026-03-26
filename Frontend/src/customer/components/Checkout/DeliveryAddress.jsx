@@ -6,34 +6,18 @@ import AddressCard from "../Address/AddressCard";
 import { createOrder } from "../../../Redux/Customers/Order/Action";
 import { updateAddress, saveAddress, deleteAddress } from "../../../Redux/Auth/Action";
 
-const inputClass = `
-  w-full px-4 py-3 rounded-xl border text-sm font-medium outline-none transition-all duration-200 placeholder-gray-400 bg-white
-`;
-const inputStyle = { borderColor: "#e8ddd5", color: "#1a1109" };
-const inputFocusStyle = { borderColor: "#c8742a", boxShadow: "0 0 0 3px rgba(200,116,42,0.12)" };
-
-function FormInput({ label, name, id, autoComplete, type = "text", required = true, colSpan = 1, multiline = false, defaultValue = "" }) {
-  const [focused, setFocused] = useState(false);
+// Minimalist Underline Input
+function FormInput({ label, name, id, autoComplete, type = "text", required = true, colSpan = 1, defaultValue = "" }) {
   return (
-    <div className={colSpan === 2 ? "col-span-2" : "col-span-2 sm:col-span-1"}>
-      <label className="block text-xs font-bold mb-1.5 uppercase tracking-wide" style={{ color: "#7a6a5a" }}>
-        {label} {required && <span style={{ color: "#c8742a" }}>*</span>}
+    <div className={`relative ${colSpan === 2 ? "md:col-span-2" : ""}`}>
+      <label className="block font-label text-[10px] uppercase tracking-widest text-outline mb-1">
+        {label} {required && "*"}
       </label>
-      {multiline ? (
-        <textarea
-          name={name} id={id} rows={3} required={required} autoComplete={autoComplete}
-          onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-          defaultValue={defaultValue}
-          className={inputClass} style={focused ? { ...inputStyle, ...inputFocusStyle } : inputStyle}
-        />
-      ) : (
-        <input
-          type={type} name={name} id={id} required={required} autoComplete={autoComplete}
-          onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-          defaultValue={defaultValue}
-          className={inputClass} style={focused ? { ...inputStyle, ...inputFocusStyle } : inputStyle}
-        />
-      )}
+      <input
+        type={type} name={name} id={id} required={required} autoComplete={autoComplete} defaultValue={defaultValue}
+        className="w-full bg-transparent border-t-0 border-x-0 border-b border-outline-variant py-3 px-0 font-body text-sm transition-all duration-300 focus:ring-0 focus:border-primary placeholder-transparent"
+        placeholder={label}
+      />
     </div>
   );
 }
@@ -41,7 +25,6 @@ function FormInput({ label, name, id, autoComplete, type = "text", required = tr
 export default function DeliveryAddress({ handleNext }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
   const { auth, order } = useSelector((store) => store);
 
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -53,15 +36,10 @@ export default function DeliveryAddress({ handleNext }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
-
     const address = {
-      firstName: data.get("firstName"),
-      lastName: data.get("lastName"),
-      streetAddress: data.get("address"),
-      city: data.get("city"),
-      state: data.get("state"),
-      zipCode: data.get("zip"),
-      mobile: data.get("phoneNumber"),
+      firstName: data.get("firstName"), lastName: data.get("lastName"),
+      streetAddress: data.get("address"), city: data.get("city"),
+      state: data.get("state"), zipCode: data.get("zip"), mobile: data.get("phoneNumber"),
     };
 
     if (editingAddress) {
@@ -70,11 +48,8 @@ export default function DeliveryAddress({ handleNext }) {
       setShowForm(false);
     } else {
       try {
-        //  Step 1: Save address first to get its ID
         const savedAddress = await dispatch(saveAddress(address));
-        // Step 2: Create order with the saved address ID
-        const reqData = { address: savedAddress, navigate };
-        dispatch(createOrder(reqData));
+        dispatch(createOrder({ address: savedAddress, navigate }));
       } catch (error) {
         console.error("Failed to save address and create order:", error);
       }
@@ -82,184 +57,80 @@ export default function DeliveryAddress({ handleNext }) {
   };
 
   const handleCreateOrder = (item) => {
-    // Now, clicking "Deliver Here" will ALWAYS fire the checkout action properly.
-    const reqData = { address: item, navigate };
-    console.log("Attempting to create order with address:", item.id);
-    dispatch(createOrder(reqData));
-  };
-
-  const handleEditClick = (address) => {
-    setEditingAddress(address);
-    setShowForm(true);
-  };
-
-  const handleDeleteClick = (addressId) => {
-    dispatch(deleteAddress(addressId));
+    dispatch(createOrder({ address: item, navigate }));
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      {/* ── Left: Saved Addresses ── */}
-      <div className="lg:col-span-5">
-        <div className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: "#e8ddd5", boxShadow: "0 2px 20px rgba(200,116,42,0.06)" }}>
-          <div className="px-5 py-4 border-b" style={{ borderColor: "#f0e8e0", background: "linear-gradient(135deg, #fff9f4, #fff)" }}>
-            <h2 className="text-sm font-black uppercase tracking-widest" style={{ color: "#1a1109", fontFamily: "'Georgia', serif" }}>
-              Saved Addresses
-            </h2>
-            <p className="text-xs mt-0.5" style={{ color: "#9e8d7a" }}>
-              Select an address to deliver to
-            </p>
-          </div>
-
-          <div className="p-4 space-y-3 max-h-[28rem] overflow-y-auto">
-            {savedAddresses.length > 0 ? (
-              savedAddresses.map((item) => {
-                const isSelected = selectedAddress?.id === item.id;
-                return (
-                  <motion.div
-                    key={item.id}
-                    onClick={() => setSelectedAddress(item)}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    transition={{ duration: 0.2 }}
-                    className="cursor-pointer"
-                  >
-                    <AddressCard
-                      address={item}
-                      selected={isSelected}
-                      onEdit={handleEditClick}
-                      onDelete={handleDeleteClick} /* <-- ADD THIS LINE */
-                    />
-                    <AnimatePresence>
-                      {isSelected && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                          className="overflow-hidden"
-                        >
-                          <motion.button
-                            type="button"
-                            disabled={order?.loading}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.97 }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCreateOrder(item);
-                            }}
-                            className="mt-2 w-full py-3 rounded-xl text-sm font-bold text-white disabled:opacity-70"
-                            style={{ background: "linear-gradient(135deg, #d4832f, #c8742a)", boxShadow: "0 4px 16px rgba(200,116,42,0.3)" }}
-                          >
-                            {order?.loading ? "Processing..." : "Deliver Here →"}
-                          </motion.button>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.div>
-                );
-              })
-            ) : (
-              <p className="text-sm text-center py-4" style={{ color: "#9e8d7a" }}>No saved addresses found.</p>
-            )}
-          </div>
-
-          <div className="p-4 border-t" style={{ borderColor: "#f0e8e0" }}>
-            <button
-              onClick={() => {
-                setEditingAddress(null);
-                setShowForm((p) => !p);
-              }}
-              className="flex items-center gap-2 text-sm font-bold transition-colors w-full"
-              style={{ color: "#c8742a" }}
-            >
-              <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: "#fdf0e6" }}>
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d={showForm ? "M20 12H4" : "M12 4v16m8-8H4"} />
-                </svg>
-              </div>
-              {showForm && !editingAddress ? "Cancel" : "Add a new address"}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Right: Address Form / Placeholder ── */}
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24">
+      
+      {/* ── Left: Form Area ── */}
       <div className="lg:col-span-7">
         <AnimatePresence mode="wait">
           {showForm || savedAddresses.length === 0 ? (
-            <motion.div
-              key="form"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="bg-white rounded-2xl border overflow-hidden"
-              style={{ borderColor: "#e8ddd5", boxShadow: "0 2px 20px rgba(200,116,42,0.06)" }}
-            >
-              <div className="px-6 py-4 border-b" style={{ borderColor: "#f0e8e0", background: "linear-gradient(135deg, #fff9f4, #fff)" }}>
-                <h2 className="text-sm font-black uppercase tracking-widest" style={{ color: "#1a1109", fontFamily: "'Georgia', serif" }}>
-                  {editingAddress ? "Update Address" : "New Address"}
-                </h2>
-                <p className="text-xs mt-0.5" style={{ color: "#9e8d7a" }}>
-                  {editingAddress ? "Edit your details below" : "Fill in the details below"}
-                </p>
-              </div>
-              <form key={editingAddress ? editingAddress.id : "new"} onSubmit={handleSubmit} className="p-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormInput label="First Name" name="firstName" id="firstName" defaultValue={editingAddress?.firstName} autoComplete="given-name" />
-                  <FormInput label="Last Name" name="lastName" id="lastName" defaultValue={editingAddress?.lastName} autoComplete="family-name" />
-                  <FormInput label="Street Address" name="address" id="address" defaultValue={editingAddress?.streetAddress} autoComplete="street-address" colSpan={2} multiline />
-                  <FormInput label="City" name="city" id="city" defaultValue={editingAddress?.city} autoComplete="address-level2" />
-                  <FormInput label="State" name="state" id="state" defaultValue={editingAddress?.state} autoComplete="address-level1" />
-                  <FormInput label="PIN Code" name="zip" id="zip" defaultValue={editingAddress?.zipCode} autoComplete="postal-code" />
-                  <FormInput label="Phone Number" name="phoneNumber" id="phoneNumber" defaultValue={editingAddress?.mobile} autoComplete="tel" type="tel" />
-                </div>
-                <div className="mt-6 flex gap-4">
-                  {editingAddress && (
-                    <button
-                      type="button"
-                      onClick={() => { setEditingAddress(null); setShowForm(false); }}
-                      className="w-1/3 py-4 rounded-2xl text-sm font-black tracking-wider uppercase transition-colors"
-                      style={{ color: "#7a6a5a", background: "#f5ede4" }}
-                    >
-                      Cancel
-                    </button>
+            <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <section>
+                <div className="flex justify-between items-end border-b border-outline-variant/30 pb-2 mb-8">
+                  <h2 className="font-label text-xs uppercase tracking-[0.15em] text-on-surface">
+                    {editingAddress ? "Update Destination" : "Shipping Destination"}
+                  </h2>
+                  {savedAddresses.length > 0 && (
+                    <button type="button" onClick={() => setShowForm(false)} className="text-[10px] font-label uppercase tracking-widest text-primary border-b border-primary pb-0.5">Cancel</button>
                   )}
-                  <motion.button
-                    disabled={order?.loading}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.97 }}
-                    type="submit"
-                    className={`py-4 rounded-2xl text-sm font-black tracking-wider uppercase text-white disabled:opacity-70 ${editingAddress ? 'w-2/3' : 'w-full'}`}
-                    style={{ background: "linear-gradient(135deg, #d4832f, #c8742a)", boxShadow: "0 6px 24px rgba(200,116,42,0.3)", letterSpacing: "0.06em" }}
-                  >
-                    {order?.loading ? "Processing..." : editingAddress ? "Update Address" : "Save & Deliver Here →"}
-                  </motion.button>
                 </div>
-              </form>
+                
+                <form onSubmit={handleSubmit} className="space-y-10">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                    <FormInput label="First Name" name="firstName" id="firstName" defaultValue={editingAddress?.firstName} />
+                    <FormInput label="Last Name" name="lastName" id="lastName" defaultValue={editingAddress?.lastName} />
+                    <FormInput label="Street Address" name="address" id="address" defaultValue={editingAddress?.streetAddress} colSpan={2} />
+                    <FormInput label="City" name="city" id="city" defaultValue={editingAddress?.city} />
+                    <FormInput label="State" name="state" id="state" defaultValue={editingAddress?.state} />
+                    <FormInput label="Postal Code" name="zip" id="zip" defaultValue={editingAddress?.zipCode} />
+                    <FormInput label="Phone Number" name="phoneNumber" id="phoneNumber" defaultValue={editingAddress?.mobile} type="tel" />
+                  </div>
+                  
+                  <div className="pt-8 flex justify-end">
+                    <button type="submit" disabled={order?.loading} className="bg-on-background text-surface px-12 py-5 font-label text-xs font-black uppercase tracking-[0.3em] hover:bg-primary transition-all duration-300 disabled:opacity-50">
+                      {order?.loading ? "PROCESSING..." : editingAddress ? "UPDATE ADDRESS" : "SAVE & DELIVER HERE"}
+                    </button>
+                  </div>
+                </form>
+              </section>
             </motion.div>
           ) : (
-            <motion.div
-              key="placeholder"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="bg-white rounded-2xl border flex flex-col items-center justify-center py-20 text-center"
-              style={{ borderColor: "#e8ddd5", borderStyle: "dashed" }}
-            >
-              <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ background: "#fdf0e6" }}>
-                <svg className="w-7 h-7" style={{ color: "#c8742a" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <p className="text-sm font-bold" style={{ color: "#1a1109" }}>Select a saved address</p>
-              <p className="text-xs mt-1" style={{ color: "#9e8d7a" }}>or click "Add a new address" to enter one</p>
+            <motion.div key="saved" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <section>
+                <div className="flex justify-between items-end border-b border-outline-variant/30 pb-2 mb-8">
+                  <h2 className="font-label text-xs uppercase tracking-[0.15em] text-on-surface">Saved Destinations</h2>
+                  <button type="button" onClick={() => { setEditingAddress(null); setShowForm(true); }} className="text-[10px] font-label uppercase tracking-widest text-primary border-b border-primary pb-0.5">Add New</button>
+                </div>
+                
+                <div className="space-y-6">
+                  {savedAddresses.map((item) => (
+                    <div key={item.id} className="border border-outline-variant/30 p-6 relative">
+                      <AddressCard address={item} selected={selectedAddress?.id === item.id} onEdit={setEditingAddress} onDelete={(id) => dispatch(deleteAddress(id))} />
+                      <button 
+                        disabled={order?.loading}
+                        onClick={() => handleCreateOrder(item)}
+                        className="mt-6 w-full bg-transparent border border-on-background text-on-background py-4 font-label text-[10px] font-black uppercase tracking-[0.2em] hover:bg-on-background hover:text-surface transition-colors disabled:opacity-50"
+                      >
+                        {order?.loading && selectedAddress?.id === item.id ? "PROCESSING..." : "DELIVER TO THIS ADDRESS"}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </section>
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
+
+      {/* ── Right: Empty Summary Placeholder for Step 1 ── */}
+      <div className="hidden lg:block lg:col-span-5">
+        <div className="bg-surface-container-low p-10 sticky top-32">
+          <h3 className="font-headline text-3xl italic tracking-tighter text-outline mb-10">Order Summary</h3>
+          <p className="font-label text-[10px] uppercase tracking-widest text-outline">Summary available in the next step.</p>
+        </div>
       </div>
     </div>
   );

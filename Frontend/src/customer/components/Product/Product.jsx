@@ -1,8 +1,5 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Disclosure, DisclosureButton, DisclosurePanel } from "@headlessui/react";
-import { XMarkIcon, ChevronDownIcon, AdjustmentsHorizontalIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline"; 
-import { PlusIcon, MinusIcon } from "@heroicons/react/20/solid";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -10,8 +7,9 @@ import ProductCard from "./ProductCard";
 import { filters, singleFilter, sortOptions } from "./FilterData";
 import { findProducts } from "../../../Redux/Customers/Product/Action";
 
-const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.08 } } };
-const cardVariants = { hidden: { opacity: 0, y: 24, scale: 0.95 }, visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 120, damping: 15 } } };
+// GSAP-style framer motion variants
+const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
+const cardVariants = { hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } } };
 
 export default function Product() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -30,9 +28,10 @@ export default function Product() {
   const totalProducts = customersProduct?.products?.totalElements || 0;
   const products = customersProduct?.products?.content || [];
 
+  // ── Redux Fetch Logic ──
   useEffect(() => {
     const priceRange = searchParams.get("price");
-    const [minPrice, maxPrice] = priceRange ? priceRange.split("-").map(Number) : [0, 10000];
+    const [minPrice, maxPrice] = priceRange ? priceRange.split("-").map(Number) : [0, 100000];
 
     const reqData = {
       category: levelThree || "",
@@ -44,12 +43,13 @@ export default function Product() {
       stock: searchParams.get("stock") || "",
       sort: activeSort,
       pageNumber: pageNumber - 1,
-      pageSize: 12,
+      pageSize: 12, // 12 items looks best in a 3-column grid
       search: searchParams.get("search") || "", 
     };
     dispatch(findProducts(reqData));
-  }, [location.search, activeSort, levelThree]);
+  }, [location.search, activeSort, levelThree, dispatch]);
 
+  // ── Handlers ──
   const toggleFilter = (sectionId, value) => {
     let filterValues = searchParams.getAll(sectionId);
     if (filterValues.length > 0 && filterValues[0].split(",").includes(value)) {
@@ -78,153 +78,130 @@ export default function Product() {
 
   const isChecked = (sectionId, value) => {
     const sectionValues = searchParams.get(sectionId);
-    if (!sectionValues) return false;
-    return sectionValues.split(",").includes(value);
+    return sectionValues ? sectionValues.split(",").includes(value) : false;
   };
 
-  const clearFilters = () => {
-    navigate({ search: "" });
-  };
-
+  const clearFilters = () => navigate({ search: "" });
   const hasActiveFilters = Array.from(searchParams.keys()).some((key) => key !== "sort" && key !== "page" && key !== "search");
 
+  // Dynamic Page Title
+  const pageTitle = searchParams.get("search") 
+    ? `Results for "${searchParams.get("search")}"` 
+    : (levelThree ? levelThree.replace(/_/g, " ") : "The Archive");
+
+  // ── Minimalist Sidebar Component ──
   const FilterSidebar = () => (
-    <div>
+    <div className="space-y-12 pr-8">
       {filters.map((section) => (
-        <Disclosure key={section.id} as="div" className="border-b border-gray-200 py-4">
-          {({ open }) => (
-            <>
-              <DisclosureButton className="flex w-full items-center justify-between py-1">
-                <span className="text-sm font-semibold text-gray-800">{section.name}</span>
-                {open ? <MinusIcon className="h-4 w-4 text-gray-400" /> : <PlusIcon className="h-4 w-4 text-gray-400" />}
-              </DisclosureButton>
-              <DisclosurePanel className="pt-4 space-y-3">
-                {section.options.map((option) => (
-                  <label key={option.value} className="flex items-center gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={isChecked(section.id, option.value)}
-                      onChange={() => toggleFilter(section.id, option.value)}
-                      className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                    />
-                    <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
-                      {option.label}
-                    </span>
-                  </label>
-                ))}
-              </DisclosurePanel>
-            </>
-          )}
-        </Disclosure>
+        <section key={section.id}>
+          <h3 className="font-label uppercase tracking-[0.15em] text-[0.6875rem] font-black mb-6 text-on-surface">
+            {section.name}
+          </h3>
+          <ul className="space-y-4 font-body text-sm text-on-surface-variant">
+            {section.options.map((option) => (
+              <li key={option.value} className="flex items-center gap-4 group cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isChecked(section.id, option.value)}
+                  onChange={() => toggleFilter(section.id, option.value)}
+                  className="border-outline-variant text-primary focus:ring-0 rounded-none w-4 h-4 cursor-pointer"
+                />
+                <span className="group-hover:text-primary transition-colors" onClick={() => toggleFilter(section.id, option.value)}>
+                  {option.label}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
       ))}
 
       {singleFilter.map((section) => (
-        <Disclosure key={section.id} as="div" className="border-b border-gray-200 py-4">
-          {({ open }) => (
-            <>
-              <DisclosureButton className="flex w-full items-center justify-between py-1">
-                <span className="text-sm font-semibold text-gray-800">{section.name}</span>
-                {open ? <MinusIcon className="h-4 w-4 text-gray-400" /> : <PlusIcon className="h-4 w-4 text-gray-400" />}
-              </DisclosureButton>
-              <DisclosurePanel className="pt-4 space-y-3">
-                {section.options.map((option) => (
-                  <label key={option.value} className="flex items-center gap-3 cursor-pointer group">
-                    <input
-                      type="radio"
-                      name={section.id}
-                      value={option.value}
-                      checked={searchParams.get(section.id) === option.value}
-                      onChange={(e) => handleRadioFilter(e, section.id)}
-                      className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                    />
-                    <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
-                      {option.label}
-                    </span>
-                  </label>
-                ))}
-              </DisclosurePanel>
-            </>
-          )}
-        </Disclosure>
+        <section key={section.id}>
+          <h3 className="font-label uppercase tracking-[0.15em] text-[0.6875rem] font-black mb-6 text-on-surface">
+            {section.name}
+          </h3>
+          <ul className="space-y-4 font-body text-sm text-on-surface-variant">
+            {section.options.map((option) => (
+              <li key={option.value} className="flex items-center gap-4 group cursor-pointer">
+                <input
+                  type="radio"
+                  name={section.id}
+                  value={option.value}
+                  checked={searchParams.get(section.id) === option.value}
+                  onChange={(e) => handleRadioFilter(e, section.id)}
+                  className="border-outline-variant text-primary focus:ring-0 w-4 h-4 cursor-pointer"
+                />
+                <span className="group-hover:text-primary transition-colors" onClick={(e) => handleRadioFilter({target: {value: option.value}}, section.id)}>
+                  {option.label}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
       ))}
 
       {hasActiveFilters && (
         <button
           onClick={clearFilters}
-          className="mt-6 w-full py-2 bg-gray-100 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
+          className="mt-8 w-full py-3 border border-outline-variant text-[0.6875rem] uppercase tracking-widest font-bold hover:bg-surface-container transition-colors text-on-surface"
         >
-          Clear all filters
+          Clear Filters
         </button>
       )}
     </div>
   );
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-background min-h-screen pt-32 px-8 md:px-12 pb-24">
+      
+      {/* ── Header Area ── */}
+      <header className="mb-24 flex flex-col md:flex-row justify-between items-end gap-8 border-b border-outline-variant/30 pb-12">
+        <div className="max-w-2xl">
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}
+            className="font-headline italic text-6xl md:text-8xl lg:text-9xl tracking-tighter text-on-background leading-none capitalize"
+          >
+            {pageTitle}
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }}
+            className="mt-8 font-body text-lg text-on-surface-variant max-w-md"
+          >
+            Architectural silhouettes and artisanal craftsmanship. A curated selection of modern essentials.
+          </motion.p>
+        </div>
 
-      <AnimatePresence>
-        {mobileFiltersOpen && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMobileFiltersOpen(false)} className="fixed inset-0 bg-black/40 z-40 lg:hidden" />
-            <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="fixed inset-y-0 right-0 z-50 w-80 bg-white shadow-2xl flex flex-col lg:hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                <div className="flex items-center gap-2">
-                  <AdjustmentsHorizontalIcon className="h-5 w-5 text-gray-500" />
-                  <h2 className="text-base font-semibold text-gray-900">Filters</h2>
-                </div>
-                <button onClick={() => setMobileFiltersOpen(false)} className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 transition">
-                  <XMarkIcon className="h-5 w-5" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto px-5 py-4">
-                <FilterSidebar />
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-
-        {/* ── UPDATED HEADER WITHOUT SEARCH BAR ── */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-200 pb-6 mb-8 gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 capitalize">
-              {searchParams.get("search") 
-                ? `Results for "${searchParams.get("search")}"` 
-                : (levelThree?.replace(/_/g, " ") || "All Products")}
-            </h1>
-            <p className="text-sm text-gray-400 mt-1">{totalProducts} products found</p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative">
-              <motion.button
-                whileTap={{ scale: 0.97 }}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }}
+          className="flex flex-col items-start md:items-end gap-4 w-full md:w-auto"
+        >
+          <span className="font-label uppercase tracking-[0.2em] text-[0.6875rem] font-bold text-primary">
+            Displaying {totalProducts} Pieces
+          </span>
+          
+          <div className="flex gap-4 w-full md:w-auto">
+            {/* Sort Dropdown */}
+            <div className="relative w-1/2 md:w-auto">
+              <button 
                 onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:border-[#c8742a] transition shadow-sm"
+                className="w-full px-6 py-3 border border-outline-variant text-[0.6875rem] uppercase tracking-widest font-bold hover:bg-surface-container transition-colors flex justify-between items-center gap-2"
               >
-                {sortOptions.find((o) => o.query === activeSort)?.name || "Sort"}
-                <ChevronDownIcon className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${sortDropdownOpen ? "rotate-180" : ""}`} />
-              </motion.button>
-
+                Sort: {sortOptions.find((o) => o.query === activeSort)?.name.split(':')[0] || "Newest"}
+                <span className="material-symbols-outlined text-[14px]">{sortDropdownOpen ? 'expand_less' : 'expand_more'}</span>
+              </button>
+              
               <AnimatePresence>
                 {sortDropdownOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: -6 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: -6 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-20"
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                    className="absolute top-full left-0 w-full mt-2 bg-surface border border-outline-variant z-20 shadow-ambient"
                   >
                     {sortOptions.map((option) => (
                       <button
                         key={option.query}
                         onClick={() => { setActiveSort(option.query); setSortDropdownOpen(false); }}
-                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                          activeSort === option.query
-                            ? "bg-orange-50 text-[#c8742a] font-medium"
-                            : "text-gray-600 hover:bg-gray-50"
+                        className={`w-full text-left px-4 py-3 text-xs font-label uppercase tracking-widest transition-colors ${
+                          activeSort === option.query ? "bg-primary text-on-primary" : "text-on-surface hover:bg-surface-container"
                         }`}
                       >
                         {option.name}
@@ -235,103 +212,126 @@ export default function Product() {
               </AnimatePresence>
             </div>
 
-            <motion.button
-              whileTap={{ scale: 0.97 }}
+            {/* Mobile Filter Toggle */}
+            <button 
               onClick={() => setMobileFiltersOpen(true)}
-              className="lg:hidden flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:border-[#c8742a] transition shadow-sm"
+              className="lg:hidden w-1/2 px-6 py-3 bg-on-surface text-surface text-[0.6875rem] uppercase tracking-widest font-bold flex items-center justify-center gap-2"
             >
-              <AdjustmentsHorizontalIcon className="h-5 w-5" />
-              Filters
-            </motion.button>
+              <span className="material-symbols-outlined text-[14px]">filter_list</span> Filters
+            </button>
           </div>
-        </div>
+        </motion.div>
+      </header>
 
-        {/* Sidebar + Grid */}
-        <div className="flex flex-row gap-8 items-start">
-          <aside className="hidden lg:block w-60 flex-shrink-0 sticky top-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <AdjustmentsHorizontalIcon className="h-5 w-5 text-gray-500" />
-                <h2 className="font-semibold text-gray-900">Filters</h2>
-              </div>
-              <FilterSidebar />
-            </div>
-          </aside>
+      {/* ── Main Layout (Sidebar + Grid) ── */}
+      <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
+        
+        {/* Desktop Sidebar */}
+        <aside className="hidden lg:block w-64 flex-shrink-0 border-r border-outline-variant/30">
+          <div className="sticky top-32">
+            <FilterSidebar />
+          </div>
+        </aside>
 
-          <div className="flex-1 min-w-0">
-            {customersProduct?.loading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-                {[...Array(12)].map((_, i) => (
-                  <div key={i} className="rounded-2xl bg-gray-200 animate-pulse aspect-[3/4]" />
-                ))}
-              </div>
-            ) : products.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-24 text-gray-400">
-                <p className="text-lg font-medium">No products found</p>
-                <p className="text-sm mt-1">Try adjusting your search or filters</p>
-              </div>
-            ) : (
-              <motion.div
-                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                {products.map((item, index) => (
-                  <motion.div key={item.id || index} variants={cardVariants} className="flex w-full h-full">
-                    <ProductCard product={item} />
-                  </motion.div>
-                ))}
+        {/* Mobile Sidebar (Slide-in) */}
+        <AnimatePresence>
+          {mobileFiltersOpen && (
+            <>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMobileFiltersOpen(false)} className="fixed inset-0 bg-black/40 z-[100] lg:hidden backdrop-blur-sm" />
+              <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="fixed inset-y-0 right-0 z-[110] w-[85vw] max-w-sm bg-surface shadow-ambient flex flex-col lg:hidden border-l border-outline-variant/20">
+                <div className="flex items-center justify-between px-8 py-6 border-b border-outline-variant/20">
+                  <h2 className="font-headline text-2xl text-on-surface italic">Filters</h2>
+                  <button onClick={() => setMobileFiltersOpen(false)} className="text-on-surface">
+                    <span className="material-symbols-outlined">close</span>
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto px-8 py-8">
+                  <FilterSidebar />
+                </div>
               </motion.div>
-            )}
+            </>
+          )}
+        </AnimatePresence>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-12 flex items-center justify-center gap-2">
-                <button
-                  onClick={() => handlePageChange(pageNumber - 1)}
-                  disabled={pageNumber === 1}
-                  className="p-2 rounded-xl border border-gray-200 text-gray-500 hover:border-[#c8742a] hover:text-[#c8742a] disabled:opacity-30 disabled:cursor-not-allowed transition"
-                >
-                  <ChevronLeftIcon className="h-5 w-5" />
-                </button>
+        {/* Product Grid */}
+        <section className="flex-grow min-w-0">
+          {customersProduct?.loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-24 gap-x-12">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="bg-surface-container animate-pulse aspect-[3/4] w-full" />
+              ))}
+            </div>
+          ) : products.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-32 text-on-surface-variant">
+              <span className="material-symbols-outlined text-4xl mb-4 opacity-50">inventory_2</span>
+              <p className="font-headline text-3xl italic">No pieces found.</p>
+              <p className="font-body text-sm mt-2 uppercase tracking-widest text-[0.6875rem]">Adjust filters to explore the archive.</p>
+            </div>
+          ) : (
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-24 gap-x-12"
+            >
+              {products.map((item) => (
+                <motion.div key={item.id} variants={cardVariants}>
+                  <ProductCard product={item} />
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
 
+          {/* ── Minimalist Pagination ── */}
+          {totalPages > 1 && (
+            <div className="mt-32 flex justify-center items-center gap-8 md:gap-12 border-t border-outline-variant/30 pt-12">
+              <button
+                onClick={() => handlePageChange(pageNumber - 1)}
+                disabled={pageNumber === 1}
+                className="font-label uppercase tracking-widest text-[0.6875rem] font-bold text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-2 disabled:opacity-30"
+              >
+                <span className="material-symbols-outlined text-[16px]">arrow_back_ios</span> Prev
+              </button>
+
+              <div className="flex gap-6 md:gap-8 items-end">
                 {[...Array(totalPages)].map((_, i) => {
                   const page = i + 1;
                   const isActive = page === pageNumber;
+                  
+                  // Show first, last, current, and adjacent pages
                   if (page === 1 || page === totalPages || Math.abs(page - pageNumber) <= 1) {
                     return (
                       <button
                         key={page}
                         onClick={() => handlePageChange(page)}
-                        className={`w-9 h-9 rounded-xl text-sm font-bold transition ${
-                          isActive
-                            ? "bg-[#1a1109] text-white shadow-md"
-                            : "border border-gray-200 text-gray-600 hover:border-[#c8742a] hover:text-[#c8742a]"
+                        className={`font-body text-sm transition-colors ${
+                          isActive 
+                            ? "font-black border-b border-primary pb-1 text-on-surface" 
+                            : "text-on-surface-variant hover:text-on-surface"
                         }`}
                       >
-                        {page}
+                        {page.toString().padStart(2, '0')}
                       </button>
                     );
                   }
                   if (Math.abs(page - pageNumber) === 2) {
-                    return <span key={page} className="text-gray-400 px-1">...</span>;
+                    return <span key={page} className="font-body text-sm text-on-surface-variant">...</span>;
                   }
                   return null;
                 })}
-
-                <button
-                  onClick={() => handlePageChange(pageNumber + 1)}
-                  disabled={pageNumber === totalPages}
-                  className="p-2 rounded-xl border border-gray-200 text-gray-500 hover:border-[#c8742a] hover:text-[#c8742a] disabled:opacity-30 disabled:cursor-not-allowed transition"
-                >
-                  <ChevronRightIcon className="h-5 w-5" />
-                </button>
               </div>
-            )}
-          </div>
-        </div>
-      </main>
+
+              <button
+                onClick={() => handlePageChange(pageNumber + 1)}
+                disabled={pageNumber === totalPages}
+                className="font-label uppercase tracking-widest text-[0.6875rem] font-bold text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-2 disabled:opacity-30"
+              >
+                Next <span className="material-symbols-outlined text-[16px]">arrow_forward_ios</span>
+              </button>
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

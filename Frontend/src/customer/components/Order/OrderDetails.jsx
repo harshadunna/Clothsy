@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { DocumentTextIcon } from "@heroicons/react/24/outline"; // ── IMPORTED ICON ──
 import OrderTracker from "./OrderTracker";
-import AddressCard from "../Address/AddressCard";
 import api from "../../../config/api";
 
 const checkReturnEligibility = (deliveryDateString) => {
@@ -21,22 +19,21 @@ const checkReturnEligibility = (deliveryDateString) => {
 
 const getReturnBadgeConfig = (status) => {
   switch (status) {
-    case "RETURN_REQUESTED": return { text: "Return Requested", bg: "bg-purple-600" };
-    case "RETURN_PICKED": return { text: "Picked Up", bg: "bg-indigo-600" };
-    case "RETURN_RECEIVED": return { text: "Warehouse Received", bg: "bg-teal-600" };
-    case "REFUND_INITIATED": return { text: "Refund Initiated", bg: "bg-pink-600" };
-    case "REFUND_COMPLETED": return { text: "Refund Completed", bg: "bg-emerald-600" };
-    case "RETURNED": return { text: "Returned", bg: "bg-purple-600" };
+    case "RETURN_REQUESTED": return "Return Requested";
+    case "RETURN_PICKED": return "Picked Up";
+    case "RETURN_RECEIVED": return "Warehouse Received";
+    case "REFUND_INITIATED": return "Refund Initiated";
+    case "REFUND_COMPLETED": return "Refund Completed";
+    case "RETURNED": return "Returned";
     default: return null;
   }
 };
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 18 },
+  hidden: { opacity: 0, y: 20 },
   show: (i = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.1, duration: 0.45, ease: [0.22, 1, 0.36, 1] },
+    opacity: 1, y: 0,
+    transition: { delay: i * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] },
   }),
 };
 
@@ -45,8 +42,6 @@ export default function OrderDetails() {
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // ── NEW: Downloading State ──
   const [downloading, setDownloading] = useState(false);
 
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -74,14 +69,10 @@ export default function OrderDetails() {
     fetchOrder();
   }, [orderId]);
 
-  // ── NEW: Download Invoice Function ──
   const handleDownloadInvoice = async () => {
     setDownloading(true);
     try {
-      const response = await api.get(`/api/orders/${orderId}/invoice`, {
-        responseType: 'blob' // Crucial for handling binary data (PDF)
-      });
-
+      const response = await api.get(`/api/orders/${orderId}/invoice`, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -129,8 +120,8 @@ export default function OrderDetails() {
 
   if (loading && !order) {
     return (
-      <div className="min-h-screen flex justify-center items-center" style={{ background: "linear-gradient(160deg, #fdf8f4 0%, #f5f0eb 100%)" }}>
-        <div className="w-12 h-12 rounded-full border-4 border-t-transparent animate-spin" style={{ borderColor: "#fdf0e6", borderTopColor: "#c8742a" }}></div>
+      <div className="min-h-screen flex justify-center items-center bg-background">
+        <div className="w-12 h-12 border-2 border-t-transparent border-primary animate-spin rounded-full"></div>
       </div>
     );
   }
@@ -147,31 +138,33 @@ export default function OrderDetails() {
   }) || [];
 
   return (
-    <div className="min-h-screen pb-24 relative" style={{ background: "linear-gradient(160deg, #fdf8f4 0%, #f5f0eb 100%)" }}>
+    <div className="bg-background text-on-background font-body min-h-screen pt-32 pb-24 px-6 md:px-12">
       
+      {/* ── Cancel Items Modal ── */}
       <AnimatePresence>
         {isCancelModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-100">
-              <div className="p-6 border-b border-gray-100 bg-gray-50/50">
-                <h3 className="text-xl font-black text-gray-900" style={{ fontFamily: "'Georgia', serif" }}>Cancel Items</h3>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="bg-surface border border-outline-variant/30 shadow-2xl w-full max-w-lg overflow-hidden">
+              <div className="p-8 border-b border-outline-variant/30">
+                <h3 className="text-3xl font-headline italic tracking-tighter text-on-surface">Cancel Silhouette</h3>
+                <p className="font-label text-[10px] uppercase tracking-widest text-outline mt-2">Select pieces to remove from order.</p>
               </div>
-              <div className="p-6 max-h-[50vh] overflow-y-auto space-y-4">
+              <div className="p-8 max-h-[50vh] overflow-y-auto space-y-4">
                 {eligibleItemsForCancellation.length === 0 ? (
-                  <p className="text-center text-gray-500 py-4">No eligible items to cancel.</p>
+                  <p className="text-center font-label text-[10px] uppercase tracking-widest text-outline py-4">No eligible pieces to cancel.</p>
                 ) : (
                   eligibleItemsForCancellation.map((item) => (
-                    <label key={item.id} className="flex items-center gap-4 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 cursor-pointer">
-                      <input type="checkbox" className="w-5 h-5 rounded border-gray-300 text-[#c8742a]" checked={selectedItemsToCancel.includes(item.id)} onChange={() => setSelectedItemsToCancel(p => p.includes(item.id) ? p.filter(id => id !== item.id) : [...p, item.id])} />
-                      <img src={item.product?.imageUrl} alt={item.product?.title} className="w-12 h-12 object-cover rounded bg-gray-100" />
-                      <div className="flex-1"><p className="text-sm font-bold text-gray-900 truncate">{item.product?.title}</p></div>
+                    <label key={item.id} className="flex items-center gap-6 p-4 border border-outline-variant/30 hover:border-primary transition-colors cursor-pointer">
+                      <input type="checkbox" className="w-4 h-4 border-outline text-primary focus:ring-0 rounded-none cursor-pointer" checked={selectedItemsToCancel.includes(item.id)} onChange={() => setSelectedItemsToCancel(p => p.includes(item.id) ? p.filter(id => id !== item.id) : [...p, item.id])} />
+                      <img src={item.product?.imageUrl} alt={item.product?.title} className="w-12 h-16 object-cover bg-surface-container grayscale-[20%]" />
+                      <div className="flex-1"><p className="text-sm font-bold text-on-surface truncate font-headline italic">{item.product?.title}</p></div>
                     </label>
                   ))
                 )}
               </div>
-              <div className="p-6 border-t border-gray-100 flex gap-3 bg-gray-50/50">
-                <button onClick={() => { setIsCancelModalOpen(false); setSelectedItemsToCancel([]); }} className="flex-1 py-3 rounded-xl font-bold text-gray-600 bg-white border border-gray-200 hover:bg-gray-50">Keep Order</button>
-                <button onClick={handleCancelSubmit} disabled={selectedItemsToCancel.length === 0 || cancelLoading} className="flex-1 py-3 rounded-xl font-bold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50">
+              <div className="p-8 border-t border-outline-variant/30 flex gap-4 bg-surface-container-low">
+                <button onClick={() => { setIsCancelModalOpen(false); setSelectedItemsToCancel([]); }} className="flex-1 py-4 font-label text-[10px] font-bold uppercase tracking-widest text-on-surface border border-outline-variant hover:bg-surface-container transition-colors">Abort</button>
+                <button onClick={handleCancelSubmit} disabled={selectedItemsToCancel.length === 0 || cancelLoading} className="flex-1 py-4 font-label text-[10px] font-bold uppercase tracking-widest text-surface bg-error hover:bg-error/80 disabled:opacity-50 transition-colors">
                   {cancelLoading ? "Processing..." : "Confirm Cancellation"}
                 </button>
               </div>
@@ -180,30 +173,31 @@ export default function OrderDetails() {
         )}
       </AnimatePresence>
 
+      {/* ── Return Items Modal ── */}
       <AnimatePresence>
         {isReturnModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-100">
-              <div className="p-6 border-b border-gray-100 bg-gray-50/50">
-                <h3 className="text-xl font-black text-gray-900" style={{ fontFamily: "'Georgia', serif" }}>Return Items</h3>
-                <p className="text-sm text-gray-500 mt-1">Items can be returned within 7 days of delivery.</p>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="bg-surface border border-outline-variant/30 shadow-2xl w-full max-w-lg overflow-hidden">
+              <div className="p-8 border-b border-outline-variant/30">
+                <h3 className="text-3xl font-headline italic tracking-tighter text-on-surface">Return Silhouette</h3>
+                <p className="font-label text-[10px] uppercase tracking-widest text-outline mt-2">Items can be returned within 7 days of delivery.</p>
               </div>
-              <div className="p-6 max-h-[50vh] overflow-y-auto space-y-4">
+              <div className="p-8 max-h-[50vh] overflow-y-auto space-y-4">
                 {eligibleItemsForReturn.length === 0 ? (
-                  <p className="text-center text-gray-500 py-4">No eligible items to return. Return window may have closed.</p>
+                  <p className="text-center font-label text-[10px] uppercase tracking-widest text-outline py-4">Return window has closed for these items.</p>
                 ) : (
                   eligibleItemsForReturn.map((item) => (
-                    <label key={item.id} className="flex items-center gap-4 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 cursor-pointer">
-                      <input type="checkbox" className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-600" checked={selectedItemsToReturn.includes(item.id)} onChange={() => setSelectedItemsToReturn(p => p.includes(item.id) ? p.filter(id => id !== item.id) : [...p, item.id])} />
-                      <img src={item.product?.imageUrl} alt={item.product?.title} className="w-12 h-12 object-cover rounded bg-gray-100" />
-                      <div className="flex-1"><p className="text-sm font-bold text-gray-900 truncate">{item.product?.title}</p></div>
+                    <label key={item.id} className="flex items-center gap-6 p-4 border border-outline-variant/30 hover:border-primary transition-colors cursor-pointer">
+                      <input type="checkbox" className="w-4 h-4 border-outline text-primary focus:ring-0 rounded-none cursor-pointer" checked={selectedItemsToReturn.includes(item.id)} onChange={() => setSelectedItemsToReturn(p => p.includes(item.id) ? p.filter(id => id !== item.id) : [...p, item.id])} />
+                      <img src={item.product?.imageUrl} alt={item.product?.title} className="w-12 h-16 object-cover bg-surface-container grayscale-[20%]" />
+                      <div className="flex-1"><p className="text-sm font-bold text-on-surface truncate font-headline italic">{item.product?.title}</p></div>
                     </label>
                   ))
                 )}
               </div>
-              <div className="p-6 border-t border-gray-100 flex gap-3 bg-gray-50/50">
-                <button onClick={() => { setIsReturnModalOpen(false); setSelectedItemsToReturn([]); }} className="flex-1 py-3 rounded-xl font-bold text-gray-600 bg-white border border-gray-200 hover:bg-gray-50">Cancel</button>
-                <button onClick={handleReturnSubmit} disabled={selectedItemsToReturn.length === 0 || returnLoading} className="flex-1 py-3 rounded-xl font-bold text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50">
+              <div className="p-8 border-t border-outline-variant/30 flex gap-4 bg-surface-container-low">
+                <button onClick={() => { setIsReturnModalOpen(false); setSelectedItemsToReturn([]); }} className="flex-1 py-4 font-label text-[10px] font-bold uppercase tracking-widest text-on-surface border border-outline-variant hover:bg-surface-container transition-colors">Abort</button>
+                <button onClick={handleReturnSubmit} disabled={selectedItemsToReturn.length === 0 || returnLoading} className="flex-1 py-4 font-label text-[10px] font-bold uppercase tracking-widest text-surface bg-on-surface hover:bg-primary disabled:opacity-50 transition-colors">
                   {returnLoading ? "Processing..." : "Confirm Return"}
                 </button>
               </div>
@@ -212,110 +206,133 @@ export default function OrderDetails() {
         )}
       </AnimatePresence>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 space-y-6">
+      <div className="max-w-5xl mx-auto space-y-12">
         
-        {/* ── UPDATED HEADER WITH INVOICE BUTTON ── */}
-        <motion.div variants={fadeUp} initial="hidden" animate="show" custom={0} className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        {/* ── HEADER & INVOICE BUTTON ── */}
+        <motion.div variants={fadeUp} initial="hidden" animate="show" custom={0} className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-outline-variant/30 pb-8">
           <div>
-            <div className="flex items-center gap-3 mb-1">
-              <button onClick={() => navigate("/account/orders")} className="flex items-center gap-1.5 text-sm font-bold transition-colors hover:underline" style={{ color: "#c8742a" }}>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
-                My Orders
-              </button>
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight" style={{ color: "#1a1109", fontFamily: "'Georgia', serif" }}>Order #{order?.id}</h1>
+            <button onClick={() => navigate("/account/orders")} className="flex items-center gap-2 font-label text-[10px] uppercase tracking-widest text-outline hover:text-primary transition-colors mb-6">
+              <span className="material-symbols-outlined text-[14px]">arrow_back</span>
+              Archive Orders
+            </button>
+            <h1 className="text-5xl md:text-6xl font-headline italic tracking-tight text-on-surface">Order #{order?.id}</h1>
           </div>
 
           <button 
             onClick={handleDownloadInvoice} 
             disabled={downloading || isFullyCancelled}
-            className="flex items-center justify-center sm:justify-start gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-[#1a1109] bg-white border-2 border-[#1a1109] hover:bg-[#1a1109] hover:text-white transition-colors disabled:opacity-50"
+            className="flex items-center justify-center gap-3 px-8 py-4 font-label text-[10px] uppercase tracking-widest font-bold text-on-surface border border-on-surface hover:bg-on-surface hover:text-surface transition-colors disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-on-surface"
           >
             {downloading ? (
-              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              <span className="material-symbols-outlined animate-spin text-[16px]">sync</span>
             ) : (
-              <DocumentTextIcon className="w-5 h-5" />
+              <span className="material-symbols-outlined text-[16px]">receipt_long</span>
             )}
-            {downloading ? "Generating..." : "Download Invoice"}
+            {downloading ? "GENERATING..." : "DOWNLOAD INVOICE"}
           </button>
         </motion.div>
 
-        <motion.div variants={fadeUp} initial="hidden" animate="show" custom={1} className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: "#e8ddd5", boxShadow: "0 2px 20px rgba(200,116,42,0.06)" }}>
-          <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: "#f0e8e0", background: "linear-gradient(135deg, #fff9f4, #fff)" }}>
-            <h2 className="text-sm font-black uppercase tracking-widest" style={{ color: "#1a1109", fontFamily: "'Georgia', serif" }}>Delivery Address</h2>
+        {/* ── DELIVERY ADDRESS (Rendered Directly, No Edit/Delete Buttons) ── */}
+        <motion.div variants={fadeUp} initial="hidden" animate="show" custom={1} className="bg-surface-container-low border border-outline-variant/30">
+          <div className="px-8 py-6 border-b border-outline-variant/30">
+            <h2 className="font-label text-[10px] uppercase tracking-widest font-bold text-on-surface">Delivery Destination</h2>
           </div>
-          <div className="p-5">{order?.shippingAddress && <AddressCard address={order.shippingAddress} compact />}</div>
+          <div className="p-8">
+            {order?.shippingAddress ? (
+              <div className="font-body text-sm space-y-2 text-on-surface-variant">
+                 <p className="font-headline italic text-2xl text-on-surface mb-4">
+                   {order.shippingAddress.firstName} {order.shippingAddress.lastName}
+                 </p>
+                 <p>{order.shippingAddress.streetAddress}</p>
+                 <p className="uppercase tracking-wider text-xs mt-1">{order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zipCode}</p>
+                 <p className="pt-4 font-label text-xs">Phone: {order.shippingAddress.mobile}</p>
+              </div>
+            ) : (
+              <p className="font-label text-[10px] uppercase tracking-widest text-outline">Destination unavailable.</p>
+            )}
+          </div>
         </motion.div>
 
-        <motion.div variants={fadeUp} initial="hidden" animate="show" custom={2} className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: "#e8ddd5", boxShadow: "0 2px 20px rgba(200,116,42,0.06)" }}>
-          <div className="px-5 py-4 border-b flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between" style={{ borderColor: "#f0e8e0", background: "linear-gradient(135deg, #fff9f4, #fff)" }}>
-            <h2 className="text-sm font-black uppercase tracking-widest" style={{ color: "#1a1109", fontFamily: "'Georgia', serif" }}>Order Status</h2>
+        {/* ── ORDER STATUS & TRACKER ── */}
+        <motion.div variants={fadeUp} initial="hidden" animate="show" custom={2} className="bg-surface border border-outline-variant/30">
+          <div className="px-8 py-6 border-b border-outline-variant/30 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <h2 className="font-label text-[10px] uppercase tracking-widest font-bold text-on-surface">Logistics Status</h2>
             
-            {!isFullyCancelled && !isDelivered && (
-              <button onClick={() => setIsCancelModalOpen(true)} className="text-xs font-bold px-4 py-2 rounded-xl text-gray-600 bg-gray-100 hover:bg-red-50 hover:text-red-600">Cancel Items</button>
-            )}
-            
-            {isDelivered && eligibleItemsForReturn.length > 0 && (
-              <button onClick={() => setIsReturnModalOpen(true)} className="text-xs font-bold px-4 py-2 rounded-xl text-purple-600 bg-purple-50 border border-purple-200 hover:bg-purple-100">Request Return</button>
-            )}
+            <div className="flex gap-4">
+              {!isFullyCancelled && !isDelivered && (
+                <button onClick={() => setIsCancelModalOpen(true)} className="font-label text-[10px] uppercase tracking-widest text-error border-b border-error pb-0.5 hover:opacity-70 transition-opacity">
+                  Cancel Pieces
+                </button>
+              )}
+              {isDelivered && eligibleItemsForReturn.length > 0 && (
+                <button onClick={() => setIsReturnModalOpen(true)} className="font-label text-[10px] uppercase tracking-widest text-primary border-b border-primary pb-0.5 hover:opacity-70 transition-opacity">
+                  Request Return
+                </button>
+              )}
+            </div>
           </div>
-          <div className="px-6 py-8 overflow-x-auto">
+          <div className="px-8 py-12 overflow-x-auto">
+             {/* Assuming OrderTracker can handle transparent backgrounds natively. If it looks weird, we'll style it later */}
             <OrderTracker status={order?.orderStatus} />
           </div>
         </motion.div>
 
-        <div className="space-y-4">
+        {/* ── ORDER ITEMS ── */}
+        <div className="space-y-8">
+          <h2 className="font-headline text-3xl italic text-on-surface border-b border-outline-variant/30 pb-4">Secured Pieces</h2>
           {order?.orderItems?.map((item, i) => {
             const isItemCancelled = item.itemStatus === "CANCELLED";
-            const returnBadge = getReturnBadgeConfig(item.itemStatus);
+            const returnBadgeText = getReturnBadgeConfig(item.itemStatus);
             const { isEligible, daysLeft } = checkReturnEligibility(item.deliveryDate || order?.deliveryDate);
             
             return (
-              <motion.div key={item.id || i} variants={fadeUp} initial="hidden" animate="show" custom={3 + i} className={`bg-white rounded-2xl border overflow-hidden ${isItemCancelled ? 'opacity-70 grayscale-[30%]' : ''}`} style={{ borderColor: "#e8ddd5" }}>
-                <div className="flex flex-col sm:flex-row relative">
-                  
-                  {isItemCancelled && <div className="absolute top-4 left-4 z-10 bg-red-600 text-white text-[10px] font-black uppercase px-3 py-1 rounded-full shadow-md">Cancelled</div>}
-                  {returnBadge && <div className={`absolute top-4 left-4 z-10 ${returnBadge.bg} text-white text-[10px] font-black uppercase px-3 py-1 rounded-full shadow-md`}>{returnBadge.text}</div>}
+              <motion.div key={item.id || i} variants={fadeUp} initial="hidden" animate="show" custom={3 + i} className={`bg-surface border border-outline-variant/30 flex flex-col sm:flex-row relative ${isItemCancelled ? 'opacity-70' : ''}`}>
+                
+                {/* Status Badges Overlaid on Image Area */}
+                {isItemCancelled && <div className="absolute top-4 left-4 z-10 bg-error text-surface text-[9px] font-label uppercase tracking-widest px-3 py-1 border border-error/50">Cancelled</div>}
+                {returnBadgeText && <div className="absolute top-4 left-4 z-10 bg-primary text-on-primary text-[9px] font-label uppercase tracking-widest px-3 py-1">{returnBadgeText}</div>}
 
-                  <div 
-                    onClick={() => navigate(`/product/${item?.product?.id}`)} 
-                    className="w-full sm:w-36 h-44 sm:h-auto shrink-0 overflow-hidden cursor-pointer" 
-                    style={{ background: "#f9f3ed" }}
-                  >
-                    <img src={item?.product?.imageUrl} alt={item?.product?.title} className="w-full h-full object-cover object-top hover:scale-105 transition-transform" />
-                  </div>
-                  
-                  <div className="flex-1 p-5 flex flex-col sm:flex-row justify-between gap-4">
-                    <div className="space-y-2">
-                      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "#c8742a" }}>{item?.product?.brand}</p>
-                      <h3 
-                        onClick={() => navigate(`/product/${item?.product?.id}`)} 
-                        className={`font-bold text-base leading-snug cursor-pointer hover:underline ${isItemCancelled ? 'text-gray-500 line-through' : 'text-[#1a1109]'}`}
-                      >
-                        {item?.product?.title}
-                      </h3>
-                      <div className="flex items-center gap-3 pt-1">
-                        <p className={`font-black text-lg ${isItemCancelled ? 'text-gray-400 line-through' : 'text-[#1a1109]'}`}>₹{item?.discountedPrice || item?.price}</p>
-                      </div>
-                      
-                      {item.itemStatus === "DELIVERED" && (
-                        <p className={`text-xs font-bold ${isEligible ? 'text-green-600' : 'text-gray-400'}`}>
-                          {isEligible ? `Return eligible for ${daysLeft} more days` : "Return window closed"}
-                        </p>
-                      )}
+                <div 
+                  onClick={() => navigate(`/product/${item?.product?.id}`)} 
+                  className={`w-full sm:w-40 aspect-[3/4] sm:aspect-auto shrink-0 overflow-hidden cursor-pointer bg-surface-container ${isItemCancelled ? 'grayscale-[80%]' : 'grayscale-[10%] hover:grayscale-0 transition-all duration-700'}`} 
+                >
+                  <img src={item?.product?.imageUrl} alt={item?.product?.title} className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-700" />
+                </div>
+                
+                <div className="flex-1 p-8 flex flex-col sm:flex-row justify-between gap-6">
+                  <div className="space-y-2">
+                    <p className="font-label text-[10px] uppercase tracking-[0.2em] text-outline">{item?.product?.brand}</p>
+                    <h3 
+                      onClick={() => navigate(`/product/${item?.product?.id}`)} 
+                      className={`font-headline text-2xl italic cursor-pointer hover:text-primary transition-colors ${isItemCancelled ? 'text-outline line-through' : 'text-on-surface'}`}
+                    >
+                      {item?.product?.title}
+                    </h3>
+                    <div className="pt-2 flex flex-col gap-2">
+                      <span className="font-label text-xs uppercase tracking-widest text-on-surface-variant">Size {item?.size} · Qty {item?.quantity}</span>
+                      <span className={`font-body text-xl font-bold ${isItemCancelled ? 'text-outline line-through' : 'text-on-surface'}`}>₹{item?.discountedPrice || item?.price}</span>
                     </div>
-
+                    
                     {item.itemStatus === "DELIVERED" && (
-                      <div className="flex flex-col items-start sm:items-end justify-end gap-2">
-                        <button onClick={() => navigate(`/product/${item?.product?.id}/rate`)} className="text-xs font-bold px-4 py-2.5 rounded-xl w-full sm:w-auto text-center" style={{ color: "#c8742a", background: "#fdf0e6" }}>Rate & Review</button>
-                      </div>
+                      <p className={`font-label text-[10px] uppercase tracking-widest pt-4 ${isEligible ? 'text-primary' : 'text-outline'}`}>
+                        {isEligible ? `Return window open (${daysLeft} days left)` : "Return window closed"}
+                      </p>
                     )}
                   </div>
+
+                  {item.itemStatus === "DELIVERED" && (
+                    <div className="flex flex-col items-start sm:items-end justify-end">
+                      <button onClick={() => navigate(`/product/${item?.product?.id}/rate`)} className="font-label text-[10px] uppercase tracking-widest font-bold text-on-surface border-b border-on-surface pb-1 hover:text-primary hover:border-primary transition-colors">
+                        Leave a Narrative
+                      </button>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             );
           })}
         </div>
+
       </div>
     </div>
   );
