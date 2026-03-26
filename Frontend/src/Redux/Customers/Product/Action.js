@@ -27,6 +27,7 @@ export const findProducts = (reqData) => async (dispatch) => {
         sort: reqData.sort,
         pageNumber: reqData.pageNumber,
         pageSize: reqData.pageSize,
+        search: reqData.search, // ── NEW: Send the search term to backend ──
       },
     });
     dispatch({ type: FIND_PRODUCTS_BY_CATEGORY_SUCCESS, payload: data });

@@ -173,7 +173,8 @@ public class ProductServiceImplementation implements ProductService {
             String sort,
             String stock,
             Integer pageNumber,
-            Integer pageSize) {
+            Integer pageSize,
+            String search) { // ── NEW: Added search parameter ──
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
@@ -211,14 +212,24 @@ public class ProductServiceImplementation implements ProductService {
             }
         }
 
+        // ── NEW: Apply Global Search Keyword ──────────────────────────────────
+        if (search != null && !search.isEmpty()) {
+            String q = search.toLowerCase();
+            products = products.stream()
+                    .filter(p -> p.getTitle().toLowerCase().contains(q) ||
+                            (p.getBrand() != null && p.getBrand().toLowerCase().contains(q)) ||
+                            (p.getDescription() != null && p.getDescription().toLowerCase().contains(q)))
+                    .collect(Collectors.toList());
+        }
+
         // ── SAFE Pagination (Prevents 500 Internal Server Errors) ─────────────
         int startIndex = (int) pageable.getOffset();
-        
+
         // If the calculated start index is beyond our list size, return an empty page
         if (startIndex >= products.size()) {
             return new PageImpl<>(List.of(), pageable, products.size());
         }
-        
+
         int endIndex = Math.min(startIndex + pageable.getPageSize(), products.size());
         List<Product> pageContent = products.subList(startIndex, endIndex);
 

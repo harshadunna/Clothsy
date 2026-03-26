@@ -28,14 +28,14 @@ public class UserProductController {
             @RequestParam(defaultValue = "price_low") String sort,
             @RequestParam(required = false) String stock,
             @RequestParam(defaultValue = "0") Integer pageNumber,
-            @RequestParam(defaultValue = "12") Integer pageSize) {
+            @RequestParam(defaultValue = "12") Integer pageSize,
+            @RequestParam(required = false) String search) { // ── NEW PARAM ──
 
         Page<Product> products = productService.getAllProduct(
                 category, color, size, minPrice, maxPrice,
-                minDiscount, sort, stock, pageNumber, pageSize
+                minDiscount, sort, stock, pageNumber, pageSize, search // ── PASS IT DOWN ──
         );
 
-        // FIX: Use 200 OK for successful GET requests instead of 202 ACCEPTED
         return ResponseEntity.ok(products);
     }
 

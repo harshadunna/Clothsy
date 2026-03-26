@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Disclosure, DisclosureButton, DisclosurePanel } from "@headlessui/react";
-import { XMarkIcon, ChevronDownIcon, AdjustmentsHorizontalIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, ChevronDownIcon, AdjustmentsHorizontalIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline"; 
 import { PlusIcon, MinusIcon } from "@heroicons/react/20/solid";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -10,18 +10,8 @@ import ProductCard from "./ProductCard";
 import { filters, singleFilter, sortOptions } from "./FilterData";
 import { findProducts } from "../../../Redux/Customers/Product/Action";
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 24, scale: 0.95 },
-  visible: {
-    opacity: 1, y: 0, scale: 1,
-    transition: { type: "spring", stiffness: 120, damping: 15 },
-  },
-};
+const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.08 } } };
+const cardVariants = { hidden: { opacity: 0, y: 24, scale: 0.95 }, visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 120, damping: 15 } } };
 
 export default function Product() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -42,9 +32,7 @@ export default function Product() {
 
   useEffect(() => {
     const priceRange = searchParams.get("price");
-    const [minPrice, maxPrice] = priceRange
-      ? priceRange.split("-").map(Number)
-      : [0, 10000];
+    const [minPrice, maxPrice] = priceRange ? priceRange.split("-").map(Number) : [0, 10000];
 
     const reqData = {
       category: levelThree || "",
@@ -57,6 +45,7 @@ export default function Product() {
       sort: activeSort,
       pageNumber: pageNumber - 1,
       pageSize: 12,
+      search: searchParams.get("search") || "", 
     };
     dispatch(findProducts(reqData));
   }, [location.search, activeSort, levelThree]);
@@ -65,15 +54,10 @@ export default function Product() {
     let filterValues = searchParams.getAll(sectionId);
     if (filterValues.length > 0 && filterValues[0].split(",").includes(value)) {
       filterValues = filterValues[0].split(",").filter((item) => item !== value);
-      if (filterValues.length === 0) {
-        searchParams.delete(sectionId);
-      } else {
-        searchParams.set(sectionId, filterValues.join(","));
-      }
+      if (filterValues.length === 0) searchParams.delete(sectionId);
+      else searchParams.set(sectionId, filterValues.join(","));
     } else {
-      filterValues = filterValues.length === 0
-        ? [value]
-        : [...filterValues[0].split(","), value];
+      filterValues = filterValues.length === 0 ? [value] : [...filterValues[0].split(","), value];
       searchParams.set(sectionId, filterValues.join(","));
     }
     searchParams.set("page", "1");
@@ -98,11 +82,11 @@ export default function Product() {
     return sectionValues.split(",").includes(value);
   };
 
-  const clearFilters = () => navigate({ search: "" });
+  const clearFilters = () => {
+    navigate({ search: "" });
+  };
 
-  const hasActiveFilters = Array.from(searchParams.keys()).some(
-    (key) => key !== "sort" && key !== "page"
-  );
+  const hasActiveFilters = Array.from(searchParams.keys()).some((key) => key !== "sort" && key !== "page" && key !== "search");
 
   const FilterSidebar = () => (
     <div>
@@ -112,9 +96,7 @@ export default function Product() {
             <>
               <DisclosureButton className="flex w-full items-center justify-between py-1">
                 <span className="text-sm font-semibold text-gray-800">{section.name}</span>
-                {open
-                  ? <MinusIcon className="h-4 w-4 text-gray-400" />
-                  : <PlusIcon className="h-4 w-4 text-gray-400" />}
+                {open ? <MinusIcon className="h-4 w-4 text-gray-400" /> : <PlusIcon className="h-4 w-4 text-gray-400" />}
               </DisclosureButton>
               <DisclosurePanel className="pt-4 space-y-3">
                 {section.options.map((option) => (
@@ -142,9 +124,7 @@ export default function Product() {
             <>
               <DisclosureButton className="flex w-full items-center justify-between py-1">
                 <span className="text-sm font-semibold text-gray-800">{section.name}</span>
-                {open
-                  ? <MinusIcon className="h-4 w-4 text-gray-400" />
-                  : <PlusIcon className="h-4 w-4 text-gray-400" />}
+                {open ? <MinusIcon className="h-4 w-4 text-gray-400" /> : <PlusIcon className="h-4 w-4 text-gray-400" />}
               </DisclosureButton>
               <DisclosurePanel className="pt-4 space-y-3">
                 {section.options.map((option) => (
@@ -182,33 +162,17 @@ export default function Product() {
   return (
     <div className="bg-gray-50 min-h-screen">
 
-      {/* Mobile Drawer */}
       <AnimatePresence>
         {mobileFiltersOpen && (
           <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMobileFiltersOpen(false)}
-              className="fixed inset-0 bg-black/40 z-40 lg:hidden"
-            />
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 right-0 z-50 w-80 bg-white shadow-2xl flex flex-col lg:hidden"
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMobileFiltersOpen(false)} className="fixed inset-0 bg-black/40 z-40 lg:hidden" />
+            <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="fixed inset-y-0 right-0 z-50 w-80 bg-white shadow-2xl flex flex-col lg:hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <AdjustmentsHorizontalIcon className="h-5 w-5 text-gray-500" />
                   <h2 className="text-base font-semibold text-gray-900">Filters</h2>
                 </div>
-                <button
-                  onClick={() => setMobileFiltersOpen(false)}
-                  className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 transition"
-                >
+                <button onClick={() => setMobileFiltersOpen(false)} className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 transition">
                   <XMarkIcon className="h-5 w-5" />
                 </button>
               </div>
@@ -222,21 +186,23 @@ export default function Product() {
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
 
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 pb-6 mb-8">
+        {/* ── UPDATED HEADER WITHOUT SEARCH BAR ── */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-200 pb-6 mb-8 gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 capitalize">
-              {levelThree?.replace(/_/g, " ") || "Products"}
+              {searchParams.get("search") 
+                ? `Results for "${searchParams.get("search")}"` 
+                : (levelThree?.replace(/_/g, " ") || "All Products")}
             </h1>
-            <p className="text-sm text-gray-400 mt-1">{totalProducts} products</p>
+            <p className="text-sm text-gray-400 mt-1">{totalProducts} products found</p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="relative">
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:border-indigo-300 transition shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:border-[#c8742a] transition shadow-sm"
               >
                 {sortOptions.find((o) => o.query === activeSort)?.name || "Sort"}
                 <ChevronDownIcon className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${sortDropdownOpen ? "rotate-180" : ""}`} />
@@ -257,7 +223,7 @@ export default function Product() {
                         onClick={() => { setActiveSort(option.query); setSortDropdownOpen(false); }}
                         className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
                           activeSort === option.query
-                            ? "bg-indigo-50 text-indigo-600 font-medium"
+                            ? "bg-orange-50 text-[#c8742a] font-medium"
                             : "text-gray-600 hover:bg-gray-50"
                         }`}
                       >
@@ -272,7 +238,7 @@ export default function Product() {
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={() => setMobileFiltersOpen(true)}
-              className="lg:hidden flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:border-indigo-300 transition shadow-sm"
+              className="lg:hidden flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:border-[#c8742a] transition shadow-sm"
             >
               <AdjustmentsHorizontalIcon className="h-5 w-5" />
               Filters
@@ -282,7 +248,6 @@ export default function Product() {
 
         {/* Sidebar + Grid */}
         <div className="flex flex-row gap-8 items-start">
-
           <aside className="hidden lg:block w-60 flex-shrink-0 sticky top-6">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
               <div className="flex items-center gap-2 mb-4">
@@ -303,7 +268,7 @@ export default function Product() {
             ) : products.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 text-gray-400">
                 <p className="text-lg font-medium">No products found</p>
-                <p className="text-sm mt-1">Try adjusting your filters</p>
+                <p className="text-sm mt-1">Try adjusting your search or filters</p>
               </div>
             ) : (
               <motion.div
@@ -320,12 +285,13 @@ export default function Product() {
               </motion.div>
             )}
 
+            {/* Pagination */}
             {totalPages > 1 && (
               <div className="mt-12 flex items-center justify-center gap-2">
                 <button
                   onClick={() => handlePageChange(pageNumber - 1)}
                   disabled={pageNumber === 1}
-                  className="p-2 rounded-xl border border-gray-200 text-gray-500 hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                  className="p-2 rounded-xl border border-gray-200 text-gray-500 hover:border-[#c8742a] hover:text-[#c8742a] disabled:opacity-30 disabled:cursor-not-allowed transition"
                 >
                   <ChevronLeftIcon className="h-5 w-5" />
                 </button>
@@ -338,10 +304,10 @@ export default function Product() {
                       <button
                         key={page}
                         onClick={() => handlePageChange(page)}
-                        className={`w-9 h-9 rounded-xl text-sm font-medium transition ${
+                        className={`w-9 h-9 rounded-xl text-sm font-bold transition ${
                           isActive
-                            ? "bg-indigo-600 text-white shadow-md"
-                            : "border border-gray-200 text-gray-600 hover:border-indigo-300 hover:text-indigo-600"
+                            ? "bg-[#1a1109] text-white shadow-md"
+                            : "border border-gray-200 text-gray-600 hover:border-[#c8742a] hover:text-[#c8742a]"
                         }`}
                       >
                         {page}
@@ -357,7 +323,7 @@ export default function Product() {
                 <button
                   onClick={() => handlePageChange(pageNumber + 1)}
                   disabled={pageNumber === totalPages}
-                  className="p-2 rounded-xl border border-gray-200 text-gray-500 hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                  className="p-2 rounded-xl border border-gray-200 text-gray-500 hover:border-[#c8742a] hover:text-[#c8742a] disabled:opacity-30 disabled:cursor-not-allowed transition"
                 >
                   <ChevronRightIcon className="h-5 w-5" />
                 </button>

@@ -28,6 +28,9 @@ const CustomerRoutes = () => {
         <Route path="/product/:productId/rate" element={<RateProduct />} />
         <Route path="/product/:productId" element={<ProductDetails />} />
         
+        {/* ── NEW: Global Search Route ── */}
+        <Route path="/products" element={<Product />} />
+        
         {/* Generic Category Route */}
         <Route path="/:levelOne/:levelTwo/:levelThree" element={<Product />} />
 
