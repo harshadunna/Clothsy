@@ -15,6 +15,8 @@ export default function CreateProduct() {
     brand: "",
     color: "",
     description: "",
+    materials: "", // <-- NEW FIELD
+    fit: "",       // <-- NEW FIELD
     price: "",
     discountedPrice: "",
     discountPercent: "",
@@ -91,7 +93,7 @@ export default function CreateProduct() {
 
       // Reset
       setProductData({
-        title: "", brand: "", color: "", description: "",
+        title: "", brand: "", color: "", description: "", materials: "", fit: "",
         price: "", discountedPrice: "", discountPercent: "", quantity: "",
         topLevelCategory: "", secondLevelCategory: "", thirdLevelCategory: "",
         sizes: [
@@ -255,10 +257,27 @@ export default function CreateProduct() {
             </div>
           </div>
 
-          {/* Description */}
+          {/* Description & Materials */}
           <div>
-            <label className="font-label font-bold text-[0.75rem] tracking-[0.2em] uppercase text-[#7F756E] block mb-4">Editorial Copy</label>
-            <textarea required rows="4" name="description" value={productData.description} onChange={handleChange} className="w-full border-0 border-b border-[#D1C4BC] bg-transparent font-headline text-2xl leading-relaxed focus:ring-0 focus:border-[#C8742A] resize-none p-0 placeholder:opacity-20 text-[#1A1109]" placeholder="Begin narrative composition..." />
+            <label className="font-label font-bold text-[0.75rem] tracking-[0.2em] uppercase text-[#7F756E] block mb-4 border-b border-[#D1C4BC] pb-2">Editorial Copy & Specifications</label>
+            <div className="space-y-8 mt-6">
+              
+              <div>
+                <label className={labelClass}>Narrative Description</label>
+                <textarea required rows="3" name="description" value={productData.description} onChange={handleChange} className="w-full border-0 border-b border-[#D1C4BC] bg-transparent font-headline text-2xl leading-relaxed focus:ring-0 focus:border-[#C8742A] resize-none p-0 placeholder:opacity-20 text-[#1A1109]" placeholder="Begin narrative composition..." />
+              </div>
+              
+              <div>
+                <label className={labelClass}>Materials & Construction</label>
+                <textarea rows="2" name="materials" value={productData.materials} onChange={handleChange} className="w-full border-0 border-b border-[#D1C4BC] bg-transparent font-body text-lg leading-relaxed focus:ring-0 focus:border-[#C8742A] resize-none p-0 placeholder:opacity-20 text-[#1A1109]" placeholder="E.g. 100% Virgin Wool. Matte horn buttons." />
+              </div>
+              
+              <div>
+                <label className={labelClass}>Fit & Silhouette</label>
+                <textarea rows="2" name="fit" value={productData.fit} onChange={handleChange} className="w-full border-0 border-b border-[#D1C4BC] bg-transparent font-body text-lg leading-relaxed focus:ring-0 focus:border-[#C8742A] resize-none p-0 placeholder:opacity-20 text-[#1A1109]" placeholder="E.g. Oversized drop-shoulder profile." />
+              </div>
+
+            </div>
           </div>
 
           {/* Measurements & Value */}

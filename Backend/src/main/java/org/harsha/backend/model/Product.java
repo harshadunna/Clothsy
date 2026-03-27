@@ -27,8 +27,14 @@ public class Product {
 
     private String title;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(length = 2000)
     private String description;
+
+    @Column(length = 1000)
+    private String materials;
+
+    @Column(length = 1000)
+    private String fit;
 
     private int price;
     private int discountedPrice;
@@ -53,10 +59,8 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Review> reviews = new ArrayList<>();
 
-    // ── NEW CASCADE RELATIONSHIPS ──────────────────────────────────────────
-    // These tell the database to automatically clean up carts and past orders
-    // if the admin decides to permanently delete a product.
-
+    // ── CASCADE RELATIONSHIPS ──────────────────────────────────────────
+    // Clean up carts and past orders if product is permanently deleted.
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<CartItem> cartItems = new ArrayList<>();

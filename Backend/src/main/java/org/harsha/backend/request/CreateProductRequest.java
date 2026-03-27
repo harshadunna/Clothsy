@@ -14,11 +14,6 @@ import java.util.Set;
  * CreateProductRequest
  *
  * Request payload received from the admin when creating a new product.
- * Contains all the details needed to build and persist a Product entity.
- *
- * Category hierarchy is passed as three separate string fields
- * representing the top, second, and third level categories
- * (e.g. "Men" → "Clothing" → "T-Shirts").
  */
 @Data
 @NoArgsConstructor
@@ -30,6 +25,12 @@ public class CreateProductRequest {
 
     /** Detailed description of the product */
     private String description;
+
+    /** Material composition and detailing */
+    private String materials;
+
+    /** Fit and sizing instructions */
+    private String fit;
 
     /** Original price of the product */
     private int price;
@@ -52,18 +53,18 @@ public class CreateProductRequest {
     /** Available size variants with their stock quantities */
     private Set<Size> sizes = new HashSet<>();
 
-    /** URL of the product's main image — kept for backward compatibility */
+    /** URL of the product's main image */
     private String imageUrl;
 
     /** Multiple image URLs for the product gallery */
     private List<String> images = new ArrayList<>();
 
-    /** Top level category name (e.g. "Men", "Women") */
+    /** Top level category name (e.g. "collections", "atelier") */
     private String topLevelCategory;
 
-    /** Second level category name (e.g. "Clothing", "Footwear") */
+    /** Second level category name (e.g. "silhouettes", "accents") */
     private String secondLevelCategory;
 
-    /** Third level category name (e.g. "T-Shirts", "Sneakers") */
+    /** Third level category name (e.g. "overcoats", "trousers") */
     private String thirdLevelCategory;
 }

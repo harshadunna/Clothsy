@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleWishlistItem } from "../../../Redux/Customers/Wishlist/Action";
-// Using Material Symbols to match the new Stitch aesthetic
 import { HeartIcon as HeartOutline } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
 
@@ -23,52 +22,56 @@ const ProductCard = ({ product }) => {
   return (
     <div 
       onClick={handleNavigate}
-      className="product-card group cursor-pointer w-full flex flex-col"
+      className="group cursor-pointer w-full flex flex-col bg-transparent"
     >
-      {/* Image Container - Strict 3:4 Ratio, No Borders */}
-      <div className="aspect-[3/4] overflow-hidden bg-surface-container mb-6 relative">
+      {/* ── IMAGE CONTAINER ── */}
+      <div className="aspect-[3/4] overflow-hidden bg-[#E8E1DE] mb-6 relative border border-transparent group-hover:border-[#D1C4BC] transition-colors duration-500">
         <img
           src={imageUrl}
           alt={title}
-          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          className="w-full h-full object-cover grayscale-[15%] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
         />
         
-        {/* Badges & Actions */}
+        {/* Badges */}
         {discountPercent > 0 && (
-          <div className="absolute top-4 left-4 bg-on-surface text-surface text-[0.6rem] px-3 py-1 font-label uppercase tracking-widest z-10">
-            {discountPercent}% OFF
+          <div className="absolute top-4 left-4 bg-[#1A1109] text-[#FFF8F5] text-[0.55rem] px-3 py-1 font-label font-black uppercase tracking-[0.2em] z-10">
+            Archive -{discountPercent}%
           </div>
         )}
 
         {/* Minimalist Wishlist Button */}
         <button 
           onClick={handleToggleWishlist}
-          className="absolute top-4 right-4 p-2 bg-transparent hover:bg-surface/50 transition-colors duration-300 z-10"
+          className="absolute top-4 right-4 p-2 bg-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
         >
           {isWishlisted ? (
-            <HeartSolid className="w-5 h-5 text-primary" />
+            <HeartSolid className="w-5 h-5 text-[#C8742A]" />
           ) : (
-            <HeartOutline className="w-5 h-5 text-on-surface hover:text-primary transition-colors" />
+            <HeartOutline className="w-5 h-5 text-[#1A1109] hover:text-[#C8742A] transition-colors" />
           )}
         </button>
       </div>
 
-      {/* Product Information - Editorial Typography */}
+      {/* ── EDITORIAL TYPOGRAPHY ── */}
       <div className="flex flex-col gap-1 pr-4">
-        <h2 className="font-headline text-2xl italic text-on-surface group-hover:text-primary transition-colors duration-300 truncate">
+        <p className="font-label text-[0.55rem] font-black uppercase tracking-[0.3em] text-[#C8742A]">
+          {brand || "CLOTHSY Atelier"}
+        </p>
+        
+        <h2 className="font-headline text-2xl md:text-3xl italic text-[#1A1109] group-hover:text-[#C8742A] transition-colors duration-300 truncate mt-1">
           {title}
         </h2>
         
-        <p className="font-body text-[0.6875rem] uppercase tracking-[0.15em] text-on-surface-variant truncate mt-1">
-          {color || "Signature"} / {brand || "Clothsy"}
+        <p className="font-label text-[0.6rem] uppercase tracking-[0.15em] text-[#7F756E] truncate mt-1">
+          {color || "Signature Palette"}
         </p>
         
-        <div className="flex items-baseline gap-3 mt-2">
-          <span className="font-body text-sm font-bold text-on-surface">
+        <div className="flex items-baseline gap-3 mt-3">
+          <span className="font-headline text-lg font-bold text-[#1A1109]">
             ₹{discountedPrice}
           </span>
           {discountPercent > 0 && (
-            <span className="font-body text-xs text-on-surface-variant line-through">
+            <span className="font-headline text-sm text-[#7F756E] line-through decoration-[#BA1A1A] opacity-60">
               ₹{price}
             </span>
           )}

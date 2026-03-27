@@ -30,7 +30,7 @@ public class ProductServiceImplementation implements ProductService {
     @Override
     public Product createProduct(CreateProductRequest req) throws ProductException {
 
-        // ── Resolve or create Top Level Category (e.g. "Men") ──────────────
+        // ── Resolve or create Top Level Category ──────────────
         Category topLevel = categoryRepository.findByName(req.getTopLevelCategory());
         if (topLevel == null) {
             Category newTopLevel = new Category();
@@ -39,7 +39,7 @@ public class ProductServiceImplementation implements ProductService {
             topLevel = categoryRepository.save(newTopLevel);
         }
 
-        // ── Resolve or create Second Level Category (e.g. "Clothing") ──────
+        // ── Resolve or create Second Level Category ──────
         Category secondLevel = null;
         try {
             secondLevel = categoryRepository.findByNameAndParent(
@@ -56,7 +56,7 @@ public class ProductServiceImplementation implements ProductService {
             secondLevel = categoryRepository.save(newSecondLevel);
         }
 
-        // ── Resolve or create Third Level Category (e.g. "mens_kurta") ─────
+        // ── Resolve or create Third Level Category ─────
         Category thirdLevel = null;
         try {
             thirdLevel = categoryRepository.findByNameAndParent(
@@ -80,6 +80,8 @@ public class ProductServiceImplementation implements ProductService {
         product.setTitle(req.getTitle());
         product.setColor(req.getColor());
         product.setDescription(req.getDescription());
+        product.setMaterials(req.getMaterials()); // NEW
+        product.setFit(req.getFit());             // NEW
         product.setDiscountedPrice(req.getDiscountedPrice());
         product.setDiscountPercent(req.getDiscountPercent());
         product.setImageUrl(req.getImageUrl());
@@ -113,11 +115,13 @@ public class ProductServiceImplementation implements ProductService {
         // ── Update Text Fields ─────────────────────────────────────────────
         if (req.getTitle() != null) product.setTitle(req.getTitle());
         if (req.getDescription() != null) product.setDescription(req.getDescription());
+        if (req.getMaterials() != null) product.setMaterials(req.getMaterials()); // NEW
+        if (req.getFit() != null) product.setFit(req.getFit());                   // NEW
         if (req.getBrand() != null) product.setBrand(req.getBrand());
         if (req.getColor() != null) product.setColor(req.getColor());
         if (req.getImageUrl() != null) product.setImageUrl(req.getImageUrl());
 
-        // ── Update Pricing & Inventory (Now safely allows 0 for Out of Stock) ──
+        // ── Update Pricing & Inventory ─────────────────────────────────────
         product.setPrice(req.getPrice());
         product.setDiscountedPrice(req.getDiscountedPrice());
         product.setDiscountPercent(req.getDiscountPercent());
@@ -174,7 +178,7 @@ public class ProductServiceImplementation implements ProductService {
             String stock,
             Integer pageNumber,
             Integer pageSize,
-            String search) { // ── NEW: Added search parameter ──
+            String search) {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
@@ -212,7 +216,7 @@ public class ProductServiceImplementation implements ProductService {
             }
         }
 
-        // ── NEW: Apply Global Search Keyword ──────────────────────────────────
+        // ── Apply Global Search Keyword ──────────────────────────────────
         if (search != null && !search.isEmpty()) {
             String q = search.toLowerCase();
             products = products.stream()
@@ -222,10 +226,9 @@ public class ProductServiceImplementation implements ProductService {
                     .collect(Collectors.toList());
         }
 
-        // ── SAFE Pagination (Prevents 500 Internal Server Errors) ─────────────
+        // ── SAFE Pagination ───────────────────────────────────────────────────
         int startIndex = (int) pageable.getOffset();
 
-        // If the calculated start index is beyond our list size, return an empty page
         if (startIndex >= products.size()) {
             return new PageImpl<>(List.of(), pageable, products.size());
         }
