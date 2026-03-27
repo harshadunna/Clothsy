@@ -5,23 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import api from "../../../config/api";
 import { findProductById } from "../../../Redux/Customers/Product/Action";
 
-const StarIcon = ({ filled, onClick, onMouseEnter, onMouseLeave }) => (
-  <svg
-    onClick={onClick}
-    onMouseEnter={onMouseEnter}
-    onMouseLeave={onMouseLeave}
-    className={`h-10 w-10 cursor-pointer transition-all duration-150 ${
-      filled ? "text-yellow-400 scale-110" : "text-gray-200 hover:text-yellow-200"
-    }`}
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 20 20"
-    fill="currentColor"
-  >
-    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-  </svg>
-);
-
-const ratingLabels = ["", "Terrible", "Poor", "Okay", "Good", "Excellent"];
+const ratingLabels = ["", "Terrible", "Poor", "Fair", "Good", "Exceptional"];
 
 export default function RateProduct() {
   const { productId } = useParams();
@@ -45,18 +29,12 @@ export default function RateProduct() {
     setError("");
 
     if (rating === 0) {
-      setError("Please select a star rating before submitting.");
+      setError("Please select a quality score before submitting.");
       return;
     }
 
     setLoading(true);
     try {
-      /**
-       * FIX: Single API call instead of two.
-       * Rating is now stored directly on the Review entity,
-       * so /api/reviews/create handles everything in one request.
-       * The separate /api/ratings/create call has been removed.
-       */
       await api.post("/api/reviews/create", {
         productId: Number(productId),
         review: review.trim(),
@@ -69,8 +47,7 @@ export default function RateProduct() {
     } catch (err) {
       console.error("Error submitting review:", err);
       setError(
-        err?.response?.data?.message ||
-          "Something went wrong. Please try again."
+        err?.response?.data?.message || "An error occurred in the archive. Please try again."
       );
     } finally {
       setLoading(false);
@@ -78,109 +55,130 @@ export default function RateProduct() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-[2rem] shadow-xl overflow-hidden border border-gray-100"
-        >
-          <div className="p-8 sm:p-12">
-            <h1
-              className="text-3xl font-black text-gray-900 mb-8"
-              style={{ fontFamily: "'Georgia', serif" }}
-            >
-              Rate This Product
-            </h1>
+    <div className="min-h-screen bg-background flex items-center justify-center py-24 px-6 relative overflow-hidden">
+      
+      {/* Subtle Background Texture */}
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-20 flex justify-center items-center">
+        <span className="font-headline italic font-bold text-[30rem] md:text-[40rem] text-surface-container-highest select-none leading-none">
+          {rating > 0 ? `0${rating}` : "R"}
+        </span>
+      </div>
 
-            {product && (
-              <div className="flex items-center gap-6 mb-10 p-4 bg-gray-50 rounded-2xl">
-                <img
-                  src={product.imageUrl}
-                  alt={product.title}
-                  className="w-20 h-24 object-cover rounded-lg shadow-sm"
-                />
-                <div>
-                  <p className="text-sm font-bold text-indigo-600 uppercase">
-                    {product.brand}
-                  </p>
-                  <h2 className="text-lg font-bold text-gray-900 line-clamp-1">
-                    {product.title}
-                  </h2>
-                </div>
-              </div>
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        className="relative z-10 bg-surface-container-lowest w-full max-w-4xl border border-outline-variant/30 rounded-none overflow-hidden shadow-[0_20px_80px_rgba(35,26,17,0.06)]"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2">
+          
+          {/* ── Left: Visual/Brand Side ── */}
+          <div className="hidden md:block relative bg-surface-container">
+            {product?.imageUrl ? (
+              <img 
+                src={product.imageUrl} 
+                alt={product.title} 
+                className="w-full h-full object-cover grayscale-[20%]"
+              />
+            ) : (
+              <div className="w-full h-full bg-outline-variant/20 animate-pulse"></div>
             )}
+            <div className="absolute inset-0 flex flex-col justify-end p-10 bg-gradient-to-t from-on-background/60 via-on-background/20 to-transparent">
+              <p className="font-label text-[10px] uppercase tracking-widest text-surface/80 mb-2 font-bold">
+                {product?.brand || "Editorial Archive"}
+              </p>
+              <h2 className="font-headline italic text-3xl text-surface leading-tight">
+                Your perspective shapes our craftsmanship.
+              </h2>
+            </div>
+          </div>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Star Selection */}
-              <div className="flex flex-col items-center justify-center py-4">
-                <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">
-                  Your Rating
-                </p>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <StarIcon
-                      key={star}
-                      filled={star <= (hoverRating || rating)}
-                      onClick={() => setRating(star)}
-                      onMouseEnter={() => setHoverRating(star)}
-                      onMouseLeave={() => setHoverRating(0)}
-                    />
-                  ))}
-                </div>
-                <p className="mt-4 text-indigo-600 font-black text-xl h-7">
-                  {hoverRating > 0
-                    ? ratingLabels[hoverRating]
-                    : rating > 0
-                    ? `${ratingLabels[rating]} — ${rating} / 5`
-                    : "Select a rating"}
+          {/* ── Right: Interaction Side ── */}
+          <div className="p-8 md:p-12 flex flex-col bg-surface">
+            
+            <div className="flex justify-between items-start mb-12">
+              <div>
+                <h2 className="font-headline italic text-3xl tracking-tight leading-none mb-2 text-on-surface">
+                  Editorial Feedback
+                </h2>
+                <p className="uppercase tracking-widest text-[0.6rem] font-bold text-outline">
+                  {product?.title ? `Reviewing: ${product.title}` : "Product Rating & Review"}
                 </p>
               </div>
+              <button 
+                onClick={() => navigate(-1)} 
+                className="text-outline hover:text-primary transition-colors focus:outline-none"
+              >
+                <span className="material-symbols-outlined text-[24px]">close</span>
+              </button>
+            </div>
 
-              {/* Review Text Area */}
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 uppercase tracking-widest">
-                  Write a Review{" "}
-                  <span className="text-gray-400 font-normal normal-case">
-                    (optional)
+            <form onSubmit={handleSubmit} className="flex flex-col flex-grow">
+              
+              {/* Rating Logic: Copper Dots */}
+              <div className="mb-12">
+                <p className="uppercase tracking-widest text-[0.6875rem] font-bold mb-6 text-on-surface">
+                  Select Quality Score
+                </p>
+                <div className="flex items-center gap-4">
+                  {[1, 2, 3, 4, 5].map((star) => {
+                    const isFilled = star <= (hoverRating || rating);
+                    return (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setRating(star)}
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        className={`w-4 h-4 rounded-full transition-transform hover:scale-125 focus:ring-2 focus:ring-offset-4 focus:ring-primary outline-none ${
+                          isFilled ? "bg-primary" : "bg-outline-variant/50"
+                        }`}
+                        title={`${star} Stars`}
+                      ></button>
+                    );
+                  })}
+                  
+                  {/* Dynamic Rating Label */}
+                  <span className="ml-4 font-headline italic text-primary text-xl">
+                    {hoverRating > 0 ? ratingLabels[hoverRating] : rating > 0 ? ratingLabels[rating] : ""}
                   </span>
+                </div>
+              </div>
+
+              {/* Text Area: Sharp, 1px Border */}
+              <div className="mb-12 flex-grow">
+                <label htmlFor="review" className="block uppercase tracking-widest text-[0.6875rem] font-bold mb-4 text-on-surface">
+                  Written Narrative <span className="text-outline font-normal lowercase tracking-normal ml-1">(optional)</span>
                 </label>
                 <textarea
+                  id="review"
                   rows="5"
                   value={review}
                   onChange={(e) => setReview(e.target.value)}
-                  placeholder="Tell others what you liked or disliked about this product..."
-                  className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all resize-none"
-                />
+                  placeholder="Describe the fit, texture, and silhouette..."
+                  className="w-full bg-transparent border border-outline-variant/40 rounded-none px-4 py-4 text-on-surface font-body text-sm focus:border-primary focus:ring-0 placeholder:text-outline/50 transition-colors duration-300 resize-none"
+                ></textarea>
               </div>
 
-              {/* Error message */}
+              {/* Error Message */}
               {error && (
-                <p className="text-sm text-red-500 font-medium text-center">
+                <p className="text-error font-label text-[10px] uppercase tracking-widest font-bold mb-6">
                   {error}
                 </p>
               )}
 
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  onClick={() => navigate(-1)}
-                  className="flex-1 py-4 rounded-2xl font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 py-4 rounded-2xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 disabled:opacity-50 transition-all"
-                >
-                  {loading ? "Submitting..." : "Submit Review"}
-                </button>
-              </div>
+              {/* CTA: Sharp Black Rectangle */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-on-surface text-surface rounded-none py-5 uppercase tracking-[0.2em] text-[0.75rem] font-bold hover:bg-primary transition-all duration-500 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? "Submitting Archive..." : "Submit Review"}
+              </button>
             </form>
           </div>
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
     </div>
   );
 }

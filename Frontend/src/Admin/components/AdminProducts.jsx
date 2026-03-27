@@ -1,13 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { TrashIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 import api from "../../config/api";
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 15 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
-};
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -31,11 +25,11 @@ export default function AdminProducts() {
   }, []);
 
   const deleteProduct = async (productId) => {
-    if (!window.confirm("Are you sure you want to permanently delete this product? This action cannot be undone.")) return;
-    
+    if (!window.confirm("CONFIRM DELETION: Are YOU sure you want to permanently erase this piece from the archive?")) return;
+
     try {
       await api.delete(`/api/admin/products/${productId}/delete`);
-      fetchProducts(); 
+      fetchProducts();
     } catch (error) {
       console.error("Error deleting product:", error);
     }
@@ -43,104 +37,140 @@ export default function AdminProducts() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-full">
-        <div className="w-10 h-10 border-4 border-t-transparent animate-spin rounded-full" style={{ borderColor: "#fdf0e6", borderTopColor: "#c8742a" }}></div>
+      <div className="flex justify-center items-center min-h-screen bg-[#FFF8F5]">
+        <div className="w-12 h-12 border-2 border-t-transparent border-[#1A1109] animate-spin rounded-none" />
       </div>
     );
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <motion.div variants={fadeUp} initial="hidden" animate="show" className="mb-8 flex justify-between items-end">
+    <div className="p-12 max-w-[1440px] mx-auto min-h-screen bg-[#FFF8F5]">
+
+      <div className="flex justify-between items-end mb-16 border-b border-[#D1C4BC] pb-8">
         <div>
-          <h1 className="text-3xl font-black" style={{ color: "#1a1109", fontFamily: "'Georgia', serif" }}>
-            Product Catalog
+          <h1 className="text-6xl font-headline italic text-[#1A1109] tracking-tight leading-none mb-4">
+            Inventory Ledger
           </h1>
-          <p className="text-sm mt-1" style={{ color: "#9e8d7a" }}>Manage your store inventory, pricing, and stock.</p>
+          <p className="font-label text-[0.65rem] font-bold uppercase tracking-[0.3em] text-[#C8742A]">
+            Current Archive Stock
+          </p>
         </div>
-        <button 
+        <button
           onClick={() => navigate("/admin/product/create")}
-          className="px-5 py-2.5 bg-[#c8742a] text-white text-sm font-bold rounded-xl hover:bg-[#b06522] transition-colors shadow-sm"
+          className="px-10 py-5 bg-[#1A1109] text-white font-label text-[0.75rem] font-bold uppercase tracking-[0.2em] hover:bg-[#C8742A] transition-colors rounded-none"
         >
-          + Add New Product
+          Draft New Piece
         </button>
-      </motion.div>
+      </div>
 
-      <motion.div variants={fadeUp} initial="hidden" animate="show" className="bg-white rounded-2xl border shadow-sm overflow-hidden" style={{ borderColor: "#e8ddd5" }}>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50/50 border-b text-xs uppercase tracking-widest text-gray-500 font-bold" style={{ borderColor: "#e8ddd5" }}>
-                <th className="px-6 py-4">Product</th>
-                <th className="px-6 py-4">Category</th>
-                <th className="px-6 py-4">Price</th>
-                <th className="px-6 py-4">Stock</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+      <div className="bg-[#FFF8F5] border-t-2 border-[#1A1109]">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-[#D1C4BC] bg-[#F9F2EF]">
+              <th className="py-4 px-6 font-label text-[0.65rem] font-black tracking-[0.1em] text-[#7F756E] uppercase">
+                Identity / Silhouette
+              </th>
+              <th className="py-4 px-6 font-label text-[0.65rem] font-black tracking-[0.1em] text-[#7F756E] uppercase">
+                Classification
+              </th>
+              <th className="py-4 px-6 font-label text-[0.65rem] font-black tracking-[0.1em] text-[#7F756E] uppercase">
+                Value
+              </th>
+              <th className="py-4 px-6 font-label text-[0.65rem] font-black tracking-[0.1em] text-[#7F756E] uppercase">
+                Status
+              </th>
+              <th className="py-4 px-6 font-label text-[0.65rem] font-black tracking-[0.1em] text-[#7F756E] uppercase text-right">
+                Actions
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {products.length === 0 ? (
+              <tr>
+                <td colSpan="5" className="py-12 text-center font-label text-[0.75rem] tracking-widest uppercase text-[#7F756E]">
+                  No pieces recorded in ledger.
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y" style={{ borderColor: "#f0e8e0" }}>
-              {products.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center text-gray-400 font-medium">No products found in inventory.</td>
-                </tr>
-              ) : (
-                products.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50/50 transition-colors">
-                    
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden shrink-0">
-                          <img src={product.imageUrl} alt={product.title} className="w-full h-full object-cover object-top" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "#c8742a" }}>{product.brand}</p>
-                          <p className="text-sm font-bold text-gray-900 line-clamp-1">{product.title}</p>
-                        </div>
+            ) : (
+              products.map((product) => (
+                <tr
+                  key={product.id}
+                  className="border-b border-[#D1C4BC] hover:bg-[#F9F2EF] transition-colors group"
+                >
+
+                  <td className="py-6 px-6">
+                    <div className="flex items-center gap-6">
+                      <div className="w-16 h-20 bg-[#F3ECEA] overflow-hidden border border-[#D1C4BC]">
+                        <img
+                          src={product.imageUrl}
+                          alt={product.title}
+                          className="w-full h-full object-cover object-top grayscale opacity-90 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
+                        />
                       </div>
-                    </td>
-
-                    <td className="px-6 py-4 text-sm text-gray-600 capitalize">
-                      {product.category?.name || "Uncategorized"}
-                    </td>
-
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-black text-gray-900">₹{product.discountedPrice}</span>
-                        {product.discountPercent > 0 && (
-                          <span className="text-xs text-gray-400 line-through">₹{product.price}</span>
-                        )}
+                      <div>
+                        <p className="font-label text-[0.65rem] font-bold uppercase tracking-[0.2em] text-[#C8742A] mb-1">
+                          {product.brand}
+                        </p>
+                        <p className="font-headline text-xl text-[#1A1109] line-clamp-1">
+                          {product.title}
+                        </p>
                       </div>
-                    </td>
+                    </div>
+                  </td>
 
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 text-xs font-bold rounded-lg border ${product.quantity > 10 ? 'bg-green-50 text-green-700 border-green-200' : product.quantity > 0 ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
-                        {product.quantity > 0 ? `${product.quantity} in stock` : "Out of Stock"}
+                  <td className="py-6 px-6 font-label text-[0.7rem] font-bold uppercase tracking-widest text-[#1A1109]">
+                    {product.category?.name || "Uncategorized"}
+                  </td>
+
+                  <td className="py-6 px-6">
+                    <div className="flex flex-col">
+                      <span className="font-headline text-xl font-bold text-[#1A1109]">
+                        ₹{product.discountedPrice}
                       </span>
-                    </td>
+                      {product.discountPercent > 0 && (
+                        <span className="font-label text-[0.65rem] font-bold tracking-widest text-[#7F756E] line-through">
+                          ₹{product.price}
+                        </span>
+                      )}
+                    </div>
+                  </td>
 
-                    <td className="px-6 py-4 flex items-center justify-end gap-2">
-                      <button 
-                        onClick={() => navigate(`/admin/product/update/${product.id}`)} 
-                        className="p-2 text-gray-400 hover:text-[#c8742a] hover:bg-[#fdf0e6] rounded-lg transition-colors"
-                        title="Edit Product"
-                      >
-                        <PencilSquareIcon className="w-5 h-5" />
-                      </button>
-                      <button 
-                        onClick={() => deleteProduct(product.id)} 
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete Product"
-                      >
-                        <TrashIcon className="w-5 h-5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </motion.div>
+                  <td className="py-6 px-6">
+                    <span
+                      className={`inline-block whitespace-nowrap px-3 py-1 font-label text-[0.6rem] font-black uppercase tracking-widest border ${
+                        product.quantity > 0
+                          ? "text-[#1A1109] border-[#1A1109]"
+                          : "text-[#BA1A1A] border-[#BA1A1A] bg-[#FFDAD6]/30"
+                      }`}
+                    >
+                      {product.quantity > 0
+                        ? `${product.quantity} IN STOCK`
+                        : "OUT OF STOCK"}
+                    </span>
+                  </td>
+
+                  <td className="py-6 px-6 text-right space-x-6">
+                    <button
+                      onClick={() => navigate(`/admin/product/update/${product.id}`)}
+                      className="font-label text-[0.65rem] font-black uppercase tracking-[0.2em] text-[#1A1109] hover:text-[#C8742A] border-b border-transparent hover:border-[#C8742A] transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => deleteProduct(product.id)}
+                      className="font-label text-[0.65rem] font-black uppercase tracking-[0.2em] text-[#BA1A1A] hover:opacity-60 transition-opacity"
+                    >
+                      Delete
+                    </button>
+                  </td>
+
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

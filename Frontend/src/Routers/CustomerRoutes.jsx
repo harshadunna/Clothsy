@@ -10,16 +10,17 @@ import Product from "../customer/components/Product/Product";
 import ProductDetails from "../customer/components/ProductDetails/ProductDetails";
 import Cart from "../customer/components/Cart/Cart";
 import Checkout from "../customer/components/Checkout/Checkout";
-import Order from "../customer/components/Order/Order";
 import OrderDetails from "../customer/components/Order/OrderDetails";
+import ReturnOrder from "../customer/components/Order/ReturnOrder";
 import PaymentSuccess from "../customer/components/Payment/PaymentSuccess";
 import PaymentCancel from "../customer/components/Payment/PaymentCancel";
 import RateProduct from "../customer/components/ProductDetails/RateProduct";
 import Wishlist from "../customer/pages/Wishlist";
 import Profile from "../customer/components/Account/Profile";
 import NotFound from "../customer/pages/NotFound";
+import Contact from "../customer/pages/Contact";
+import Craftsmanship from "../customer/pages/Craftsmanship"; 
 
-// ── Page transition wrapper ──
 const PageTransition = ({ children }) => (
   <motion.div
     initial={{ opacity: 0, y: 18 }}
@@ -35,7 +36,7 @@ const CustomerRoutes = () => {
   const location = useLocation();
 
   return (
-    <div>
+    <div className="bg-[#FFF8F5] min-h-screen text-[#1A1109] font-body selection:bg-[#FEA052] selection:text-[#1A1109]">
       <Navigation />
 
       <AnimatePresence mode="wait" initial={false}>
@@ -49,6 +50,8 @@ const CustomerRoutes = () => {
           <Route path="/product/:productId" element={<PageTransition><ProductDetails /></PageTransition>} />
 
           <Route path="/products" element={<PageTransition><Product /></PageTransition>} />
+          
+          {/* Dynamic Editorial Routes (E.g. /collections/silhouettes/outerwear) */}
           <Route path="/:levelOne/:levelTwo/:levelThree" element={<PageTransition><Product /></PageTransition>} />
 
           <Route path="/wishlist" element={<PageTransition><Wishlist /></PageTransition>} />
@@ -60,28 +63,16 @@ const CustomerRoutes = () => {
 
           <Route path="/account/profile" element={<PageTransition><Profile /></PageTransition>} />
           <Route path="/account/orders" element={<PageTransition><Profile /></PageTransition>} />
-          
           <Route path="/account/order/:orderId" element={<PageTransition><OrderDetails /></PageTransition>} />
           
-          {/* ── FIXED THE CLOSING TAGS BELOW ── */}
-          <Route 
-            path="/account/rate/:productId" 
-            element={
-              <PageTransition>
-                <RateProduct />
-              </PageTransition>
-            } 
-          />
+          <Route path="/account/order/:orderId/return" element={<PageTransition><ReturnOrder /></PageTransition>} />
+          <Route path="/account/rate/:productId" element={<PageTransition><RateProduct /></PageTransition>} />
 
-          {/* ── 404 FALLBACK ── */}
-          <Route
-            path="*"
-            element={
-              <PageTransition>
-                <NotFound />
-              </PageTransition>
-            }
-          />
+          <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
+          <Route path="/about" element={<PageTransition><Craftsmanship /></PageTransition>} />
+          <Route path="/craftsmanship" element={<PageTransition><Craftsmanship /></PageTransition>} />
+
+          <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>
       </AnimatePresence>
 

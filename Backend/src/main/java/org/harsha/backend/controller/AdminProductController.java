@@ -118,4 +118,17 @@ public class AdminProductController {
         return ResponseEntity.status(HttpStatus.ACCEPTED)
                 .body(new ApiResponse("Products created successfully", true));
     }
+
+    @PostMapping("/bulk")
+    public ResponseEntity<String> createMultipleProducts(@RequestBody List<CreateProductRequest> requests) {
+        for (CreateProductRequest request : requests) {
+            try {
+                productService.createProduct(request);
+            } catch (Exception e) {
+                // Log the error but keep processing the rest
+                System.out.println("Failed to create product: " + request.getTitle());
+            }
+        }
+        return new ResponseEntity<>("Bulk archive upload completed successfully.", HttpStatus.CREATED);
+    }
 }

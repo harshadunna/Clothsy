@@ -27,7 +27,7 @@ export default function Cart() {
   const discount = totalPrice - totalDiscountedPrice;
 
   return (
-    <div className="bg-background text-on-background font-body min-h-screen pt-32 pb-24 px-6 md:px-12">
+    <div className="bg-background text-on-background font-body min-h-screen pt-32 pb-24 px-6 md:px-12 relative overflow-hidden">
       <div className="max-w-7xl mx-auto">
         
         {/* ── Editorial Header ── */}
@@ -51,15 +51,35 @@ export default function Cart() {
             <div className="animate-spin h-8 w-8 border-t-2 border-primary rounded-full"></div>
           </div>
         ) : isEmpty ? (
+          /* ── "A Quiet Collection" Empty State ── */
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }}
-            className="flex flex-col items-center justify-center py-32 border-t border-outline-variant/30"
+            className="flex flex-col items-center justify-center py-24 relative w-full text-center border-t border-outline-variant/30"
           >
-            <span className="material-symbols-outlined text-4xl mb-4 opacity-50 text-outline">inventory_2</span>
-            <p className="font-headline text-3xl italic text-on-surface">The archive is empty.</p>
-            <button onClick={() => navigate('/products')} className="mt-8 font-label text-[10px] uppercase tracking-[0.2em] text-primary border-b border-primary pb-1 hover:text-on-surface transition-colors">
-              Discover Pieces
-            </button>
+            <div className="mb-12 flex justify-center">
+              <span className="material-symbols-outlined text-[80px] text-primary/30" style={{ fontVariationSettings: "'wght' 100" }}>shopping_bag</span>
+            </div>
+            <div className="space-y-8 relative z-10">
+              <h2 className="font-headline italic text-5xl md:text-6xl tracking-tight text-on-surface">
+                A Quiet Collection.
+              </h2>
+              <p className="max-w-md mx-auto text-on-surface-variant font-body text-sm tracking-[0.05rem] opacity-70 leading-relaxed">
+                Your bag is currently empty. Seek inspiration in our curated silhouettes and artisanal fabrics.
+              </p>
+              <div className="pt-10">
+                <button 
+                  onClick={() => navigate('/products')} 
+                  className="bg-on-background text-background px-12 py-5 font-label font-bold text-[0.6875rem] tracking-[0.15em] uppercase border-0 rounded-none hover:bg-primary transition-all duration-500 group relative overflow-hidden"
+                >
+                  <span className="relative z-10">DISCOVER PIECES</span>
+                  <div className="absolute inset-0 bg-primary translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out"></div>
+                </button>
+              </div>
+            </div>
+            {/* Subtle Backdrop Texture */}
+            <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl aspect-square opacity-30 pointer-events-none">
+              <div className="w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary-fixed/50 via-transparent to-transparent"></div>
+            </div>
           </motion.div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
@@ -152,29 +172,22 @@ export default function Cart() {
                   </div>
                 </div>
               </motion.div>
-
-              {/* Payment Methods */}
-              <motion.div 
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.4 }}
-                className="mt-8 p-8 border border-outline-variant/30"
-              >
-                <h4 className="font-label uppercase tracking-[0.2em] text-[11px] font-bold mb-4">Payment Methods</h4>
-                <div className="flex gap-4 opacity-40 grayscale">
-                  <span className="material-symbols-outlined text-2xl">credit_card</span>
-                  <span className="material-symbols-outlined text-2xl">account_balance_wallet</span>
-                  <span className="material-symbols-outlined text-2xl">contactless</span>
-                </div>
-              </motion.div>
             </aside>
 
           </div>
         )}
 
-        {/* ── Cross-sell Section (Static Concept) ── */}
-        {!isEmpty && !loading && (
-          <section className="mt-32 border-t border-outline-variant/30 pt-16">
-            <div className="mb-12">
-              <h2 className="font-headline text-3xl italic text-on-surface/60">You may also seek</h2>
+        {/* ── Cross-sell Section (Always Visible if not loading) ── */}
+        {!loading && (
+          <section className={`mt-32 pt-16 ${isEmpty ? '' : 'border-t border-outline-variant/30'}`}>
+            <div className="flex items-end justify-between mb-12">
+              <div>
+                <span className="font-label text-[0.6875rem] font-bold tracking-[0.2em] text-primary uppercase">Essentials</span>
+                <h2 className="font-headline italic text-4xl mt-2">Seasonless Objects</h2>
+              </div>
+              <button onClick={() => navigate('/products')} className="font-label text-[0.6875rem] font-bold tracking-[0.1em] border-b border-outline-variant hover:border-primary transition-colors pb-1">
+                VIEW ALL
+              </button>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {[
@@ -183,13 +196,13 @@ export default function Cart() {
                 { title: "Heavy Shell", price: "₹1120", img: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=400&q=80" },
                 { title: "Archive Boot", price: "₹4640", img: "https://images.unsplash.com/photo-1608256246200-53e635b5b65f?auto=format&fit=crop&w=400&q=80" },
               ].map((item, i) => (
-                <div key={i} className="space-y-4 cursor-pointer group" onClick={() => navigate('/products')}>
+                <div key={i} className={`space-y-4 cursor-pointer group ${i % 2 !== 0 && isEmpty ? 'md:translate-y-8' : ''}`} onClick={() => navigate('/products')}>
                   <div className="aspect-[3/4] bg-surface-container overflow-hidden">
                     <img src={item.img} alt={item.title} className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105" />
                   </div>
                   <div className="space-y-1">
-                    <p className="font-label uppercase tracking-[0.15em] text-[9px] text-outline">{item.title}</p>
-                    <p className="font-headline text-lg">{item.price}</p>
+                    <p className="font-label uppercase tracking-[0.15em] text-[9px] font-bold text-outline">{item.title}</p>
+                    <p className="font-headline text-lg italic text-on-surface">{item.price}</p>
                   </div>
                 </div>
               ))}

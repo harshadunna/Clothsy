@@ -1,21 +1,11 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, BarChart, Bar } from "recharts";
 import api from "../../config/api";
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 15 },
-  show: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.4, ease: [0.22, 1, 0.36, 1] } }),
-};
 
 export default function AdminAnalytics() {
   const [timeframe, setTimeframe] = useState("weekly");
   const [loading, setLoading] = useState(true);
-  const [chartData, setChartData] = useState({
-    weekly: [],
-    monthly: [],
-    yearly: []
-  });
+  const [chartData, setChartData] = useState({ weekly: [], monthly: [], yearly: [] });
 
   useEffect(() => {
     const fetchChartData = async () => {
@@ -28,14 +18,13 @@ export default function AdminAnalytics() {
         setLoading(false);
       }
     };
-
     fetchChartData();
   }, []);
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-[80vh]">
-        <div className="w-12 h-12 rounded-full border-4 border-t-transparent animate-spin" style={{ borderColor: "#fdf0e6", borderTopColor: "#c8742a" }}></div>
+      <div className="flex justify-center items-center min-h-screen bg-[#FFF8F5]">
+        <div className="w-12 h-12 border-2 border-t-transparent border-[#1A1109] animate-spin rounded-none" />
       </div>
     );
   }
@@ -43,77 +32,80 @@ export default function AdminAnalytics() {
   const activeData = chartData[timeframe] || [];
 
   return (
-    <div className="p-8 max-w-7xl mx-auto pb-24">
-      <motion.div variants={fadeUp} initial="hidden" animate="show" custom={0} className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div className="p-12 max-w-[1440px] mx-auto min-h-screen bg-[#FFF8F5]">
+      
+      <header className="mb-16 border-b border-[#D1C4BC] pb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
-          <h1 className="text-3xl font-black" style={{ color: "#1a1109", fontFamily: "'Georgia', serif" }}>
-            Financial Analytics
+          <h1 className="text-6xl font-headline italic text-[#1A1109] tracking-tight leading-none mb-4">
+            Analytics Ledger
           </h1>
-          <p className="text-sm mt-1" style={{ color: "#9e8d7a" }}>Deep dive into your actual revenue and sales metrics.</p>
+          <p className="font-label text-[0.65rem] font-bold uppercase tracking-[0.3em] text-[#C8742A]">
+            Financial & Volume Index
+          </p>
         </div>
         
-        {/* The BI Toggle */}
-        <div className="flex bg-gray-100 p-1 rounded-xl w-fit">
+        <div className="flex gap-4">
           {["weekly", "monthly", "yearly"].map((tab) => (
             <button
               key={tab}
               onClick={() => setTimeframe(tab)}
-              className={`px-4 py-2 rounded-lg text-sm font-bold capitalize transition-all ${
-                timeframe === tab ? "bg-white text-[#c8742a] shadow-sm" : "text-gray-500 hover:text-gray-900"
+              className={`font-label text-[0.65rem] font-bold uppercase tracking-widest pb-1 transition-all ${
+                timeframe === tab 
+                  ? "border-b border-[#1A1109] text-[#1A1109]" 
+                  : "text-[#7F756E] hover:text-[#1A1109]"
               }`}
             >
               {tab}
             </button>
           ))}
         </div>
-      </motion.div>
+      </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
         
-        {/* Revenue Area Chart */}
-        <motion.div variants={fadeUp} initial="hidden" animate="show" custom={1} className="bg-white p-6 rounded-2xl border shadow-sm" style={{ borderColor: "#e8ddd5" }}>
-          <h2 className="text-lg font-black text-gray-900 mb-6">Revenue Trend</h2>
-          <div className="h-80 w-full">
+        {/* REVENUE TRAJECTORY */}
+        <div className="bg-[#FFF8F5] p-10 border border-[#D1C4BC]">
+          <h2 className="font-label text-[0.75rem] font-bold uppercase tracking-[0.2em] text-[#1A1109] mb-10 border-b border-[#1A1109] pb-2">Revenue Trajectory</h2>
+          <div className="h-96 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={activeData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#c8742a" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#c8742a" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0e8e0" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9e8d7a' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9e8d7a' }} tickFormatter={(value) => `₹${value}`} />
+              <AreaChart data={activeData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#D1C4BC" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#7F756E', fontFamily: 'Inter', fontWeight: 700 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#7F756E', fontFamily: 'Inter', fontWeight: 700 }} tickFormatter={(val) => `₹${val}`} />
                 <Tooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
+                  cursor={{ stroke: '#1A1109', strokeWidth: 1 }}
+                  contentStyle={{ backgroundColor: '#1A1109', borderRadius: '0px', border: 'none', color: '#FFF' }}
+                  itemStyle={{ color: '#C8742A', fontWeight: '700', fontSize: '12px', fontFamily: 'Inter' }}
+                  labelStyle={{ color: '#FFF', fontWeight: 'bold', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em' }}
                   formatter={(value) => [`₹${value}`, 'Revenue']}
                 />
-                <Area type="monotone" dataKey="revenue" stroke="#c8742a" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                <Area type="linear" dataKey="revenue" stroke="#1A1109" strokeWidth={2} fillOpacity={0.05} fill="#1A1109" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Orders Bar Chart */}
-        <motion.div variants={fadeUp} initial="hidden" animate="show" custom={2} className="bg-white p-6 rounded-2xl border shadow-sm" style={{ borderColor: "#e8ddd5" }}>
-          <h2 className="text-lg font-black text-gray-900 mb-6">Order Volume</h2>
-          <div className="h-80 w-full">
+        {/* VOLUME METRICS */}
+        <div className="bg-[#FFF8F5] p-10 border border-[#D1C4BC]">
+          <h2 className="font-label text-[0.75rem] font-bold uppercase tracking-[0.2em] text-[#1A1109] mb-10 border-b border-[#1A1109] pb-2">Logistics Volume</h2>
+          <div className="h-96 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={activeData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0e8e0" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9e8d7a' }} dy={10} />
-                <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9e8d7a' }} />
+              <BarChart data={activeData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#D1C4BC" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#7F756E', fontFamily: 'Inter', fontWeight: 700 }} dy={10} />
+                <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#7F756E', fontFamily: 'Inter', fontWeight: 700 }} />
                 <Tooltip 
-                  cursor={{ fill: '#fdf8f4' }}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
-                  formatter={(value) => [value, 'Orders']}
+                  cursor={{ fill: '#F9F2EF' }}
+                  contentStyle={{ backgroundColor: '#1A1109', borderRadius: '0px', border: 'none', color: '#FFF' }}
+                  itemStyle={{ color: '#C8742A', fontWeight: '700', fontSize: '12px', fontFamily: 'Inter' }}
+                  labelStyle={{ color: '#FFF', fontWeight: 'bold', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em' }}
+                  formatter={(value) => [value, 'Dispatches']}
                 />
-                <Bar dataKey="orders" fill="#1e293b" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="orders" fill="#C8742A" radius={[0, 0, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </motion.div>
+        </div>
 
       </div>
     </div>

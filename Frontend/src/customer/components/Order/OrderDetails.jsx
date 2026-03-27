@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import OrderTracker from "./OrderTracker";
 import api from "../../../config/api";
 
 const checkReturnEligibility = (deliveryDateString) => {
@@ -29,12 +28,18 @@ const getReturnBadgeConfig = (status) => {
   }
 };
 
-const fadeUp = {
+// ── Animation Variants ──
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.2, delayChildren: 0.2 }
+  }
+};
+
+const nodeVariants = {
   hidden: { opacity: 0, y: 20 },
-  show: (i = 0) => ({
-    opacity: 1, y: 0,
-    transition: { delay: i * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] },
-  }),
+  show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } }
 };
 
 export default function OrderDetails() {
@@ -47,10 +52,6 @@ export default function OrderDetails() {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [selectedItemsToCancel, setSelectedItemsToCancel] = useState([]);
   const [cancelLoading, setCancelLoading] = useState(false);
-
-  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
-  const [selectedItemsToReturn, setSelectedItemsToReturn] = useState([]);
-  const [returnLoading, setReturnLoading] = useState(false);
 
   const fetchOrder = () => {
     setLoading(true);
@@ -103,21 +104,6 @@ export default function OrderDetails() {
     }
   };
 
-  const handleReturnSubmit = async () => {
-    if (selectedItemsToReturn.length === 0) return;
-    setReturnLoading(true);
-    try {
-      await api.put(`/api/orders/${orderId}/return-items`, selectedItemsToReturn);
-      setIsReturnModalOpen(false);
-      setSelectedItemsToReturn([]);
-      fetchOrder();
-    } catch (error) {
-      console.error("Error returning items:", error);
-    } finally {
-      setReturnLoading(false);
-    }
-  };
-
   if (loading && !order) {
     return (
       <div className="min-h-screen flex justify-center items-center bg-background">
@@ -126,10 +112,12 @@ export default function OrderDetails() {
     );
   }
 
-  const isDelivered = order?.orderStatus === "DELIVERED";
+  // Determine Overall States
   const isFullyCancelled = order?.orderStatus === "CANCELLED";
+  const orderStatusStr = String(order?.orderStatus || "");
+  const isDeliveredOrReturned = orderStatusStr === "DELIVERED" || orderStatusStr.includes("RETURN") || orderStatusStr.includes("REFUND");
 
-  const eligibleItemsForCancellation = order?.orderItems?.filter(item => item.itemStatus !== "CANCELLED" && item.itemStatus !== "DELIVERED") || [];
+  const eligibleItemsForCancellation = order?.orderItems?.filter(item => item.itemStatus !== "CANCELLED" && item.itemStatus !== "DELIVERED" && !String(item.itemStatus).includes("RETURN")) || [];
   
   const eligibleItemsForReturn = order?.orderItems?.filter(item => {
     if (item.itemStatus !== "DELIVERED") return false;
@@ -137,8 +125,20 @@ export default function OrderDetails() {
     return isEligible;
   }) || [];
 
+  // ── FIX: Smarter Timeline Logic ──
+  const timelineSteps = ["PLACED", "CONFIRMED", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED"];
+  const displayLabels = ["Confirmed", "Tailored", "Dispatched", "In Transit", "Delivered"];
+  
+  let currentStepIndex = 0;
+  if (isDeliveredOrReturned) {
+    currentStepIndex = 4; // Fully completed timeline
+  } else {
+    const foundIndex = timelineSteps.indexOf(order?.orderStatus);
+    currentStepIndex = foundIndex >= 0 ? foundIndex : 0;
+  }
+
   return (
-    <div className="bg-background text-on-background font-body min-h-screen pt-32 pb-24 px-6 md:px-12">
+    <div className="bg-background text-on-background font-body min-h-screen pt-32 pb-24 px-6 md:px-12 flex flex-col items-center">
       
       {/* ── Cancel Items Modal ── */}
       <AnimatePresence>
@@ -173,166 +173,180 @@ export default function OrderDetails() {
         )}
       </AnimatePresence>
 
-      {/* ── Return Items Modal ── */}
-      <AnimatePresence>
-        {isReturnModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="bg-surface border border-outline-variant/30 shadow-2xl w-full max-w-lg overflow-hidden">
-              <div className="p-8 border-b border-outline-variant/30">
-                <h3 className="text-3xl font-headline italic tracking-tighter text-on-surface">Return Silhouette</h3>
-                <p className="font-label text-[10px] uppercase tracking-widest text-outline mt-2">Items can be returned within 7 days of delivery.</p>
-              </div>
-              <div className="p-8 max-h-[50vh] overflow-y-auto space-y-4">
-                {eligibleItemsForReturn.length === 0 ? (
-                  <p className="text-center font-label text-[10px] uppercase tracking-widest text-outline py-4">Return window has closed for these items.</p>
-                ) : (
-                  eligibleItemsForReturn.map((item) => (
-                    <label key={item.id} className="flex items-center gap-6 p-4 border border-outline-variant/30 hover:border-primary transition-colors cursor-pointer">
-                      <input type="checkbox" className="w-4 h-4 border-outline text-primary focus:ring-0 rounded-none cursor-pointer" checked={selectedItemsToReturn.includes(item.id)} onChange={() => setSelectedItemsToReturn(p => p.includes(item.id) ? p.filter(id => id !== item.id) : [...p, item.id])} />
-                      <img src={item.product?.imageUrl} alt={item.product?.title} className="w-12 h-16 object-cover bg-surface-container grayscale-[20%]" />
-                      <div className="flex-1"><p className="text-sm font-bold text-on-surface truncate font-headline italic">{item.product?.title}</p></div>
-                    </label>
-                  ))
-                )}
-              </div>
-              <div className="p-8 border-t border-outline-variant/30 flex gap-4 bg-surface-container-low">
-                <button onClick={() => { setIsReturnModalOpen(false); setSelectedItemsToReturn([]); }} className="flex-1 py-4 font-label text-[10px] font-bold uppercase tracking-widest text-on-surface border border-outline-variant hover:bg-surface-container transition-colors">Abort</button>
-                <button onClick={handleReturnSubmit} disabled={selectedItemsToReturn.length === 0 || returnLoading} className="flex-1 py-4 font-label text-[10px] font-bold uppercase tracking-widest text-surface bg-on-surface hover:bg-primary disabled:opacity-50 transition-colors">
-                  {returnLoading ? "Processing..." : "Confirm Return"}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* ── 1. Hero Branding ── */}
+      <section className="max-w-4xl w-full text-center mb-16 relative">
+        <button onClick={() => navigate("/account/orders")} className="absolute left-0 top-0 flex items-center gap-2 font-label text-[10px] uppercase tracking-widest text-outline hover:text-primary transition-colors">
+          <span className="material-symbols-outlined text-[14px]">arrow_back</span>
+          Archive
+        </button>
+        <h1 className="text-5xl md:text-7xl font-headline italic tracking-tight text-on-surface mb-6 mt-8 md:mt-0">
+          Where is your Clothsy?
+        </h1>
+        <p className="font-body text-sm uppercase tracking-[0.2em] text-on-surface-variant opacity-60">
+          Order #{order?.id}
+        </p>
+      </section>
 
-      <div className="max-w-5xl mx-auto space-y-12">
+      <div className="max-w-4xl w-full space-y-24">
         
-        {/* ── HEADER & INVOICE BUTTON ── */}
-        <motion.div variants={fadeUp} initial="hidden" animate="show" custom={0} className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-outline-variant/30 pb-8">
-          <div>
-            <button onClick={() => navigate("/account/orders")} className="flex items-center gap-2 font-label text-[10px] uppercase tracking-widest text-outline hover:text-primary transition-colors mb-6">
-              <span className="material-symbols-outlined text-[14px]">arrow_back</span>
-              Archive Orders
-            </button>
-            <h1 className="text-5xl md:text-6xl font-headline italic tracking-tight text-on-surface">Order #{order?.id}</h1>
-          </div>
+        {/* ── 2. Interactive Tracker (Horizontal Timeline) ── */}
+        <section className="w-full overflow-hidden px-4">
+          <motion.div 
+            variants={containerVariants} 
+            initial="hidden" 
+            animate="show" 
+            className="relative flex justify-between items-start pt-8"
+          >
+            {/* Background Line */}
+            <div className="absolute top-[41px] left-0 w-full h-[1px] bg-outline-variant/30 -z-10"></div>
+            
+            {/* Progress Line */}
+            {!isFullyCancelled && (
+              <motion.div 
+                initial={{ scaleX: 0 }} 
+                animate={{ scaleX: currentStepIndex / (timelineSteps.length - 1) }} 
+                transition={{ duration: 1.5, ease: "easeInOut" }}
+                className="absolute top-[41px] left-0 w-full h-[1px] bg-on-surface -z-10 origin-left"
+              />
+            )}
 
+            {isFullyCancelled ? (
+              <div className="w-full text-center py-8">
+                <span className="font-headline italic text-3xl text-error">This order has been cancelled.</span>
+              </div>
+            ) : (
+              displayLabels.map((label, index) => {
+                const isActive = index <= currentStepIndex;
+                const isCurrent = index === currentStepIndex;
+                
+                return (
+                  <motion.div key={label} variants={nodeVariants} className="flex flex-col items-center text-center">
+                    <div className={`w-6 h-6 mb-4 flex items-center justify-center transition-colors duration-500
+                      ${isActive ? 'bg-[#C8742A]' : 'border border-on-surface bg-transparent'}`}
+                    >
+                      {isCurrent && <div className="w-1.5 h-1.5 bg-white"></div>}
+                    </div>
+                    <span className={`text-[0.625rem] uppercase tracking-widest font-bold ${isActive ? 'text-[#C8742A]' : 'text-outline'}`}>
+                      {label}
+                    </span>
+                  </motion.div>
+                );
+              })
+            )}
+          </motion.div>
+        </section>
+
+        {/* ── 3. Shipment Contents (Horizontal Scroll) ── */}
+        <section className="border-t border-outline-variant/30 pt-16">
+          <div className="flex justify-between items-end mb-8">
+            <h2 className="font-label text-[0.6875rem] uppercase tracking-[0.2em] font-bold text-primary">Shipment Contents</h2>
+            
+            {/* Top Right Request Return Button (Optional quick access) */}
+            {eligibleItemsForReturn.length > 0 && (
+              <button 
+                onClick={() => navigate(`/account/order/${orderId}/return`)} 
+                className="font-label text-[10px] uppercase tracking-widest text-primary border-b border-primary pb-0.5 hover:opacity-70 transition-opacity"
+              >
+                Request Return
+              </button>
+            )}
+          </div>
+          
+          <div className="flex gap-12 overflow-x-auto pb-8 snap-x" style={{ scrollbarWidth: 'none' }}>
+            {order?.orderItems?.map((item, index) => {
+              const isItemCancelled = item.itemStatus === "CANCELLED";
+              const returnBadgeText = getReturnBadgeConfig(item.itemStatus);
+              
+              return (
+                <div key={item.id || index} className={`flex items-center gap-6 flex-shrink-0 snap-start w-80 ${isItemCancelled ? 'opacity-50' : ''}`}>
+                  <div 
+                    onClick={() => navigate(`/product/${item?.product?.id}`)}
+                    className="w-24 h-32 bg-surface-container overflow-hidden cursor-pointer relative"
+                  >
+                    {isItemCancelled && <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10"><span className="text-[8px] font-bold uppercase tracking-widest text-error">Cancelled</span></div>}
+                    {returnBadgeText && <div className="absolute top-0 left-0 bg-primary text-surface px-1 py-0.5 z-10"><span className="text-[7px] font-bold uppercase tracking-widest">{returnBadgeText}</span></div>}
+                    <img 
+                      src={item.product?.imageUrl} 
+                      alt={item.product?.title} 
+                      className="w-full h-full object-cover grayscale-[20%] hover:scale-105 transition-transform duration-700" 
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-label text-[0.625rem] uppercase tracking-[0.2em] text-outline">{item.product?.brand}</p>
+                    <h4 
+                      onClick={() => navigate(`/product/${item?.product?.id}`)}
+                      className="font-headline italic text-xl cursor-pointer hover:text-primary transition-colors line-clamp-2"
+                    >
+                      {item.product?.title}
+                    </h4>
+                    <p className="font-label text-[0.625rem] uppercase tracking-widest opacity-60 mt-2">Size: {item.size} / Qty: {item.quantity}</p>
+                    
+                    {/* Rate product link if delivered */}
+                    {(item.itemStatus === "DELIVERED" || String(item.itemStatus).includes("RETURN")) && (
+                      <button onClick={() => navigate(`/product/${item?.product?.id}/rate`)} className="mt-4 font-label text-[9px] uppercase tracking-widest text-primary border-b border-primary pb-0.5">
+                        Leave Narrative
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ── 4. Document & Post-Delivery Actions ── */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          
           <button 
             onClick={handleDownloadInvoice} 
             disabled={downloading || isFullyCancelled}
-            className="flex items-center justify-center gap-3 px-8 py-4 font-label text-[10px] uppercase tracking-widest font-bold text-on-surface border border-on-surface hover:bg-on-surface hover:text-surface transition-colors disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-on-surface"
+            className="w-full border border-on-surface text-on-surface py-6 font-label text-[0.7rem] uppercase tracking-[0.25em] font-bold hover:bg-on-surface hover:text-surface transition-all duration-300 disabled:opacity-50 flex justify-center items-center gap-2"
           >
-            {downloading ? (
-              <span className="material-symbols-outlined animate-spin text-[16px]">sync</span>
-            ) : (
-              <span className="material-symbols-outlined text-[16px]">receipt_long</span>
-            )}
-            {downloading ? "GENERATING..." : "DOWNLOAD INVOICE"}
+            {downloading ? <span className="material-symbols-outlined animate-spin text-[16px]">sync</span> : <span className="material-symbols-outlined text-[16px]">receipt_long</span>}
+            Invoice
           </button>
-        </motion.div>
 
-        {/* ── DELIVERY ADDRESS (Rendered Directly, No Edit/Delete Buttons) ── */}
-        <motion.div variants={fadeUp} initial="hidden" animate="show" custom={1} className="bg-surface-container-low border border-outline-variant/30">
-          <div className="px-8 py-6 border-b border-outline-variant/30">
-            <h2 className="font-label text-[10px] uppercase tracking-widest font-bold text-on-surface">Delivery Destination</h2>
-          </div>
-          <div className="p-8">
-            {order?.shippingAddress ? (
-              <div className="font-body text-sm space-y-2 text-on-surface-variant">
-                 <p className="font-headline italic text-2xl text-on-surface mb-4">
-                   {order.shippingAddress.firstName} {order.shippingAddress.lastName}
-                 </p>
-                 <p>{order.shippingAddress.streetAddress}</p>
-                 <p className="uppercase tracking-wider text-xs mt-1">{order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zipCode}</p>
-                 <p className="pt-4 font-label text-xs">Phone: {order.shippingAddress.mobile}</p>
-              </div>
-            ) : (
-              <p className="font-label text-[10px] uppercase tracking-widest text-outline">Destination unavailable.</p>
-            )}
-          </div>
-        </motion.div>
+          {!isFullyCancelled && !isDeliveredOrReturned && eligibleItemsForCancellation.length > 0 && (
+            <button 
+              onClick={() => setIsCancelModalOpen(true)}
+              className="w-full border border-error text-error py-6 font-label text-[0.7rem] uppercase tracking-[0.25em] font-bold hover:bg-error hover:text-surface transition-all duration-300"
+            >
+              Cancel Pieces
+            </button>
+          )}
 
-        {/* ── ORDER STATUS & TRACKER ── */}
-        <motion.div variants={fadeUp} initial="hidden" animate="show" custom={2} className="bg-surface border border-outline-variant/30">
-          <div className="px-8 py-6 border-b border-outline-variant/30 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <h2 className="font-label text-[10px] uppercase tracking-widest font-bold text-on-surface">Logistics Status</h2>
-            
-            <div className="flex gap-4">
-              {!isFullyCancelled && !isDelivered && (
-                <button onClick={() => setIsCancelModalOpen(true)} className="font-label text-[10px] uppercase tracking-widest text-error border-b border-error pb-0.5 hover:opacity-70 transition-opacity">
-                  Cancel Pieces
-                </button>
-              )}
-              {isDelivered && eligibleItemsForReturn.length > 0 && (
-                <button onClick={() => setIsReturnModalOpen(true)} className="font-label text-[10px] uppercase tracking-widest text-primary border-b border-primary pb-0.5 hover:opacity-70 transition-opacity">
-                  Request Return
-                </button>
-              )}
-            </div>
-          </div>
-          <div className="px-8 py-12 overflow-x-auto">
-             {/* Assuming OrderTracker can handle transparent backgrounds natively. If it looks weird, we'll style it later */}
-            <OrderTracker status={order?.orderStatus} />
-          </div>
-        </motion.div>
+          {/* ── RETURN BUTTON LINKED HERE ── */}
+          {eligibleItemsForReturn.length > 0 && (
+            <button 
+              onClick={() => navigate(`/account/order/${orderId}/return`)}
+              className="w-full bg-[#C8742A] text-white py-6 font-label text-[0.7rem] uppercase tracking-[0.25em] font-bold hover:opacity-90 transition-all duration-300"
+            >
+              Request Return
+            </button>
+          )}
+        </section>
 
-        {/* ── ORDER ITEMS ── */}
-        <div className="space-y-8">
-          <h2 className="font-headline text-3xl italic text-on-surface border-b border-outline-variant/30 pb-4">Secured Pieces</h2>
-          {order?.orderItems?.map((item, i) => {
-            const isItemCancelled = item.itemStatus === "CANCELLED";
-            const returnBadgeText = getReturnBadgeConfig(item.itemStatus);
-            const { isEligible, daysLeft } = checkReturnEligibility(item.deliveryDate || order?.deliveryDate);
-            
-            return (
-              <motion.div key={item.id || i} variants={fadeUp} initial="hidden" animate="show" custom={3 + i} className={`bg-surface border border-outline-variant/30 flex flex-col sm:flex-row relative ${isItemCancelled ? 'opacity-70' : ''}`}>
-                
-                {/* Status Badges Overlaid on Image Area */}
-                {isItemCancelled && <div className="absolute top-4 left-4 z-10 bg-error text-surface text-[9px] font-label uppercase tracking-widest px-3 py-1 border border-error/50">Cancelled</div>}
-                {returnBadgeText && <div className="absolute top-4 left-4 z-10 bg-primary text-on-primary text-[9px] font-label uppercase tracking-widest px-3 py-1">{returnBadgeText}</div>}
+      </div>
 
-                <div 
-                  onClick={() => navigate(`/product/${item?.product?.id}`)} 
-                  className={`w-full sm:w-40 aspect-[3/4] sm:aspect-auto shrink-0 overflow-hidden cursor-pointer bg-surface-container ${isItemCancelled ? 'grayscale-[80%]' : 'grayscale-[10%] hover:grayscale-0 transition-all duration-700'}`} 
-                >
-                  <img src={item?.product?.imageUrl} alt={item?.product?.title} className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-700" />
-                </div>
-                
-                <div className="flex-1 p-8 flex flex-col sm:flex-row justify-between gap-6">
-                  <div className="space-y-2">
-                    <p className="font-label text-[10px] uppercase tracking-[0.2em] text-outline">{item?.product?.brand}</p>
-                    <h3 
-                      onClick={() => navigate(`/product/${item?.product?.id}`)} 
-                      className={`font-headline text-2xl italic cursor-pointer hover:text-primary transition-colors ${isItemCancelled ? 'text-outline line-through' : 'text-on-surface'}`}
-                    >
-                      {item?.product?.title}
-                    </h3>
-                    <div className="pt-2 flex flex-col gap-2">
-                      <span className="font-label text-xs uppercase tracking-widest text-on-surface-variant">Size {item?.size} · Qty {item?.quantity}</span>
-                      <span className={`font-body text-xl font-bold ${isItemCancelled ? 'text-outline line-through' : 'text-on-surface'}`}>₹{item?.discountedPrice || item?.price}</span>
-                    </div>
-                    
-                    {item.itemStatus === "DELIVERED" && (
-                      <p className={`font-label text-[10px] uppercase tracking-widest pt-4 ${isEligible ? 'text-primary' : 'text-outline'}`}>
-                        {isEligible ? `Return window open (${daysLeft} days left)` : "Return window closed"}
-                      </p>
-                    )}
-                  </div>
-
-                  {item.itemStatus === "DELIVERED" && (
-                    <div className="flex flex-col items-start sm:items-end justify-end">
-                      <button onClick={() => navigate(`/product/${item?.product?.id}/rate`)} className="font-label text-[10px] uppercase tracking-widest font-bold text-on-surface border-b border-on-surface pb-1 hover:text-primary hover:border-primary transition-colors">
-                        Leave a Narrative
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            );
-          })}
+      {/* ── 5. Editorial Accent Image ── */}
+      <div className="mt-32 w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-12 items-center border-t border-outline-variant/30 pt-16">
+        <div className="aspect-[4/5] overflow-hidden bg-surface-container">
+          <img 
+            src="https://images.unsplash.com/photo-1550614000-4895a10e1bfd?auto=format&fit=crop&w=800&q=80" 
+            alt="Close-up of luxury fabric" 
+            className="w-full h-full object-cover grayscale-[20%] transition-transform duration-700 hover:scale-105" 
+          />
         </div>
-
+        <div className="space-y-6">
+          <span className="font-label text-[0.6875rem] uppercase tracking-[0.3em] text-primary block">Atelier Craftsmanship</span>
+          <p className="font-headline text-3xl leading-relaxed italic text-on-surface">
+            "Every garment is tracked not just by numbers, but by the hands that touched it."
+          </p>
+          <div className="h-px w-24 bg-primary opacity-30"></div>
+          <p className="font-body text-sm text-on-surface-variant leading-loose">
+            At Clothsy, our logistical process mirrors our design philosophy: precise, intentional, and transparent. From our atelier to your door, every step is a commitment to quality.
+          </p>
+        </div>
       </div>
     </div>
   );

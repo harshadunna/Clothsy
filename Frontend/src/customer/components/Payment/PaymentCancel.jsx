@@ -1,3 +1,4 @@
+import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
@@ -5,64 +6,87 @@ export default function PaymentCancel() {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Grab the order ID just in case we want to show it
+  // Grab the order ID if it was passed back by the payment gateway
   const queryParams = new URLSearchParams(location.search);
   const orderId = queryParams.get("order_id");
 
   return (
-    <div className="min-h-[80vh] flex flex-col items-center justify-center py-10 px-4 sm:px-6 bg-gray-50/50">
-      <motion.div 
-        initial={{ scale: 0.95, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, type: "spring" }}
-        className="bg-white p-8 sm:p-12 rounded-[2rem] border shadow-xl flex flex-col items-center w-full max-w-lg text-center"
-        style={{ borderColor: "#f3e8e8" }}
-      >
-        {/* Animated Icon */}
+    <div className="min-h-screen bg-background text-on-background font-body pt-20 flex items-center justify-center overflow-hidden">
+      <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-0 py-12 lg:py-0">
+        
+        {/* ── Hero Image Column (Asymmetric Layout) ── */}
         <motion.div 
-          initial={{ rotate: -180, scale: 0 }} 
-          animate={{ rotate: 0, scale: 1 }} 
-          transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-          className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6 shadow-inner"
+          initial={{ opacity: 0, x: -40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="col-span-12 lg:col-span-7 h-[400px] lg:h-[750px] relative overflow-hidden order-2 lg:order-1 bg-surface-container"
         >
-          <svg className="w-12 h-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <img 
+            src="https://images.unsplash.com/photo-1600165328224-8175b5b00c82?auto=format&fit=crop&w=1200&q=80" 
+            alt="Draped linen fabric" 
+            className="w-full h-full object-cover grayscale-[20%] opacity-90 transition-transform duration-1000 hover:scale-105" 
+          />
+          <div className="absolute inset-0 bg-primary/5 mix-blend-multiply"></div>
         </motion.div>
 
-        <h1 className="text-3xl font-black text-gray-900 mb-3" style={{ fontFamily: "'Georgia', serif" }}>
-          Payment Cancelled
-        </h1>
-        
-        <p className="text-gray-500 text-base mb-8">
-          You cancelled the checkout process. <strong className="text-gray-700">No charges were made to your card.</strong>
-          {orderId && <span className="block mt-2 text-sm text-gray-400">Order Reference: #{orderId}</span>}
-        </p>
+        {/* ── Content Column ── */}
+        <motion.div 
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          className="col-span-12 lg:col-span-5 flex flex-col justify-center lg:pl-16 order-1 lg:order-2"
+        >
+          <div className="flex flex-col space-y-12">
+            
+            {/* Minimalist Close Icon */}
+            <div className="flex justify-start">
+              <div className="w-20 h-20 md:w-24 md:h-24 rounded-none border border-outline-variant/40 flex items-center justify-center p-0">
+                <span className="material-symbols-outlined text-on-background text-[40px] md:text-[48px]" style={{ fontVariationSettings: "'wght' 100" }}>
+                  close
+                </span>
+              </div>
+            </div>
 
-        <div className="w-full bg-gray-50 rounded-xl p-4 mb-8 border border-gray-100">
-          <p className="text-sm text-gray-600">
-            Your items are still safely saved in your cart. You can come back and complete your purchase anytime!
-          </p>
-        </div>
+            <div className="space-y-6">
+              <h1 className="font-headline italic text-5xl md:text-6xl lg:text-7xl xl:text-8xl text-on-background tracking-tighter leading-tight">
+                A Momentary <br className="hidden lg:block"/> Pause.
+              </h1>
+              <p className="text-on-surface-variant font-body text-sm md:text-base tracking-[0.05rem] leading-relaxed max-w-sm">
+                Your selection is still reserved in your bag. Our systems encountered a brief interruption during the secure processing of your transaction. No charges were made.
+              </p>
+            </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col w-full gap-3">
-          <button 
-            onClick={() => navigate("/cart")}
-            className="w-full py-4 rounded-2xl text-sm font-black tracking-wider uppercase text-white shadow-lg transition-transform active:scale-95 hover:shadow-xl hover:-translate-y-0.5"
-            style={{ background: "linear-gradient(135deg, #d4832f, #c8742a)" }}
-          >
-            Return to Cart
-          </button>
-          
-          <button 
-            onClick={() => navigate("/")}
-            className="w-full py-4 rounded-2xl text-sm font-black tracking-wider uppercase text-gray-500 bg-white border-2 border-gray-100 hover:bg-gray-50 hover:text-gray-700 transition-colors active:scale-95"
-          >
-            Continue Shopping
-          </button>
-        </div>
-      </motion.div>
+            {/* CTA Section */}
+            <div className="flex flex-col space-y-4 pt-4">
+              <button 
+                onClick={() => navigate("/checkout?step=2")}
+                className="w-full md:w-80 bg-on-background text-surface font-label font-bold text-[11px] uppercase tracking-[0.2em] py-5 px-8 transition-transform active:scale-[0.98] hover:bg-primary"
+              >
+                Retry Payment
+              </button>
+              <button 
+                onClick={() => navigate("/cart")}
+                className="w-full md:w-80 border border-outline-variant text-on-background font-label font-bold text-[11px] uppercase tracking-[0.2em] py-5 px-8 hover:bg-surface-container-low hover:border-primary transition-colors duration-300"
+              >
+                Return to Bag
+              </button>
+            </div>
+
+            {/* Metadata / Help */}
+            <div className="pt-8 border-t border-outline-variant/30 flex flex-col space-y-2">
+              {orderId && (
+                <p className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">
+                  Reference ID: #{orderId}
+                </p>
+              )}
+              <p className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">
+                Need assistance? <button onClick={() => navigate("/contact")} className="underline decoration-primary/30 hover:decoration-primary transition-colors">Contact Editorial Support</button>
+              </p>
+            </div>
+
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 }

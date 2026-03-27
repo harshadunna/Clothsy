@@ -6,10 +6,10 @@ import CreateProduct from "./components/CreateProduct";
 import AdminOrders from "./components/AdminOrders";
 import AdminProducts from "./components/AdminProducts"; 
 import UpdateProduct from "./components/UpdateProduct";
-
+import AdminCustomers from "./components/AdminCustomers"; 
 export default function AdminRoutes() {
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "linear-gradient(160deg, #fdf8f4 0%, #f5f0eb 100%)" }}>
+    <div className="flex h-screen overflow-hidden bg-[#FFF8F5] text-[#1A1109] font-body selection:bg-[#FEA052] selection:text-[#1A1109]">
       
       <AdminSidebar />
       
@@ -21,6 +21,7 @@ export default function AdminRoutes() {
           <Route path="/product/update/:productId" element={<UpdateProduct />} />
           <Route path="/orders" element={<AdminOrders />} />
           <Route path="/products" element={<AdminProducts />} />
+          <Route path="/customers" element={<AdminCustomers />} />
         </Routes>
       </div>
     </div>

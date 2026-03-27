@@ -1,18 +1,18 @@
-import './App.css'
-import { Routes, Route } from 'react-router-dom'
-import CustomerRoutes from './Routers/CustomerRoutes'
-import AdminRoutes from './Admin/AdminRoutes' 
+import './App.css';
+import { Routes, Route } from 'react-router-dom';
+import CustomerRoutes from './Routers/CustomerRoutes';
+import AdminRoutes from './Admin/AdminRoutes'; 
 
 function App() {
   return (
     <Routes>
-      {/* Customer Routes (Catches everything else) */}
-      <Route path="/*" element={<CustomerRoutes />} />
-      
-      {/* Admin Routes (Catches anything starting with /admin) */}
+      {/* Admin Suite Routes */}
       <Route path="/admin/*" element={<AdminRoutes />} />
+      
+      {/* Customer / Atelier Routes */}
+      <Route path="/*" element={<CustomerRoutes />} />
     </Routes>
   );
 }
 
-export default App
+export default App;

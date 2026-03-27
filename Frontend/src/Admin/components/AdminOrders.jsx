@@ -1,16 +1,11 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { TrashIcon, CheckCircleIcon, TruckIcon, CheckIcon, ArrowPathIcon, BuildingStorefrontIcon, CurrencyRupeeIcon, CheckBadgeIcon } from "@heroicons/react/24/outline";
+import { useNavigate } from "react-router-dom";
 import api from "../../config/api";
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 15 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
-};
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const fetchOrders = async () => {
     try {
@@ -38,28 +33,12 @@ export default function AdminOrders() {
   };
 
   const deleteOrder = async (orderId) => {
-    if (!window.confirm("Are you sure you want to permanently delete this order?")) return;
+    if (!window.confirm("CONFIRM DELETION: Permanently erase this logistics record?")) return;
     try {
       await api.delete(`/api/admin/orders/${orderId}/delete`);
       fetchOrders();
     } catch (error) {
       console.error("Error deleting order:", error);
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "PLACED": return "bg-blue-50 text-blue-600 border-blue-200";
-      case "CONFIRMED": return "bg-yellow-50 text-yellow-700 border-yellow-200";
-      case "SHIPPED": return "bg-orange-50 text-orange-600 border-orange-200";
-      case "DELIVERED": return "bg-green-50 text-green-600 border-green-200";
-      case "CANCELLED": return "bg-red-50 text-red-600 border-red-200";
-      case "RETURN_REQUESTED": return "bg-purple-50 text-purple-600 border-purple-200";
-      case "RETURN_PICKED": return "bg-indigo-50 text-indigo-600 border-indigo-200";
-      case "RETURN_RECEIVED": return "bg-teal-50 text-teal-600 border-teal-200";
-      case "REFUND_INITIATED": return "bg-pink-50 text-pink-600 border-pink-200";
-      case "REFUND_COMPLETED": return "bg-emerald-50 text-emerald-600 border-emerald-200";
-      default: return "bg-gray-50 text-gray-600 border-gray-200";
     }
   };
 
@@ -73,119 +52,136 @@ export default function AdminOrders() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-full">
-        <div className="w-10 h-10 border-4 border-t-transparent animate-spin rounded-full" style={{ borderColor: "#fdf0e6", borderTopColor: "#c8742a" }}></div>
+      <div className="flex justify-center items-center min-h-screen bg-[#FFF8F5]">
+        <div className="w-12 h-12 border-2 border-t-transparent border-[#1A1109] animate-spin rounded-none" />
       </div>
     );
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <motion.div variants={fadeUp} initial="hidden" animate="show" className="mb-8">
-        <h1 className="text-3xl font-black" style={{ color: "#1a1109", fontFamily: "'Georgia', serif" }}>
-          Order Management
-        </h1>
-        <p className="text-sm mt-1" style={{ color: "#9e8d7a" }}>View and process customer orders and returns.</p>
-      </motion.div>
+    <div className="p-12 max-w-[1440px] mx-auto min-h-screen bg-[#FFF8F5]">
+      
+      {/* ── HEADER ── */}
+      <div className="flex justify-between items-end mb-16 border-b border-[#D1C4BC] pb-8">
+        <div>
+          <h1 className="text-6xl font-headline italic text-[#1A1109] tracking-tight leading-none mb-4">
+            Order Logistics
+          </h1>
+          <p className="font-label text-[0.65rem] font-bold uppercase tracking-[0.3em] text-[#C8742A]">
+            Global Shipping Manifest
+          </p>
+        </div>
+      </div>
 
-      <motion.div variants={fadeUp} initial="hidden" animate="show" className="bg-white rounded-2xl border shadow-sm overflow-hidden" style={{ borderColor: "#e8ddd5" }}>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50/50 border-b text-xs uppercase tracking-widest text-gray-500 font-bold" style={{ borderColor: "#e8ddd5" }}>
-                <th className="px-6 py-4">Order ID</th>
-                <th className="px-6 py-4">Customer</th>
-                <th className="px-6 py-4">Date</th>
-                <th className="px-6 py-4">Items</th>
-                <th className="px-6 py-4">Total</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+      {/* ── BRUTALIST LEDGER ── */}
+      <div className="bg-[#FFF8F5] border-t-2 border-[#1A1109]">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-[#D1C4BC] bg-[#F9F2EF]">
+              <th className="py-4 px-6 font-label text-[0.65rem] font-black tracking-[0.1em] text-[#7F756E] uppercase">Dispatch ID</th>
+              <th className="py-4 px-6 font-label text-[0.65rem] font-black tracking-[0.1em] text-[#7F756E] uppercase">Client</th>
+              <th className="py-4 px-6 font-label text-[0.65rem] font-black tracking-[0.1em] text-[#7F756E] uppercase">Volume</th>
+              <th className="py-4 px-6 font-label text-[0.65rem] font-black tracking-[0.1em] text-[#7F756E] uppercase">Value</th>
+              <th className="py-4 px-6 font-label text-[0.65rem] font-black tracking-[0.1em] text-[#7F756E] uppercase">State</th>
+              <th className="py-4 px-6 font-label text-[0.65rem] font-black tracking-[0.1em] text-[#7F756E] uppercase text-right">Directives</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.length === 0 ? (
+              <tr>
+                <td colSpan="6" className="py-12 text-center font-label text-[0.75rem] tracking-widest uppercase text-[#7F756E]">No active dispatches.</td>
               </tr>
-            </thead>
-            <tbody className="divide-y" style={{ borderColor: "#f0e8e0" }}>
-              {orders.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-gray-400 font-medium">No orders found.</td>
-                </tr>
-              ) : (
-                orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4 font-bold text-gray-900">#{order.id}</td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm font-bold text-gray-900">{order.user?.firstName} {order.user?.lastName}</p>
-                      <p className="text-xs text-gray-500">{order.user?.email}</p>
+            ) : (
+              orders.map((order) => {
+                // Get image from first item for the editorial thumbnail look
+                const previewImg = order.orderItems?.[0]?.product?.imageUrl;
+
+                return (
+                  <tr key={order.id} className="border-b border-[#D1C4BC] hover:bg-[#F9F2EF] transition-colors group">
+                    
+                    <td className="py-6 px-6">
+                      <div className="flex items-center gap-6">
+                        {previewImg && (
+                          <div className="w-12 h-16 bg-[#F3ECEA] overflow-hidden rounded-none shrink-0 border border-[#D1C4BC]">
+                            <img src={previewImg} alt="Preview" className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-label text-[0.65rem] font-bold uppercase tracking-[0.2em] text-[#C8742A] mb-1">ORD-{order.id}</p>
+                          <p className="font-label text-[0.6rem] font-bold uppercase tracking-widest text-[#7F756E]">{new Date(order.createdAt).toLocaleDateString()}</p>
+                        </div>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {new Date(order.createdAt).toLocaleDateString()}
+
+                    <td className="py-6 px-6">
+                      <p className="font-headline text-xl text-[#1A1109] line-clamp-1">{order.user?.firstName} {order.user?.lastName}</p>
+                      <p className="font-label text-[0.65rem] font-bold uppercase tracking-widest text-[#7F756E]">{order.user?.email}</p>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      <span className="font-bold text-gray-900">{order.totalItem}</span> items
+
+                    <td className="py-6 px-6 font-label text-[0.75rem] font-black tracking-widest text-[#1A1109]">
+                      {order.totalItem} <span className="text-[0.6rem] text-[#7F756E]">UNITS</span>
                     </td>
-                    <td className="px-6 py-4 font-black text-[#c8742a]">
+
+                    <td className="py-6 px-6 font-headline text-xl font-bold text-[#1A1109]">
                       ₹{order.totalDiscountedPrice}
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col gap-1 items-start">
-                        <span className={`px-3 py-1 text-xs font-bold rounded-lg border ${getStatusColor(order.orderStatus)}`}>
+
+                    <td className="py-6 px-6">
+                      <div className="flex flex-col items-start gap-1">
+                        <span className={`px-3 py-1 font-label text-[0.6rem] font-black uppercase tracking-widest border ${
+                          order.orderStatus === "DELIVERED" ? "border-[#1A1109] text-[#1A1109]" :
+                          order.orderStatus === "CANCELLED" ? "border-[#BA1A1A] text-[#BA1A1A] bg-[#FFDAD6]/30" :
+                          order.orderStatus === "SHIPPED" ? "border-[#C8742A] text-[#C8742A] bg-[#C8742A]/10" :
+                          "border-[#D1C4BC] text-[#7F756E]"
+                        }`}>
                           {order.orderStatus?.replace(/_/g, " ")}
                         </span>
                         {isPartialReturn(order) && (
-                          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">
+                          <span className="font-label text-[0.55rem] font-bold uppercase tracking-[0.2em] text-[#7F756E] mt-1">
                             (Partial Return)
                           </span>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 flex items-center justify-end gap-2">
-                      
-                      {order.orderStatus === "PLACED" && (
-                        <button onClick={() => updateOrderStatus(order.id, 'confirmed')} className="flex items-center gap-1 px-3 py-1.5 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 rounded-lg text-xs font-bold transition-colors">
-                          <CheckCircleIcon className="w-4 h-4" /> Confirm
-                        </button>
-                      )}
-                      {order.orderStatus === "CONFIRMED" && (
-                        <button onClick={() => updateOrderStatus(order.id, 'ship')} className="flex items-center gap-1 px-3 py-1.5 bg-orange-100 text-orange-700 hover:bg-orange-200 rounded-lg text-xs font-bold transition-colors">
-                          <TruckIcon className="w-4 h-4" /> Ship
-                        </button>
-                      )}
-                      {order.orderStatus === "SHIPPED" && (
-                        <button onClick={() => updateOrderStatus(order.id, 'deliver')} className="flex items-center gap-1 px-3 py-1.5 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg text-xs font-bold transition-colors">
-                          <CheckIcon className="w-4 h-4" /> Deliver
-                        </button>
-                      )}
 
-                      {order.orderStatus === "RETURN_REQUESTED" && (
-                        <button onClick={() => updateOrderStatus(order.id, 'return-picked')} className="flex items-center gap-1 px-3 py-1.5 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-lg text-xs font-bold transition-colors">
-                          <ArrowPathIcon className="w-4 h-4" /> Mark Picked Up
-                        </button>
-                      )}
-                      {order.orderStatus === "RETURN_PICKED" && (
-                        <button onClick={() => updateOrderStatus(order.id, 'return-received')} className="flex items-center gap-1 px-3 py-1.5 bg-teal-100 text-teal-700 hover:bg-teal-200 rounded-lg text-xs font-bold transition-colors">
-                          <BuildingStorefrontIcon className="w-4 h-4" /> Receive at Warehouse
-                        </button>
-                      )}
-                      {order.orderStatus === "RETURN_RECEIVED" && (
-                        <button onClick={() => updateOrderStatus(order.id, 'refund-initiated')} className="flex items-center gap-1 px-3 py-1.5 bg-pink-100 text-pink-700 hover:bg-pink-200 rounded-lg text-xs font-bold transition-colors">
-                          <CurrencyRupeeIcon className="w-4 h-4" /> Initiate Refund
-                        </button>
-                      )}
-                      {order.orderStatus === "REFUND_INITIATED" && (
-                        <button onClick={() => updateOrderStatus(order.id, 'refund-completed')} className="flex items-center gap-1 px-3 py-1.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-lg text-xs font-bold transition-colors">
-                          <CheckBadgeIcon className="w-4 h-4" /> Complete Refund
-                        </button>
-                      )}
+                    <td className="py-6 px-6 text-right">
+                      <div className="flex flex-wrap justify-end gap-3">
+                        {order.orderStatus === "PLACED" && (
+                          <button onClick={() => updateOrderStatus(order.id, 'confirmed')} className="border border-[#1A1109] text-[#1A1109] hover:bg-[#1A1109] hover:text-[#FFF8F5] px-4 py-2 font-label text-[0.6rem] font-black uppercase tracking-widest transition-colors">Confirm</button>
+                        )}
+                        {order.orderStatus === "CONFIRMED" && (
+                          <button onClick={() => updateOrderStatus(order.id, 'ship')} className="border border-[#C8742A] text-[#C8742A] hover:bg-[#C8742A] hover:text-[#FFF8F5] px-4 py-2 font-label text-[0.6rem] font-black uppercase tracking-widest transition-colors">Dispatch</button>
+                        )}
+                        {order.orderStatus === "SHIPPED" && (
+                          <button onClick={() => updateOrderStatus(order.id, 'deliver')} className="bg-[#1A1109] text-[#FFF8F5] px-4 py-2 font-label text-[0.6rem] font-black uppercase tracking-widest hover:bg-[#C8742A] transition-colors">Deliver</button>
+                        )}
 
-                      <button onClick={() => deleteOrder(order.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ml-2">
-                        <TrashIcon className="w-5 h-5" />
-                      </button>
+                        {/* Returns Process */}
+                        {order.orderStatus === "RETURN_REQUESTED" && (
+                          <button onClick={() => updateOrderStatus(order.id, 'return-picked')} className="border border-[#1A1109] text-[#1A1109] px-4 py-2 font-label text-[0.6rem] font-black uppercase tracking-widest hover:bg-[#1A1109] hover:text-[#FFF8F5] transition-colors">Mark Picked</button>
+                        )}
+                        {order.orderStatus === "RETURN_PICKED" && (
+                          <button onClick={() => updateOrderStatus(order.id, 'return-received')} className="border border-[#1A1109] text-[#1A1109] px-4 py-2 font-label text-[0.6rem] font-black uppercase tracking-widest hover:bg-[#1A1109] hover:text-[#FFF8F5] transition-colors">Warehouse Recv</button>
+                        )}
+                        {order.orderStatus === "RETURN_RECEIVED" && (
+                          <button onClick={() => updateOrderStatus(order.id, 'refund-initiated')} className="border border-[#C8742A] text-[#C8742A] px-4 py-2 font-label text-[0.6rem] font-black uppercase tracking-widest hover:bg-[#C8742A] hover:text-[#FFF8F5] transition-colors">Init Refund</button>
+                        )}
+                        {order.orderStatus === "REFUND_INITIATED" && (
+                          <button onClick={() => updateOrderStatus(order.id, 'refund-completed')} className="bg-[#1A1109] text-[#FFF8F5] px-4 py-2 font-label text-[0.6rem] font-black uppercase tracking-widest hover:bg-[#C8742A] transition-colors">End Refund</button>
+                        )}
+
+                        <button onClick={() => deleteOrder(order.id)} className="font-label text-[0.65rem] font-black uppercase tracking-[0.2em] text-[#BA1A1A] hover:opacity-60 transition-opacity ml-2">
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </motion.div>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
