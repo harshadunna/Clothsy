@@ -59,13 +59,13 @@ export const navigation = {
       featured: [
         {
           name: 'Structural Tailoring',
-          id: '/atelier/curations/structural',
+          id: '/atelier/curations/heritage-tailoring',
           imageSrc: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=800&q=80',
           imageAlt: 'Minimalist menswear flatlay featuring a sharp charcoal suit jacket.',
         },
         {
           name: 'Monolith Boots',
-          id: '/atelier/accents/footwear',
+          id: '/atelier/accents/boots',
           imageSrc: 'https://images.unsplash.com/photo-1520639888713-7851133b1ed0?auto=format&fit=crop&w=800&q=80',
           imageAlt: 'Brutalist leather boots on a concrete surface.',
         },
@@ -97,9 +97,9 @@ export const navigation = {
           id: 'curations',
           name: 'Curations',
           items: [
-            { name: 'The Monolith Edit', id: 'monolith-edit' },
+            { name: 'The Monolith Edit', id: 'the-monolith-edit' }, 
             { name: 'Urban Brutalism', id: 'urban-brutalism' },
-            { name: 'Heritage Tailoring', id: 'heritage' },
+            { name: 'Heritage Tailoring', id: 'heritage-tailoring' },
           ],
         },
       ],

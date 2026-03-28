@@ -45,6 +45,11 @@ public class Product {
 
     private String imageUrl;
 
+    // ── NEW: Curation Tag for Editorial Collections ──
+    @Column(name = "curation_tag")
+    private String curationTag;
+    // ─────────────────────────────────────────────────
+
     @ElementCollection
     @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "image_url")
@@ -59,8 +64,6 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Review> reviews = new ArrayList<>();
 
-    // ── CASCADE RELATIONSHIPS ──────────────────────────────────────────
-    // Clean up carts and past orders if product is permanently deleted.
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<CartItem> cartItems = new ArrayList<>();
@@ -68,7 +71,6 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<OrderItem> orderItems = new ArrayList<>();
-    // ───────────────────────────────────────────────────────────────────────
 
     private int numRatings;
 

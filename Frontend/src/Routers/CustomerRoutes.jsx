@@ -20,6 +20,7 @@ import Profile from "../customer/components/Account/Profile";
 import NotFound from "../customer/pages/NotFound";
 import Contact from "../customer/pages/Contact";
 import Craftsmanship from "../customer/pages/Craftsmanship"; 
+import CurationPage from "../customer/pages/CurationPage"; 
 
 const PageTransition = ({ children }) => (
   <motion.div
@@ -41,37 +42,43 @@ const CustomerRoutes = () => {
 
       <AnimatePresence mode="wait" initial={false}>
         <Routes location={location} key={location.pathname}>
+          {/* Auth & Home */}
           <Route path="/login" element={<PageTransition><HomePage /></PageTransition>} />
           <Route path="/register" element={<PageTransition><HomePage /></PageTransition>} />
           <Route path="/" element={<PageTransition><HomePage /></PageTransition>} />
           <Route path="/home" element={<PageTransition><HomePage /></PageTransition>} />
 
+          {/* Product Handling */}
           <Route path="/product/:productId/rate" element={<PageTransition><RateProduct /></PageTransition>} />
           <Route path="/product/:productId" element={<PageTransition><ProductDetails /></PageTransition>} />
-
           <Route path="/products" element={<PageTransition><Product /></PageTransition>} />
           
-          {/* Dynamic Editorial Routes (E.g. /collections/silhouettes/outerwear) */}
+          {/* ── Editorial Curation Route ── */}
+          <Route path="/atelier/curations/:editName" element={<PageTransition><CurationPage /></PageTransition>} />
+
+          {/* Dynamic Category Routes (L1/L2/L3) */}
           <Route path="/:levelOne/:levelTwo/:levelThree" element={<PageTransition><Product /></PageTransition>} />
 
+          {/* Shopping & Checkout */}
           <Route path="/wishlist" element={<PageTransition><Wishlist /></PageTransition>} />
           <Route path="/cart" element={<PageTransition><Cart /></PageTransition>} />
           <Route path="/checkout" element={<PageTransition><Checkout /></PageTransition>} />
-
           <Route path="/payment/success" element={<PageTransition><PaymentSuccess /></PageTransition>} />
           <Route path="/payment/cancel" element={<PageTransition><PaymentCancel /></PageTransition>} />
 
+          {/* User Account */}
           <Route path="/account/profile" element={<PageTransition><Profile /></PageTransition>} />
           <Route path="/account/orders" element={<PageTransition><Profile /></PageTransition>} />
           <Route path="/account/order/:orderId" element={<PageTransition><OrderDetails /></PageTransition>} />
-          
           <Route path="/account/order/:orderId/return" element={<PageTransition><ReturnOrder /></PageTransition>} />
           <Route path="/account/rate/:productId" element={<PageTransition><RateProduct /></PageTransition>} />
 
+          {/* Editorial / Info */}
           <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
           <Route path="/about" element={<PageTransition><Craftsmanship /></PageTransition>} />
           <Route path="/craftsmanship" element={<PageTransition><Craftsmanship /></PageTransition>} />
 
+          {/* 404 */}
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>
       </AnimatePresence>

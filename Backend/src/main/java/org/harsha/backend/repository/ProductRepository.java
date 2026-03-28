@@ -12,7 +12,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("SELECT p FROM Product p WHERE LOWER(p.category.name) = :category")
     List<Product> findByCategory(@Param("category") String category);
 
-    // FIX 2: Safely concatenated wildcards for cross-database compatibility
     @Query("SELECT p FROM Product p WHERE " +
             "LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
             "LOWER(p.description) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
@@ -20,7 +19,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             "LOWER(p.category.name) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<Product> searchProduct(@Param("query") String query);
 
-    // FIX 1: Split the BETWEEN clause so minPrice and maxPrice can operate independently
     @Query("SELECT p FROM Product p WHERE (:category = '' OR LOWER(p.category.name) = LOWER(:category)) " +
             "AND (:minPrice IS NULL OR p.discountedPrice >= :minPrice) " +
             "AND (:maxPrice IS NULL OR p.discountedPrice <= :maxPrice) " +
@@ -37,4 +35,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     );
 
     List<Product> findTop10ByOrderByCreatedAtDesc();
+
+    // ── NEW: Fetch by Curation Tag ──
+    @Query("SELECT p FROM Product p WHERE LOWER(p.curationTag) = LOWER(:tag)")
+    List<Product> findByCurationTag(@Param("tag") String tag);
 }

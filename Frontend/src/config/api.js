@@ -1,5 +1,6 @@
 import axios from "axios";
 
+// Changed back to 8080 to match your Spring Boot console output!
 const LOCALHOST = "http://localhost:8080";
 
 export const API_BASE_URL = LOCALHOST;

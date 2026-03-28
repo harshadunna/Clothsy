@@ -3,6 +3,7 @@ package org.harsha.backend.controller;
 import lombok.RequiredArgsConstructor;
 import org.harsha.backend.exception.ProductException;
 import org.harsha.backend.model.Product;
+import org.harsha.backend.repository.ProductRepository;
 import org.harsha.backend.service.ProductService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ import java.util.List;
 public class UserProductController {
 
     private final ProductService productService;
+    private final ProductRepository productRepository;
 
     @GetMapping("/products")
     public ResponseEntity<Page<Product>> getProductsByFilters(
@@ -23,17 +25,17 @@ public class UserProductController {
             @RequestParam(required = false) List<String> color,
             @RequestParam(required = false) List<String> size,
             @RequestParam(defaultValue = "0") Integer minPrice,
-            @RequestParam(defaultValue = "10000") Integer maxPrice,
+            @RequestParam(defaultValue = "1000000") Integer maxPrice, // Increased for luxury items
             @RequestParam(defaultValue = "0") Integer minDiscount,
             @RequestParam(defaultValue = "price_low") String sort,
             @RequestParam(required = false) String stock,
             @RequestParam(defaultValue = "0") Integer pageNumber,
             @RequestParam(defaultValue = "12") Integer pageSize,
-            @RequestParam(required = false) String search) { // ── NEW PARAM ──
+            @RequestParam(required = false) String search) {
 
         Page<Product> products = productService.getAllProduct(
                 category, color, size, minPrice, maxPrice,
-                minDiscount, sort, stock, pageNumber, pageSize, search // ── PASS IT DOWN ──
+                minDiscount, sort, stock, pageNumber, pageSize, search
         );
 
         return ResponseEntity.ok(products);
@@ -48,10 +50,16 @@ public class UserProductController {
     }
 
     @GetMapping("/products/search")
-    public ResponseEntity<List<Product>> searchProducts(
-            @RequestParam String q) {
-
+    public ResponseEntity<List<Product>> searchProducts(@RequestParam String q) {
         List<Product> products = productService.searchProduct(q);
+        return ResponseEntity.ok(products);
+    }
+
+    // ── FIXED: Curation Endpoint (Only one copy needed) ──
+    @GetMapping("/products/curations/{tag}")
+    public ResponseEntity<List<Product>> getCuratedProducts(@PathVariable String tag) {
+        // This will fetch products matching 'the-monolith-edit', etc.
+        List<Product> products = productRepository.findByCurationTag(tag);
         return ResponseEntity.ok(products);
     }
 }
