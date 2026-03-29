@@ -21,6 +21,12 @@ import java.util.List;
 
 public class JwtTokenValidator extends OncePerRequestFilter {
 
+    private final String jwtSecret;
+
+    public JwtTokenValidator(String jwtSecret) {
+        this.jwtSecret = jwtSecret;
+    }
+
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
@@ -34,9 +40,7 @@ public class JwtTokenValidator extends OncePerRequestFilter {
             jwt = jwt.substring(7);
 
             try {
-                SecretKey key = Keys.hmacShaKeyFor(
-                        JwtConstant.SECRET_KEY.getBytes()
-                );
+                SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
 
                 Claims claims = Jwts.parser()
                         .verifyWith(key)
@@ -47,8 +51,9 @@ public class JwtTokenValidator extends OncePerRequestFilter {
                 String email = String.valueOf(claims.get("email"));
                 String authorities = String.valueOf(claims.get("authorities"));
 
-                List<GrantedAuthority> auths =
-                        AuthorityUtils.commaSeparatedStringToAuthorityList(authorities);
+                List<GrantedAuthority> auths = (authorities != null && !authorities.equals("null")) 
+                        ? AuthorityUtils.commaSeparatedStringToAuthorityList(authorities) 
+                        : AuthorityUtils.NO_AUTHORITIES;
 
                 Authentication authentication =
                         new UsernamePasswordAuthenticationToken(email, null, auths);
@@ -56,6 +61,7 @@ public class JwtTokenValidator extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
             } catch (Exception e) {
+                SecurityContextHolder.clearContext();
                 throw new BadCredentialsException("Invalid Token from JwtTokenValidator");
             }
         }

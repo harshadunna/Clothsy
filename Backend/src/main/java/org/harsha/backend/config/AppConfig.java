@@ -1,6 +1,7 @@
 package org.harsha.backend.config;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -19,6 +20,10 @@ import java.util.Collections;
 @Configuration
 public class AppConfig {
 
+    // 1. Inject the secret key from application.properties
+    @Value("${jwt.secret}")
+    private String jwtSecret;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -31,7 +36,8 @@ public class AppConfig {
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
                 )
-                .addFilterBefore(new JwtTokenValidator(), BasicAuthenticationFilter.class)
+                // 2. Pass the injected secret into the validator 
+                .addFilterBefore(new JwtTokenValidator(jwtSecret), BasicAuthenticationFilter.class)
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .formLogin(formLogin -> formLogin.disable())
@@ -44,7 +50,6 @@ public class AppConfig {
         return request -> {
             CorsConfiguration cfg = new CorsConfiguration();
             cfg.setAllowedOrigins(Arrays.asList(
-                    "http://localhost:3000",
                     "http://localhost:5173"
             ));
             cfg.setAllowedMethods(Collections.singletonList("*"));
