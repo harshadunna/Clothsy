@@ -30,7 +30,7 @@ export default function Cart() {
     <div className="bg-background text-on-background font-body min-h-screen pt-32 pb-24 px-6 md:px-12 relative overflow-hidden">
       <div className="max-w-7xl mx-auto">
         
-        {/* ── Editorial Header ── */}
+        {/* Editorial Header */}
         <header className="mb-16">
           <motion.h1 
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}
@@ -51,7 +51,7 @@ export default function Cart() {
             <div className="animate-spin h-8 w-8 border-t-2 border-primary rounded-full"></div>
           </div>
         ) : isEmpty ? (
-          /* ── "A Quiet Collection" Empty State ── */
+          /* "A Quiet Collection" Empty State */
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }}
             className="flex flex-col items-center justify-center py-24 relative w-full text-center border-t border-outline-variant/30"
@@ -84,7 +84,7 @@ export default function Cart() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
             
-            {/* ── Left: Shopping Cart Items List ── */}
+            {/* Left: Shopping Cart Items List */}
             <section className="lg:col-span-8">
               <div className="flex flex-col">
                 
@@ -122,7 +122,7 @@ export default function Cart() {
               </div>
             </section>
 
-            {/* ── Right: Sticky Order Summary ── */}
+            {/* Right: Sticky Order Summary */}
             <aside className="lg:col-span-4 lg:sticky lg:top-32">
               <motion.div 
                 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}
@@ -177,7 +177,7 @@ export default function Cart() {
           </div>
         )}
 
-        {/* ── Cross-sell Section (Always Visible if not loading) ── */}
+        {/* Cross-sell Section (Always Visible if not loading) */}
         {!loading && (
           <section className={`mt-32 pt-16 ${isEmpty ? '' : 'border-t border-outline-variant/30'}`}>
             <div className="flex items-end justify-between mb-12">

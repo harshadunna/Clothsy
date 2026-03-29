@@ -106,11 +106,11 @@ public class PaymentController {
                 if (orderIdStr != null) {
                     Long orderId = Long.parseLong(orderIdStr);
 
-                    // ── 3. CAPTURE THE UPDATED ORDER OBJECT ──
+                    // 3. CAPTURE THE UPDATED ORDER OBJECT
                     Order confirmedOrder = orderService.placedOrder(orderId);
                     System.out.println("SUCCESS: Order #" + orderId + " is now marked as PLACED. Inventory deducted.");
 
-                    // ── 4. FIRE THE EMAIL API ──
+                    // 4. FIRE THE EMAIL API
                     emailApiService.sendOrderUpdateEmail(confirmedOrder, "PLACED");
 
                 } else {

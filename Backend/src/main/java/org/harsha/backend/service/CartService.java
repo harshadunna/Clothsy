@@ -14,6 +14,5 @@ public interface CartService {
 
     Cart findUserCart(Long userId);
 
-    // ── NEW: Method signature to clear the cart ──
     void clearCart(Long userId);
 }

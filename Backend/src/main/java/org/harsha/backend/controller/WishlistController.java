@@ -21,7 +21,8 @@ public class WishlistController {
         this.userService = userService;
     }
 
-    @GetMapping("/")
+    // ── FIXED: Removed trailing slash ──
+    @GetMapping
     public ResponseEntity<Wishlist> getWishlist(@RequestHeader("Authorization") String jwt) throws UserException {
         User user = userService.findUserProfileByJwt(jwt);
         Wishlist wishlist = wishlistService.getWishlistByUser(user);

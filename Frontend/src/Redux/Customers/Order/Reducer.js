@@ -24,7 +24,7 @@ export const orderReducer = (state = initialState, action) => {
     case GET_ORDER_BY_ID_REQUEST:
     case GET_ORDER_HISTORY_REQUEST:
       return { 
-        ...state, // Fix: Protects your existing data from being wiped
+        ...state, 
         loading: true, 
         error: null 
       };

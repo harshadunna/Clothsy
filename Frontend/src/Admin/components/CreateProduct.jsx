@@ -15,8 +15,8 @@ export default function CreateProduct() {
     brand: "",
     color: "",
     description: "",
-    materials: "", // <-- NEW FIELD
-    fit: "",       // <-- NEW FIELD
+    materials: "", 
+    fit: "",       
     price: "",
     discountedPrice: "",
     discountPercent: "",
@@ -118,7 +118,7 @@ export default function CreateProduct() {
   return (
     <div className="min-h-screen bg-[#FFF8F5] text-[#1A1109] flex flex-col md:flex-row">
       
-      {/* ── LEFT PANE: SPECIFICATIONS ── */}
+      {/* LEFT PANE: SPECIFICATIONS */}
       <section className="w-full md:w-[400px] border-r border-[#D1C4BC] bg-[#F9F2EF] flex flex-col h-screen sticky top-0 overflow-y-auto shrink-0 custom-scrollbar">
         <div className="p-10 border-b border-[#D1C4BC] bg-[#FFF8F5]">
           <h2 className="font-label font-bold text-[0.7rem] tracking-[0.15em] uppercase text-[#7F756E] mb-2">Atelier Components</h2>
@@ -225,7 +225,7 @@ export default function CreateProduct() {
         </div>
       </section>
 
-      {/* ── RIGHT PANE: DRAFTING AREA ── */}
+      {/* RIGHT PANE: DRAFTING AREA */}
       <section className="flex-1 p-12 md:p-20 overflow-y-auto">
         {success && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-10 p-6 bg-[#1A1109] text-[#FFF8F5] border-l-4 border-[#C8742A] font-label font-bold text-[0.7rem] tracking-widest uppercase">

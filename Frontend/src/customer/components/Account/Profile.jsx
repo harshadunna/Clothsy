@@ -1,10 +1,9 @@
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { logout } from "../../../Redux/Auth/Action";
 import { getWishlist } from "../../../Redux/Customers/Wishlist/Action";
-import Order from "../Order/Order"; // Importing the Timeline we just made!
+import Order from "../Order/Order"; 
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -35,7 +34,7 @@ export default function Profile() {
   return (
     <div className="bg-background text-on-background font-body antialiased min-h-screen flex pt-20">
       
-      {/* ── Left Sidebar (Desktop Only) ── */}
+      {/* Left Sidebar (Desktop Only) */}
       <aside className="hidden lg:flex fixed left-0 top-20 h-[calc(100vh-5rem)] z-40 flex-col py-10 w-80 border-r border-outline-variant/30 bg-surface-container-low">
         <div className="px-8 mb-12 mt-4">
           <div className="w-16 h-16 bg-surface-container mb-4 overflow-hidden flex items-center justify-center text-2xl font-headline italic text-primary">
@@ -64,7 +63,7 @@ export default function Profile() {
         </div>
       </aside>
 
-      {/* ── Main Content Canvas ── */}
+      {/* Main Content Canvas */}
       <main className="flex-1 lg:ml-80 px-6 md:px-16 py-12 max-w-6xl">
         
         {/* Header Section */}
@@ -115,10 +114,10 @@ export default function Profile() {
           </div>
         </section>
 
-        {/* ── Embedded Order History Timeline ── */}
+        {/* Embedded Order History Timeline */}
         <Order />
 
-        {/* ── Embedded Wishlist Grid ── */}
+        {/* Embedded Wishlist Grid */}
         <section className="mb-32">
           <div className="flex justify-between items-end mb-12 border-b border-outline-variant/30 pb-6">
             <h2 className="font-headline italic text-4xl text-on-surface">Archive Selection</h2>

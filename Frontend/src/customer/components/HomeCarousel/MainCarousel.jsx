@@ -114,7 +114,7 @@ export default function MainCarousel() {
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* ── Slide ── */}
+      {/* Slide */}
       <AnimatePresence initial={false} custom={direction} mode="popLayout">
         <motion.div
           key={currentIndex}
@@ -190,7 +190,7 @@ export default function MainCarousel() {
         </motion.div>
       </AnimatePresence>
 
-      {/* ── Progress bar ── */}
+      {/* Progress bar */}
       <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/10 z-30 pointer-events-none">
         <div
           ref={progressRef}
@@ -199,7 +199,7 @@ export default function MainCarousel() {
         />
       </div>
 
-      {/* ── Prev Button (magnetic) ── */}
+      {/* Prev Button (magnetic) */}
       <button
         ref={prevBtnRef}
         onClick={(e) => {
@@ -215,7 +215,7 @@ export default function MainCarousel() {
         </svg>
       </button>
 
-      {/* ── Next Button (magnetic) ── */}
+      {/* Next Button (magnetic) */}
       <button
         ref={nextBtnRef}
         onClick={(e) => {
@@ -231,7 +231,7 @@ export default function MainCarousel() {
         </svg>
       </button>
 
-      {/* ── Slide counter (top-right) ── */}
+      {/* Slide counter (top-right) */}
       <div className="absolute top-6 right-7 z-20 flex items-center gap-2 pointer-events-none">
         <span className="text-white font-bold text-sm tabular-nums" style={{ fontVariantNumeric: "tabular-nums" }}>
           {String(currentIndex + 1).padStart(2, "0")}
@@ -242,7 +242,7 @@ export default function MainCarousel() {
         </span>
       </div>
 
-      {/* ── Dots ── */}
+      {/* Dots */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
         {homeCarouselData.map((_, index) => (
           <button

@@ -9,9 +9,7 @@ import lombok.NoArgsConstructor;
  * PaymentDetails (Embeddable)
  *
  * Represents payment information embedded directly into the Order entity.
- * Tracks the payment method and current payment status.
- *
- * Not a separate table — fields are stored as columns in the orders table.
+ * Tracks the payment method, current payment status, and Stripe IDs.
  */
 @Embeddable
 @Data
@@ -19,27 +17,25 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PaymentDetails {
 
-    /** Payment method used (e.g. "RAZORPAY", "COD", "UPI") */
+    /** Payment method used (e.g. "STRIPE", "COD", "CREDIT_CARD") */
     private String paymentMethod;
 
     /**
-     * Current payment status.
+     * Internal payment status for your application.
      * (e.g. "PENDING", "COMPLETED", "FAILED", "REFUNDED")
      */
     private String status;
 
-    /** Payment gateway transaction ID for reference */
-    private String paymentId;
+    /** * The ID of the Stripe Checkout Session. 
+     * Essential for verifying if the user actually paid after returning from Stripe.
+     */
+    private String stripeSessionId;
 
-    /** Razorpay payment link ID */
-    private String razorpayPaymentLinkId;
-
-    /** Razorpay payment link reference ID */
-    private String razorpayPaymentLinkReferenceId;
-
-    /** Current status of the Razorpay payment link */
-    private String razorpayPaymentLinkStatus;
-
-    /** Razorpay specific payment ID */
-    private String razorpayPaymentId;
+    /** * The actual Stripe Payment Intent ID (the transaction ID).
+     * Used for processing refunds or looking up the exact charge in your Stripe Dashboard.
+     */
+    private String stripePaymentIntentId;
+    
+    /** The raw status returned directly from Stripe (e.g., "paid", "unpaid", "requires_payment_method") */
+    private String stripePaymentStatus;
 }

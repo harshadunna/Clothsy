@@ -28,7 +28,7 @@ const getReturnBadgeConfig = (status) => {
   }
 };
 
-// ── Animation Variants ──
+// Animation Variants
 const containerVariants = {
   hidden: { opacity: 0 },
   show: {
@@ -125,13 +125,12 @@ export default function OrderDetails() {
     return isEligible;
   }) || [];
 
-  // ── FIX: Smarter Timeline Logic ──
   const timelineSteps = ["PLACED", "CONFIRMED", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED"];
   const displayLabels = ["Confirmed", "Tailored", "Dispatched", "In Transit", "Delivered"];
   
   let currentStepIndex = 0;
   if (isDeliveredOrReturned) {
-    currentStepIndex = 4; // Fully completed timeline
+    currentStepIndex = 4; 
   } else {
     const foundIndex = timelineSteps.indexOf(order?.orderStatus);
     currentStepIndex = foundIndex >= 0 ? foundIndex : 0;
@@ -140,7 +139,7 @@ export default function OrderDetails() {
   return (
     <div className="bg-background text-on-background font-body min-h-screen pt-32 pb-24 px-6 md:px-12 flex flex-col items-center">
       
-      {/* ── Cancel Items Modal ── */}
+      {/* Cancel Items Modal */}
       <AnimatePresence>
         {isCancelModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -173,7 +172,7 @@ export default function OrderDetails() {
         )}
       </AnimatePresence>
 
-      {/* ── 1. Hero Branding ── */}
+      {/* 1. Hero Branding */}
       <section className="max-w-4xl w-full text-center mb-16 relative">
         <button onClick={() => navigate("/account/orders")} className="absolute left-0 top-0 flex items-center gap-2 font-label text-[10px] uppercase tracking-widest text-outline hover:text-primary transition-colors">
           <span className="material-symbols-outlined text-[14px]">arrow_back</span>
@@ -189,7 +188,7 @@ export default function OrderDetails() {
 
       <div className="max-w-4xl w-full space-y-24">
         
-        {/* ── 2. Interactive Tracker (Horizontal Timeline) ── */}
+        {/* 2. Interactive Tracker (Horizontal Timeline) */}
         <section className="w-full overflow-hidden px-4">
           <motion.div 
             variants={containerVariants} 
@@ -236,7 +235,7 @@ export default function OrderDetails() {
           </motion.div>
         </section>
 
-        {/* ── 3. Shipment Contents (Horizontal Scroll) ── */}
+        {/* 3. Shipment Contents (Horizontal Scroll) */}
         <section className="border-t border-outline-variant/30 pt-16">
           <div className="flex justify-between items-end mb-8">
             <h2 className="font-label text-[0.6875rem] uppercase tracking-[0.2em] font-bold text-primary">Shipment Contents</h2>
@@ -294,7 +293,7 @@ export default function OrderDetails() {
           </div>
         </section>
 
-        {/* ── 4. Document & Post-Delivery Actions ── */}
+        {/* 4. Document & Post-Delivery Actions */}
         <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           
           <button 
@@ -315,7 +314,7 @@ export default function OrderDetails() {
             </button>
           )}
 
-          {/* ── RETURN BUTTON LINKED HERE ── */}
+          {/* RETURN BUTTON LINKED HERE */}
           {eligibleItemsForReturn.length > 0 && (
             <button 
               onClick={() => navigate(`/account/order/${orderId}/return`)}
@@ -328,7 +327,7 @@ export default function OrderDetails() {
 
       </div>
 
-      {/* ── 5. Editorial Accent Image ── */}
+      {/* 5. Editorial Accent Image */}
       <div className="mt-32 w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-12 items-center border-t border-outline-variant/30 pt-16">
         <div className="aspect-[4/5] overflow-hidden bg-surface-container">
           <img 

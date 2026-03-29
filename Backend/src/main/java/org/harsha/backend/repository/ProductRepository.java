@@ -26,7 +26,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             "ORDER BY " +
             "CASE WHEN :sort = 'price_low' THEN p.discountedPrice END ASC, " +
             "CASE WHEN :sort = 'price_high' THEN p.discountedPrice END DESC")
-    public List<Product> filterProducts(
+    List<Product> filterProducts(
             @Param("category") String category,
             @Param("minPrice") Integer minPrice,
             @Param("maxPrice") Integer maxPrice,
@@ -36,7 +36,33 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     List<Product> findTop10ByOrderByCreatedAtDesc();
 
-    // ── NEW: Fetch by Curation Tag ──
+    // 1. Exact Curation Tag Match
     @Query("SELECT p FROM Product p WHERE LOWER(p.curationTag) = LOWER(:tag)")
     List<Product> findByCurationTag(@Param("tag") String tag);
+
+    // 2. Fallback: Monolith Edit (Black items, womens only)
+    @Query("SELECT p FROM Product p WHERE LOWER(p.color) LIKE '%black%' " +
+            "AND LOWER(p.category.parentCategory.parentCategory.name) = 'collections'")
+    List<Product> findMonolithEditFallback();
+
+    // 3. Fallback: Category Matching filtered by top-level gender
+    @Query("SELECT p FROM Product p WHERE LOWER(p.category.name) IN :categories " +
+            "AND LOWER(p.category.parentCategory.parentCategory.name) = LOWER(:gender)")
+    List<Product> findByCategoryFallback(
+            @Param("categories") List<String> categories,
+            @Param("gender") String gender
+    );
+
+    // 4. Fallback: Archive Sale (Random womens items) 
+    @Query(value = "SELECT p.* FROM products p " +
+            "JOIN categories c3 ON p.category_id = c3.id " +
+            "JOIN categories c2 ON c3.parent_category_id = c2.id " +
+            "JOIN categories c1 ON c2.parent_category_id = c1.id " +
+            "WHERE LOWER(c1.name) = 'collections' " +
+            "ORDER BY RAND() LIMIT 16", nativeQuery = true)
+    List<Product> findArchiveSaleFallback();
+
+    // 5. Safety Net
+    @Query(value = "SELECT * FROM products LIMIT 12", nativeQuery = true)
+    List<Product> findSafetyNetFallback();
 }

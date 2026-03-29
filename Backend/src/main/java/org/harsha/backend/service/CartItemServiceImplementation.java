@@ -15,7 +15,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional // FIX: Ensures database flushes immediately so the frontend sees the new item on redirect
+@Transactional
 public class CartItemServiceImplementation implements CartItemService {
 
     private final CartItemRepository cartItemRepository;

@@ -6,7 +6,7 @@ import AddressCard from "../Address/AddressCard";
 import { createOrder } from "../../../Redux/Customers/Order/Action";
 import { updateAddress, saveAddress, deleteAddress } from "../../../Redux/Auth/Action";
 
-// Minimalist Underline Input
+
 function FormInput({ label, name, id, autoComplete, type = "text", required = true, colSpan = 1, defaultValue = "" }) {
   return (
     <div className={`relative ${colSpan === 2 ? "md:col-span-2" : ""}`}>
@@ -63,7 +63,7 @@ export default function DeliveryAddress({ handleNext }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24">
       
-      {/* ── Left: Form Area ── */}
+      {/* Left: Form Area */}
       <div className="lg:col-span-7">
         <AnimatePresence mode="wait">
           {showForm || savedAddresses.length === 0 ? (
@@ -125,7 +125,7 @@ export default function DeliveryAddress({ handleNext }) {
         </AnimatePresence>
       </div>
 
-      {/* ── Right: Empty Summary Placeholder for Step 1 ── */}
+      {/* Right: Empty Summary Placeholder for Step 1 */}
       <div className="hidden lg:block lg:col-span-5">
         <div className="bg-surface-container-low p-10 sticky top-32">
           <h3 className="font-headline text-3xl italic tracking-tighter text-outline mb-10">Order Summary</h3>

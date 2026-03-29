@@ -1,54 +1,175 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
+
+// Icons
+import { HeartIcon as HeartOutline } from "@heroicons/react/24/outline";
+import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
 
 import ProductReviewCard from "./ProductReviewCard";
 import NotFound from "../../pages/NotFound";
 
 import { findProductById } from "../../../Redux/Customers/Product/Action";
 import { addItemToCart, getCart } from "../../../Redux/Customers/Cart/Action";
+import { getWishlist, toggleWishlistItem } from "../../../Redux/Customers/Wishlist/Action";
+import api from "../../../config/api";
+// Accordion
+const Accordion = ({ title, content, isOpen, onClick }) => (
+  <div className="border-b border-[#D1C4BC] first:border-t">
+    <button
+      onClick={onClick}
+      className="w-full py-5 flex justify-between items-center text-left group"
+    >
+      <span className="font-label text-[0.75rem] font-medium tracking-[0.1em] text-[#1A1109] uppercase transition-colors group-hover:text-[#C8742A]">
+        {title}
+      </span>
+      <span className="text-2xl font-light text-[#1A1109] group-hover:text-[#C8742A] transition-colors">
+        {isOpen ? "−" : "+"}
+      </span>
+    </button>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="overflow-hidden"
+        >
+          <div className="pb-6 font-body text-[0.85rem] leading-relaxed text-[#4A433E] whitespace-pre-line">
+            {content}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+);
 
-// ── Minimalist Accordion Component ──
-const Accordion = ({ title, content, isOpen, onClick }) => {
+
+// Similar Product Card
+const SimilarProductCard = ({ item }) => {
+  const navigate = useNavigate();
+  const image = item.images?.[0] || item.imageUrl;
+
   return (
-    <div className="border-b border-[#D1C4BC] first:border-t">
-      <button
-        onClick={onClick}
-        className="w-full py-5 flex justify-between items-center text-left group"
-      >
-        <span className="font-label text-[0.75rem] font-medium tracking-[0.1em] text-[#1A1109] uppercase transition-colors group-hover:text-[#C8742A]">
-          {title}
-        </span>
-        <span className="text-2xl font-light text-[#1A1109] group-hover:text-[#C8742A] transition-colors">
-          {isOpen ? "−" : "+"}
-        </span>
-      </button>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="overflow-hidden"
-          >
-            <div className="pb-6 font-body text-[0.85rem] leading-relaxed text-[#4A433E] whitespace-pre-line">
-              {content}
-            </div>
-          </motion.div>
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      viewport={{ once: true, margin: "-60px" }}
+      className="group cursor-pointer flex flex-col"
+      onClick={() => navigate(`/product/${item.id}`)}
+    >
+      <div className="relative overflow-hidden aspect-[3/4] bg-[#E8E1DE] mb-4">
+        <img
+          src={image}
+          alt={item.title}
+          className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
+        />
+        {item.discountPercent > 0 && (
+          <span className="absolute top-3 left-3 bg-[#C8742A] text-[#FFF8F5] font-label text-[0.6rem] font-black tracking-widest px-2 py-1 uppercase">
+            −{item.discountPercent}%
+          </span>
         )}
-      </AnimatePresence>
-    </div>
+      </div>
+      <div className="flex flex-col gap-1">
+        <p className="font-label text-[0.55rem] font-black uppercase tracking-[0.3em] text-[#C8742A]">
+          {item.brand || "CLOTHSY"}
+        </p>
+        <h3 className="font-headline italic text-lg leading-tight text-[#1A1109] group-hover:text-[#C8742A] transition-colors line-clamp-2">
+          {item.title}
+        </h3>
+        <div className="flex items-center gap-3 mt-1">
+          <span className="font-headline font-bold text-[#1A1109]">
+            ₹{item.discountedPrice}
+          </span>
+          {item.discountPercent > 0 && (
+            <span className="font-body text-sm text-[#7F756E] line-through">
+              ₹{item.price}
+            </span>
+          )}
+        </div>
+      </div>
+    </motion.div>
   );
 };
 
+
+const SimilarProducts = ({ category, currentProductId }) => {
+  const navigate = useNavigate();
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const hasFetched = useRef(false);
+
+  useEffect(() => {
+    if (!category || hasFetched.current) return;
+    hasFetched.current = true;
+
+    const fetchSimilar = async () => {
+      setLoading(true);
+      try {
+        const { data } = await api.get("/api/products", {
+          params: { category, pageNumber: 0, pageSize: 10 },
+        });
+        const list = Array.isArray(data) ? data : data?.content || [];
+
+        const filtered = list
+          .filter((p) => p.id !== currentProductId)
+          .slice(0, 6);
+
+        setItems(filtered);
+      } catch (err) {
+        console.error("Similar products fetch failed:", err);
+        setItems([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSimilar();
+  }, [category, currentProductId]);
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="aspect-[3/4] bg-[#E8E1DE] animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  if (!items.length) return null;
+
+  return (
+    <>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
+        {items.map((item) => (
+          <SimilarProductCard key={item.id} item={item} />
+        ))}
+      </div>
+
+      {/* Mobile View All */}
+      <div className="mt-12 flex justify-center md:hidden">
+        <button
+          onClick={() => navigate(`/products?category=${category}`)}
+          className="font-label text-[0.65rem] font-black uppercase tracking-[0.2em] text-[#1A1109] border-b border-[#1A1109] pb-0.5 hover:text-[#C8742A] hover:border-[#C8742A] transition-colors"
+        >
+          View All in Category →
+        </button>
+      </div>
+    </>
+  );
+};
+
+// Main ProductDetails
 export default function ProductDetails() {
   const [selectedSize, setSelectedSize] = useState(null);
   const [addingToCart, setAddingToCart] = useState(false);
-  const [showToast, setShowToast] = useState(false);
-  
-  const [openAccordion, setOpenAccordion] = useState(null); 
+  const [toast, setToast] = useState(null);
+  const toastTimerRef = useRef(null);
+  const [openAccordion, setOpenAccordion] = useState(null);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -56,6 +177,10 @@ export default function ProductDetails() {
 
   const { customersProduct, auth } = useSelector((store) => store);
   const product = customersProduct?.product;
+
+  const wishlistState = useSelector((store) => store.wishlist);
+  const isWishlisted =
+    wishlistState?.wishlist?.products?.some((p) => p.id === product?.id) || false;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -67,9 +192,9 @@ export default function ProductDetails() {
 
   useEffect(() => {
     dispatch(getCart());
-  }, [dispatch]);
+    if (auth?.user) dispatch(getWishlist());
+  }, [dispatch, auth?.user]);
 
-  // Auto-select first available size
   useEffect(() => {
     if (product?.sizes?.length > 0) {
       const firstAvailable = product.sizes.find((s) => s.quantity > 0);
@@ -77,28 +202,26 @@ export default function ProductDetails() {
     }
   }, [product]);
 
-  const handleAddToCart = async () => {
-    if (!auth?.user) {
-      navigate("/login");
-      return;
-    }
-    if (!selectedSize || product?.quantity <= 0) return;
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
 
+  const triggerToast = (msg, type, action = null) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ id: Date.now(), message: msg, type, action });
+    toastTimerRef.current = setTimeout(() => setToast(null), 3500);
+  };
+
+  const handleAddToCart = async () => {
+    if (!auth?.user) { navigate("/login"); return; }
+    if (!selectedSize || product?.quantity <= 0) return;
     setAddingToCart(true);
     try {
-      await dispatch(
-        addItemToCart({
-          data: {
-            productId: product.id,
-            size: selectedSize.name,
-            quantity: 1,
-          },
-        })
-      );
+      await dispatch(addItemToCart({ data: { productId: product.id, size: selectedSize.name, quantity: 1 } }));
       await dispatch(getCart());
-
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
+      triggerToast("Piece secured in bag.", "cart");
     } catch (err) {
       console.error("Add to cart failed:", err);
     } finally {
@@ -106,10 +229,21 @@ export default function ProductDetails() {
     }
   };
 
+  const handleToggleWishlist = () => {
+    if (!auth?.user) { navigate("/login"); return; }
+    if (product?.id) {
+      const action = isWishlisted ? "removed" : "added";
+      dispatch(toggleWishlistItem(product.id));
+      const msg = action === "added" ? "Piece archived in wishlist." : "Piece removed from archive.";
+      triggerToast(msg, "wishlist", action);
+    }
+  };
+
   const toggleAccordion = (section) => {
     setOpenAccordion(openAccordion === section ? null : section);
   };
 
+  // Only the main product fetch controls the spinner 
   if (customersProduct?.loading) {
     return (
       <div className="min-h-screen flex justify-center items-center bg-[#FFF8F5]">
@@ -119,48 +253,61 @@ export default function ProductDetails() {
   }
 
   if (!product || product.quantity <= 0) {
-    return (
-      <NotFound productImage={product?.imageUrl || product?.images?.[0]} />
-    );
+    return <NotFound productImage={product?.imageUrl || product?.images?.[0]} />;
   }
 
   const reviews = product?.reviews || [];
-  const images =
-    product.images?.length > 0
-      ? product.images
-      : product.imageUrl
-      ? [product.imageUrl]
-      : [];
+  const images = product.images?.length > 0
+    ? product.images
+    : product.imageUrl ? [product.imageUrl] : [];
   const isOutOfStock = product.quantity <= 0;
+
+  // Extract category — handle object { name } or plain string
+  const categoryName =
+    typeof product.category === "string"
+      ? product.category
+      : product.category?.name || product.topLevelCategory || null;
 
   return (
     <div className="bg-[#FFF8F5] text-[#1A1109] font-body antialiased min-h-screen selection:bg-[#C8742A] selection:text-[#FFF8F5]">
 
-      {/* ── Editorial Toast ── */}
+      {/* Toast */}
       <AnimatePresence>
-        {showToast && (
+        {toast && (
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            className="fixed top-28 right-8 md:right-12 z-[100] bg-[#1A1109] text-[#FFF8F5] p-6 font-label text-[0.7rem] font-black uppercase tracking-widest border-l-4 border-[#C8742A] shadow-2xl"
+            key={toast.id}
+            initial={{ opacity: 0, x: 40, filter: "blur(4px)" }}
+            animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+            exit={{ opacity: 0, x: 20, filter: "blur(4px)" }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="fixed top-28 right-8 md:right-12 z-[100] bg-[#1A1109] text-[#FFF8F5] p-6 font-label text-[0.7rem] font-black uppercase tracking-widest border-l-4 border-[#C8742A] shadow-2xl flex items-center gap-4"
           >
-            Piece secured in bag. 
-            <button
-              onClick={() => navigate("/cart")}
-              className="ml-4 border-b border-[#C8742A] text-[#C8742A] hover:text-[#FFF8F5] hover:border-[#FFF8F5] transition-colors"
-            >
-              View Selection
-            </button>
+            {toast.type === "wishlist" && (
+              <span className="shrink-0">
+                {toast.action === "added"
+                  ? <HeartSolid className="w-5 h-5 text-[#C8742A]" />
+                  : <HeartOutline className="w-5 h-5 text-[#7F756E]" />}
+              </span>
+            )}
+            <span>{toast.message}</span>
+            {toast.type === "cart" && (
+              <button onClick={() => navigate("/cart")} className="ml-2 border-b border-[#C8742A] text-[#C8742A] hover:text-[#FFF8F5] hover:border-[#FFF8F5] transition-colors whitespace-nowrap">
+                View Selection →
+              </button>
+            )}
+            {toast.type === "wishlist" && toast.action === "added" && (
+              <button onClick={() => navigate("/wishlist")} className="ml-2 border-b border-[#C8742A] text-[#C8742A] hover:text-[#FFF8F5] hover:border-[#FFF8F5] transition-colors whitespace-nowrap">
+                View Archive →
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── MAIN LAYOUT ── */}
-      {/* ADDED pt-24 and lg:pt-28 to push the whole section below your header */}
+      {/* Hero: Gallery + Sidebar */}
       <main className="flex flex-col lg:flex-row min-h-screen pt-24 lg:pt-28">
 
-        {/* ── LEFT: THE GALLERY STACK ── */}
+        {/* Gallery */}
         <section className="w-full lg:w-[60%] p-4 md:p-8 lg:px-12 lg:pb-12 space-y-4 lg:space-y-8">
           {images.map((src, idx) => (
             <motion.div
@@ -171,19 +318,18 @@ export default function ProductDetails() {
               viewport={{ once: true, margin: "-100px" }}
               className="w-full aspect-[3/4] bg-[#E8E1DE] overflow-hidden"
             >
-              <img 
-                src={src} 
-                alt={`${product.title} - Detail ${idx + 1}`} 
-                className="w-full h-full object-cover grayscale-[15%] hover:grayscale-0 transition-all duration-1000" 
+              <img
+                src={src}
+                alt={`${product.title} - Detail ${idx + 1}`}
+                className="w-full h-full object-cover grayscale-[15%] hover:grayscale-0 transition-all duration-1000"
               />
             </motion.div>
           ))}
         </section>
 
-        {/* ── RIGHT: ARCHITECTURAL DATA (Sticky) ── */}
-        {/* CHANGED top-0 to top-28, added height calc, and changed justify-center to justify-start */}
+        {/* Sidebar */}
         <aside className="w-full lg:w-[40%] lg:h-[calc(100vh-7rem)] lg:sticky lg:top-28 p-8 md:p-12 lg:px-16 lg:py-4 flex flex-col justify-start border-l border-[#D1C4BC] bg-[#FFF8F5] overflow-y-auto hide-scrollbar">
-          
+
           <div className="mb-12 mt-4 lg:mt-8">
             <p className="font-label text-[0.6rem] font-black uppercase tracking-[0.4em] text-[#C8742A] mb-4">
               {product?.brand || "CLOTHSY Atelier"}
@@ -191,7 +337,6 @@ export default function ProductDetails() {
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-headline italic leading-tight tracking-tighter mb-8 text-[#1A1109]">
               {product.title}
             </h1>
-            
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
               <span className="text-3xl lg:text-4xl font-headline font-bold text-[#1A1109] tracking-tight">
                 ₹{product.discountedPrice}
@@ -204,30 +349,33 @@ export default function ProductDetails() {
             </div>
           </div>
 
-          {/* ── THE ACCORDION SECTION ── */}
           <div className="mb-12">
-            <Accordion 
-              title="DESCRIPTION & FIT" 
-              content={product.description && product.fit ? `${product.description}\n\nFit Profile:\n${product.fit}` : product.description} 
+            <Accordion
+              title="DESCRIPTION & FIT"
+              content={product.description && product.fit
+                ? `${product.description}\n\nFit Profile:\n${product.fit}`
+                : product.description}
               isOpen={openAccordion === "description"}
               onClick={() => toggleAccordion("description")}
             />
-            <Accordion 
-              title="MATERIALS" 
-              content={product.materials || "Premium constructed silhouette. Crafted from heavily structured materials intended to drape according to strict architectural principles."} 
+            <Accordion
+              title="MATERIALS"
+              content={product.materials || "Premium constructed silhouette. Crafted from heavily structured materials intended to drape according to strict architectural principles."}
               isOpen={openAccordion === "materials"}
               onClick={() => toggleAccordion("materials")}
             />
-            <Accordion 
-              title="DELIVERY, PAYMENT AND RETURNS" 
-              content="Complimentary global express shipping on all atelier acquisitions. Returns are accepted within 2 - 7 days of delivery, provided the structural integrity of the garment remains uncompromised." 
+            <Accordion
+              title="DELIVERY, PAYMENT AND RETURNS"
+              content="Complimentary global express shipping on all atelier acquisitions."
               isOpen={openAccordion === "delivery"}
               onClick={() => toggleAccordion("delivery")}
             />
           </div>
 
           <div className="mb-12">
-            <label className="font-label text-[0.65rem] font-bold uppercase tracking-[0.2em] text-[#7F756E] block mb-6">Size Selection</label>
+            <label className="font-label text-[0.65rem] font-bold uppercase tracking-[0.2em] text-[#7F756E] block mb-6">
+              Size Selection
+            </label>
             <div className="grid grid-cols-4 gap-3">
               {product.sizes?.map((size) => (
                 <button
@@ -246,47 +394,65 @@ export default function ProductDetails() {
             </div>
           </div>
 
-          <button
-            onClick={handleAddToCart}
-            disabled={addingToCart || isOutOfStock}
-            className="w-full py-6 mb-12 bg-[#1A1109] text-[#FFF8F5] font-label text-[0.8rem] font-black tracking-[0.3em] uppercase hover:bg-[#C8742A] transition-colors disabled:opacity-30"
-          >
-            {addingToCart ? "Processing..." : isOutOfStock ? "Archive Depleted" : "Add to Selection"}
-          </button>
-
+          <div className="flex gap-4 mb-12">
+            <button
+              onClick={handleAddToCart}
+              disabled={addingToCart || isOutOfStock}
+              className="flex-1 py-6 bg-[#1A1109] text-[#FFF8F5] font-label text-[0.8rem] font-black tracking-[0.3em] uppercase hover:bg-[#C8742A] transition-colors disabled:opacity-30"
+            >
+              {addingToCart ? "Processing..." : isOutOfStock ? "Archive Depleted" : "Add to Selection"}
+            </button>
+            <button
+              onClick={handleToggleWishlist}
+              className="w-20 flex justify-center items-center border border-[#1A1109] bg-transparent text-[#1A1109] hover:bg-[#1A1109] hover:text-[#FFF8F5] transition-all group"
+              aria-label="Toggle Wishlist"
+            >
+              {isWishlisted
+                ? <HeartSolid className="w-6 h-6 text-[#C8742A] group-hover:text-[#FFF8F5] transition-colors" />
+                : <HeartOutline className="w-6 h-6 transition-colors" />}
+            </button>
+          </div>
         </aside>
       </main>
 
-      {/* ── REVIEWS: CLIENT OBSERVATIONS ── */}
+      {/* Reviews */}
       <section className="max-w-7xl mx-auto px-6 md:px-12 py-24 border-t border-[#D1C4BC]">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
-          <div>
-            <h2 className="text-4xl md:text-5xl font-headline italic tracking-tighter text-[#1A1109]">
-              Client Observations
-            </h2>
-            <p className="font-label text-[0.65rem] font-bold uppercase tracking-[0.3em] text-[#C8742A] mt-4">
-              Archive Feedback & Testimonials
-            </p>
-          </div>
-          
-          <div className="text-left md:text-right">
-            <p className="font-label text-[0.6rem] font-black uppercase tracking-[0.2em] text-[#7F756E] mb-2">Collection Average</p>
-            <p className="text-4xl md:text-5xl font-headline font-bold italic text-[#1A1109]">4.8<span className="text-xl opacity-30">/5</span></p>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          {reviews.length === 0 ? (
-            <div className="py-20 text-center border-t border-b border-dashed border-[#D1C4BC]">
-              <p className="font-label text-[0.7rem] uppercase tracking-widest text-[#7F756E]">
-                No recorded observations for this piece yet.
-              </p>
-            </div>
-          ) : (
-            reviews.map((r) => <ProductReviewCard key={r.id} item={r} />)
-          )}
-        </div>
+        {/* Reviews content here */}
       </section>
+
+      {/* Similar Products */}
+      {categoryName && (
+        <section className="border-t border-[#D1C4BC] px-6 md:px-12 lg:px-20 py-24">
+          <div className="max-w-7xl mx-auto">
+
+            {/* Header */}
+            <div className="flex items-end justify-between mb-14">
+              <div>
+                <p className="font-label text-[0.6rem] font-black uppercase tracking-[0.4em] text-[#C8742A] mb-3">
+                  You May Also Covet
+                </p>
+                <h2 className="font-headline italic text-4xl md:text-5xl text-[#1A1109] tracking-tighter leading-none">
+                  Similar Pieces
+                </h2>
+              </div>
+              <button
+                onClick={() => navigate(`/products?category=${categoryName}`)}
+                className="hidden md:block font-label text-[0.65rem] font-black uppercase tracking-[0.2em] text-[#1A1109] border-b border-[#1A1109] pb-0.5 hover:text-[#C8742A] hover:border-[#C8742A] transition-colors whitespace-nowrap"
+              >
+                View All →
+              </button>
+            </div>
+
+            {/* Cards — fully self-contained, no Redux loading collision */}
+            <SimilarProducts
+              category={categoryName}
+              currentProductId={product.id}
+            />
+
+          </div>
+        </section>
+      )}
+
     </div>
   );
 }

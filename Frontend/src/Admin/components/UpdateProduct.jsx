@@ -114,7 +114,7 @@ export default function UpdateProduct() {
   return (
     <div className="min-h-screen bg-[#FFF8F5] text-[#1A1109] flex flex-col md:flex-row">
       
-      {/* ── LEFT PANE: SPECIFICATIONS ── */}
+      {/* LEFT PANE: SPECIFICATIONS  */}
       <section className="w-full md:w-[400px] border-r border-[#D1C4BC] bg-[#F9F2EF] flex flex-col h-screen sticky top-0 overflow-y-auto shrink-0">
         <div className="p-10 border-b border-[#D1C4BC] bg-[#FFF8F5]">
           <h2 className="font-label font-bold text-[0.7rem] tracking-[0.15em] uppercase text-[#7F756E] mb-2">Atelier Components</h2>
@@ -183,7 +183,7 @@ export default function UpdateProduct() {
         </div>
       </section>
 
-      {/* ── RIGHT PANE: DRAFTING AREA ── */}
+      {/* RIGHT PANE: DRAFTING AREA */}
       <section className="flex-1 p-12 md:p-20 overflow-y-auto">
         <div className="flex justify-end mb-8">
           <button onClick={() => navigate("/admin/products")} className="font-label text-[0.65rem] font-bold uppercase tracking-[0.2em] text-[#1A1109] hover:text-[#C8742A] border-b border-[#1A1109] pb-1 transition-colors">

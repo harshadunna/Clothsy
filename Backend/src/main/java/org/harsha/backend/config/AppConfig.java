@@ -25,7 +25,7 @@ public class AppConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/api/payments/webhook").permitAll() // ➕ ALLOW STRIPE ACCESS
+                        .requestMatchers("/api/payments/webhook").permitAll() 
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         .requestMatchers("/api/admin/**").authenticated()
                         .requestMatchers("/api/**").authenticated()

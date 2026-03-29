@@ -30,7 +30,7 @@ export default function OrderSummary({ handleNext }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-start">
       
-      {/* ── Left: Items ── */}
+      {/* Left: Items */}
       <div className="lg:col-span-7">
         <h2 className="font-label text-xs uppercase tracking-[0.15em] mb-8 border-b border-outline-variant/30 pb-2 text-on-surface">Order Contents</h2>
         
@@ -53,7 +53,7 @@ export default function OrderSummary({ handleNext }) {
         </div>
       </div>
 
-      {/* ── Right: Summary Panel ── */}
+      {/* Right: Summary Panel */}
       <div className="lg:col-span-5">
         <div className="bg-surface-container-low p-10 sticky top-32">
           <h3 className="font-headline text-3xl italic tracking-tighter mb-10 text-on-surface">Order Summary</h3>

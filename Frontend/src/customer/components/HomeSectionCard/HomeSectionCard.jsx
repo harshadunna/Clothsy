@@ -13,7 +13,7 @@ export default function HomeSectionCard({ product }) {
   const discountPercent = product?.discountPersent || product?.discountPercent;
   const hasDiscount = discountPercent > 0;
 
-  // ── GSAP hover enter ──
+  // GSAP hover enter 
   const handleMouseEnter = () => {
     // Card lift + shadow
     gsap.to(cardRef.current, {
@@ -56,7 +56,7 @@ export default function HomeSectionCard({ product }) {
     }
   };
 
-  // ── GSAP hover leave ──
+  // GSAP hover leave 
   const handleMouseLeave = () => {
     gsap.to(cardRef.current, {
       y: 0,
@@ -86,7 +86,7 @@ export default function HomeSectionCard({ product }) {
     }
   };
 
-  // ── GSAP click press ──
+  // GSAP click press 
   const handleMouseDown = () => {
     gsap.to(cardRef.current, {
       scale: 0.97,
@@ -114,7 +114,7 @@ export default function HomeSectionCard({ product }) {
       className="cursor-pointer flex flex-col bg-white overflow-hidden w-[15rem] mx-auto"
       style={{ willChange: "transform" }}
     >
-      {/* ── Image Container ── */}
+      {/* Image Container */}
       <div className="relative w-full h-[22rem] bg-gray-50 overflow-hidden">
         <img
           ref={imageRef}
@@ -144,7 +144,7 @@ export default function HomeSectionCard({ product }) {
         )}
       </div>
 
-      {/* ── Info ── */}
+      {/* Info */}
       <div
         ref={infoRef}
         className="pt-4 pb-2 space-y-1 text-center flex-grow"

@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 
 export default function OrderCard({ item, order }) {
   const navigate = useNavigate();
@@ -16,10 +15,10 @@ export default function OrderCard({ item, order }) {
 
   return (
     <div className="mb-16 relative group">
-      {/* ── Timeline Dot ── */}
+      {/* Timeline Dot */}
       <div className={`absolute -left-[41px] top-0 w-4 h-4 ${isDelivered ? 'bg-primary' : isCancelled ? 'bg-error' : 'bg-outline-variant'}`}></div>
       
-      {/* ── Card Content ── */}
+      {/* Card Content */}
       <div 
         onClick={() => navigate(`/account/order/${order?.id}`)}
         className="flex flex-col md:flex-row gap-8 bg-surface p-8 border border-outline-variant/30 hover:border-primary/50 transition-colors cursor-pointer"

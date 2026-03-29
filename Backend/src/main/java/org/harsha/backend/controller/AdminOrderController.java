@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.harsha.backend.exception.OrderException;
 import org.harsha.backend.model.Order;
 import org.harsha.backend.response.ApiResponse;
-import org.harsha.backend.service.EmailApiService; // ── IMPORT EMAIL SERVICE
+import org.harsha.backend.service.EmailApiService;
 import org.harsha.backend.service.OrderService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,8 +18,7 @@ import java.util.List;
 public class AdminOrderController {
 
     private final OrderService orderService;
-    private final EmailApiService emailApiService; // ── INJECT EMAIL SERVICE
-
+    private final EmailApiService emailApiService;
     @GetMapping({"", "/"})
     public ResponseEntity<List<Order>> getAllOrders() {
         List<Order> orders = orderService.getAllOrders();
@@ -32,7 +31,7 @@ public class AdminOrderController {
             @RequestHeader("Authorization") String jwt) throws OrderException {
 
         Order order = orderService.confirmedOrder(orderId);
-        emailApiService.sendOrderUpdateEmail(order, "CONFIRMED"); // ── TRIGGER EMAIL
+        emailApiService.sendOrderUpdateEmail(order, "CONFIRMED"); 
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(order);
     }
 
@@ -42,7 +41,7 @@ public class AdminOrderController {
             @RequestHeader("Authorization") String jwt) throws OrderException {
 
         Order order = orderService.shippedOrder(orderId);
-        emailApiService.sendOrderUpdateEmail(order, "SHIPPED"); // ── TRIGGER EMAIL
+        emailApiService.sendOrderUpdateEmail(order, "SHIPPED");
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(order);
     }
 
@@ -52,7 +51,7 @@ public class AdminOrderController {
             @RequestHeader("Authorization") String jwt) throws OrderException {
 
         Order order = orderService.deliveredOrder(orderId);
-        emailApiService.sendOrderUpdateEmail(order, "DELIVERED"); // ── TRIGGER EMAIL
+        emailApiService.sendOrderUpdateEmail(order, "DELIVERED"); 
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(order);
     }
 
@@ -62,7 +61,7 @@ public class AdminOrderController {
             @RequestHeader("Authorization") String jwt) throws OrderException {
 
         Order order = orderService.cancledOrder(orderId);
-        emailApiService.sendOrderUpdateEmail(order, "CANCELLED"); // ── TRIGGER EMAIL
+        emailApiService.sendOrderUpdateEmail(order, "CANCELLED"); 
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(order);
     }
 
@@ -82,7 +81,6 @@ public class AdminOrderController {
             @RequestHeader("Authorization") String jwt) throws OrderException {
 
         Order order = orderService.returnPickedOrder(orderId);
-        // Note: You can add an email here like "Your return was picked up!"
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(order);
     }
 
@@ -110,7 +108,7 @@ public class AdminOrderController {
             @RequestHeader("Authorization") String jwt) throws OrderException {
 
         Order order = orderService.refundCompletedOrder(orderId);
-        emailApiService.sendOrderUpdateEmail(order, "REFUND_COMPLETED"); // ── TRIGGER EMAIL
+        emailApiService.sendOrderUpdateEmail(order, "REFUND_COMPLETED"); 
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(order);
     }
 }

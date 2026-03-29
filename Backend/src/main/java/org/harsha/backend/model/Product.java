@@ -45,10 +45,9 @@ public class Product {
 
     private String imageUrl;
 
-    // ── NEW: Curation Tag for Editorial Collections ──
+    // NEW: Curation Tag for Editorial Collections
     @Column(name = "curation_tag")
     private String curationTag;
-    // ─────────────────────────────────────────────────
 
     @ElementCollection
     @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))

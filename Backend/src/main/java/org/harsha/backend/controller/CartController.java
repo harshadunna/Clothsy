@@ -37,7 +37,7 @@ public class CartController {
         return new ResponseEntity<>(item, HttpStatus.OK);
     }
 
-    // ── NEW: Endpoint to trigger the clear cart method ──
+    // Endpoint to trigger the clear cart method
     @DeleteMapping("/clear")
     public ResponseEntity<ApiResponse> clearCart(@RequestHeader("Authorization") String jwt) throws UserException {
         User user = userService.findUserProfileByJwt(jwt);

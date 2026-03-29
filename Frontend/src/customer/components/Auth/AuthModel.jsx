@@ -39,7 +39,7 @@ export default function AuthModel({ handleClose, open }) {
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className="fixed inset-0 z-[100] flex min-h-screen w-full bg-background"
         >
-          {/* ── Left Side: Editorial Image (60% Desktop) ── */}
+          {/* Left Side: Editorial Image (60% Desktop) */}
           <section className="hidden lg:block lg:w-[60%] h-screen relative bg-surface-container-highest overflow-hidden">
             <img
               src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=80"
@@ -61,7 +61,7 @@ export default function AuthModel({ handleClose, open }) {
             </div>
           </section>
 
-          {/* ── Right Side: Auth Form (40% Desktop, 100% Mobile) ── */}
+          {/* Right Side: Auth Form (40% Desktop, 100% Mobile) */}
           <section className="w-full lg:w-[40%] h-screen bg-surface relative overflow-y-auto">
             
             {/* Close Button (Fixed to viewport) */}

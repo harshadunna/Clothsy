@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
@@ -72,7 +72,7 @@ export default function RateProduct() {
       >
         <div className="grid grid-cols-1 md:grid-cols-2">
           
-          {/* ── Left: Visual/Brand Side ── */}
+          {/* Left: Visual/Brand Side */}
           <div className="hidden md:block relative bg-surface-container">
             {product?.imageUrl ? (
               <img 
@@ -93,7 +93,7 @@ export default function RateProduct() {
             </div>
           </div>
 
-          {/* ── Right: Interaction Side ── */}
+          {/* Right: Interaction Side */}
           <div className="p-8 md:p-12 flex flex-col bg-surface">
             
             <div className="flex justify-between items-start mb-12">

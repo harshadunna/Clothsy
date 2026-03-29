@@ -14,7 +14,7 @@ export default function PaymentCancel() {
     <div className="min-h-screen bg-background text-on-background font-body pt-20 flex items-center justify-center overflow-hidden">
       <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-0 py-12 lg:py-0">
         
-        {/* ── Hero Image Column (Asymmetric Layout) ── */}
+        {/* Hero Image Column (Asymmetric Layout) */}
         <motion.div 
           initial={{ opacity: 0, x: -40 }}
           animate={{ opacity: 1, x: 0 }}
@@ -29,7 +29,7 @@ export default function PaymentCancel() {
           <div className="absolute inset-0 bg-primary/5 mix-blend-multiply"></div>
         </motion.div>
 
-        {/* ── Content Column ── */}
+        {/* Content Column */}
         <motion.div 
           initial={{ opacity: 0, x: 40 }}
           animate={{ opacity: 1, x: 0 }}

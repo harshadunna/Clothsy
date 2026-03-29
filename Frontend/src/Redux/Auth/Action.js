@@ -78,7 +78,6 @@ export const logout = () => (dispatch) => {
 export const deleteAddress = (addressId) => async (dispatch) => {
   dispatch({ type: "DELETE_ADDRESS_REQUEST" });
   try {
-    // Assuming your backend uses this standard endpoint for deleting addresses
     await api.delete(`/api/addresses/${addressId}`);
 
     dispatch({
@@ -108,7 +107,7 @@ export const saveAddress = (addressData) => async (dispatch) => {
   try {
     const { data } = await api.post("/api/users/addresses", addressData);
     dispatch({ type: "ADD_NEW_ADDRESS_SUCCESS", payload: data });
-    return data; // returns saved address with its ID
+    return data; 
   } catch (error) {
     console.error("Failed to save address:", error);
     throw error;

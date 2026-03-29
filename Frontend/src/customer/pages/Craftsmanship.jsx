@@ -19,7 +19,7 @@ export default function Craftsmanship() {
   return (
     <div className="bg-background text-on-surface font-body overflow-x-hidden pt-20">
       
-      {/* ── Hero Section: The Monolith Concept ── */}
+      {/* Hero Section: The Monolith Concept */}
       <section ref={heroRef} className="relative h-screen w-full flex items-center justify-center overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0 z-0">
           <img 
@@ -52,7 +52,7 @@ export default function Craftsmanship() {
         </motion.div>
       </section>
 
-      {/* ── Section 1: Archival Precision ── */}
+      {/* Section 1: Archival Precision */}
       <section className="bg-surface-container-low py-32 md:py-48 px-8 md:px-24">
         <div className="max-w-screen-2xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-16 md:gap-0 items-start">
           <motion.div 
@@ -93,7 +93,7 @@ export default function Craftsmanship() {
         </div>
       </section>
 
-      {/* ── Section 2: Full Bleed Texture (Liquid Architecture) ── */}
+      {/* Section 2: Full Bleed Texture (Liquid Architecture) */}
       <section ref={liquidRef} className="relative h-[80vh] md:h-[1200px] w-full flex items-center overflow-hidden">
         <motion.div style={{ y: liquidY }} className="absolute inset-0 scale-125">
           <img 
@@ -119,7 +119,7 @@ export default function Craftsmanship() {
         </div>
       </section>
 
-      {/* ── Section 3: Sourcing the Silhouette (Bento Grid) ── */}
+      {/* Section 3: Sourcing the Silhouette (Bento Grid) */}
       <section className="bg-surface py-32 md:py-48 px-8">
         <div className="max-w-screen-xl mx-auto">
           <div className="mb-24 flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -165,7 +165,7 @@ export default function Craftsmanship() {
         </div>
       </section>
 
-      {/* ── CTA Section ── */}
+      {/* CTA Section */}
       <section className="bg-on-surface py-32 px-8 text-center">
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           <h2 className="font-headline italic text-4xl md:text-6xl text-surface mb-12">Experience the Weight.</h2>

@@ -12,7 +12,7 @@ import {
   UPDATE_CART_ITEM_REQUEST,
   UPDATE_CART_ITEM_SUCCESS,
   UPDATE_CART_ITEM_FAILURE,
-  CLEAR_CART, // Make sure this is exported in your ActionType.js
+  CLEAR_CART, 
 } from "./ActionType";
 
 export const addItemToCart = (reqData) => async (dispatch) => {
@@ -74,13 +74,10 @@ export const updateCartItem = (reqData) => async (dispatch) => {
   }
 };
 
-// ── NEW: Updated clearCart thunk to hit the backend ──
 export const clearCart = () => async (dispatch) => {
-  dispatch({ type: CLEAR_CART }); // Instantly clear UI
+  dispatch({ type: CLEAR_CART }); 
   try {
-    await api.delete("/api/cart/clear"); // Delete from DB
-    
-    // Re-fetch the empty cart from the backend to ensure Redux is fully synced
+    await api.delete("/api/cart/clear"); 
     const { data } = await api.get("/api/cart/");
     dispatch({ type: GET_CART_SUCCESS, payload: data });
   } catch (error) {

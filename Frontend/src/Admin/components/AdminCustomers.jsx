@@ -12,10 +12,8 @@ export default function AdminCustomers() {
         setLoading(true);
         setError(null);
         
-        // This perfectly matches your Spring Boot AdminUserController!
         const { data } = await api.get("/api/admin/users"); 
         
-        // CRASH-PROOF CHECK: Ensure the backend actually gave us a list
         if (Array.isArray(data)) {
           setCustomers(data);
         } else {

@@ -86,7 +86,7 @@ export default function HomeSectionCarousel({ data, sectionName }) {
   return (
     <div ref={sectionRef} className="px-4 sm:px-6 lg:px-8 py-4">
 
-      {/* ── Section Header ── */}
+      {/* Section Header */}
       <div className="flex items-center justify-between mb-5">
         <div ref={headerRef} className="flex items-center gap-4" style={{ opacity: 0 }}>
           {/* Decorative accent line */}
@@ -175,7 +175,7 @@ export default function HomeSectionCarousel({ data, sectionName }) {
           </motion.div>
         </div>
 
-        {/* ── Left fade + mobile arrow ── */}
+        {/* Left fade + mobile arrow */}
         <AnimatePresence>
           {canGoPrev && (
             <motion.div
@@ -209,7 +209,7 @@ export default function HomeSectionCarousel({ data, sectionName }) {
           )}
         </AnimatePresence>
 
-        {/* ── Right fade + mobile arrow ── */}
+        {/* Right fade + mobile arrow */}
         <AnimatePresence>
           {canGoNext && (
             <motion.div
@@ -244,7 +244,7 @@ export default function HomeSectionCarousel({ data, sectionName }) {
         </AnimatePresence>
       </div>
 
-      {/* ── Dot indicators ── */}
+      {/* Dot indicators */}
       {data.length > itemsPerPage && (
         <div className="flex justify-center gap-1.5 mt-4">
           {Array.from({ length: data.length - itemsPerPage + 1 }).map((_, i) => (

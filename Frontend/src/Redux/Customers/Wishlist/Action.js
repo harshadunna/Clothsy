@@ -7,7 +7,7 @@ import {
 export const getWishlist = () => async (dispatch) => {
   dispatch({ type: GET_WISHLIST_REQUEST });
   try {
-    const { data } = await api.get("/api/wishlist/");
+    const { data } = await api.get("/api/wishlist");
     dispatch({ type: GET_WISHLIST_SUCCESS, payload: data });
   } catch (error) {
     dispatch({ type: GET_WISHLIST_FAILURE, payload: error.message });

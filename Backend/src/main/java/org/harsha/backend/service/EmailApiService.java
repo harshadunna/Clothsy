@@ -38,7 +38,7 @@ public class EmailApiService {
         String message;
         String themeColor = "#c8742a"; // Clothsy Brand Orange
 
-        // ── 2. Determine Email Content Based on Status ──
+        // 2. Determine Email Content Based on Status
         switch (updateType) {
             case "PLACED":
                 subject = "Order Confirmed! - #" + order.getId();
@@ -86,7 +86,7 @@ public class EmailApiService {
                 message = "There has been an update to your order. Please check your account dashboard for details.";
         }
 
-        // ── 3. Build Payload & Attach PDF via Resend ──
+        // 3. Build Payload & Attach PDF via Resend
         try {
             String htmlContent = buildDynamicHtml(order, title, message, themeColor);
 

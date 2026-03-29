@@ -93,13 +93,13 @@ public class AdminAnalyticsController {
 
         Map<String, Object> response = new HashMap<>();
 
-        // ── Weekly Data (Mon - Sun of current week) ──
+        // Weekly Data (Mon - Sun of current week)
         response.put("weekly", generateWeeklyData(validOrders));
 
-        // ── Monthly Data (Week 1 - Week 4 of current month) ──
+        // Monthly Data (Week 1 - Week 4 of current month)
         response.put("monthly", generateMonthlyData(validOrders));
 
-        // ── Yearly Data (Jan - Dec of current year) ──
+        // Yearly Data (Jan - Dec of current year)
         response.put("yearly", generateYearlyData(validOrders));
 
         return ResponseEntity.ok(response);
@@ -179,8 +179,6 @@ public class AdminAnalyticsController {
             Map<String, Object> map = new HashMap<>();
             map.put("name", "Week " + i);
 
-            // Just simulating the split for the UI based on total month data
-            // In a strict enterprise app, you would check day 1-7, 8-14, etc.
             double qRev = thisMonthOrders.stream().mapToDouble(Order::getTotalDiscountedPrice).sum() / 4.0;
             long qOrd = thisMonthOrders.size() / 4;
 

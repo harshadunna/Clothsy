@@ -19,9 +19,6 @@ export const createOrder = (reqData) => async (dispatch) => {
 
     dispatch({ type: CREATE_ORDER_SUCCESS, payload: data });
 
-
-    // The saveAddress action already handles adding new addresses to the UI!
-
     if (data.id && reqData.navigate) {
       reqData.navigate(`/checkout?step=3&order_id=${data.id}`);
     }
@@ -56,7 +53,6 @@ export const createPayment = (orderId) => async (dispatch) => {
   try {
     const { data } = await api.post(`/api/payments/${orderId}`);
     
-    // If Stripe gives us a URL, immediately redirect the user's browser to it!
     if (data.payment_url) {
       window.location.href = data.payment_url;
     }

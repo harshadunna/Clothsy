@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 export default function Contact() {
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Add your form submission logic here later
     alert("Message Dispatched. The Concierge will contact you shortly.");
   };
 
@@ -12,7 +11,7 @@ export default function Contact() {
     <div className="bg-surface text-on-surface font-body min-h-screen pt-20">
       <div className="flex flex-col md:flex-row h-full min-h-[calc(100vh-5rem)]">
         
-        {/* ── Left Side: Visual Anchor ── */}
+        {/* Left Side: Visual Anchor */}
         <motion.div 
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -35,7 +34,7 @@ export default function Contact() {
           </div>
         </motion.div>
 
-        {/* ── Right Side: Contact Portal ── */}
+        {/* Right Side: Contact Portal */}
         <motion.div 
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}

@@ -58,7 +58,7 @@ export default function Navigation() {
   return (
     <div className="bg-background">
       
-      {/* ── Mobile Menu (Kept functional for responsiveness, restyled) ── */}
+      {/* Mobile Menu (Kept functional for responsiveness, restyled) */}
       <Dialog open={open} onClose={setOpen} className="relative z-[100] lg:hidden">
         <DialogBackdrop transition className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 data-closed:opacity-0" />
         <div className="fixed inset-0 z-[100] flex">
@@ -128,7 +128,7 @@ export default function Navigation() {
         </div>
       </Dialog>
 
-      {/* ── Desktop Architectural Header ── */}
+      {/* Desktop Architectural Header */}
       <nav className="fixed top-0 w-full z-50 rounded-none border-b border-outline-variant/20 bg-surface/80 backdrop-blur-xl transition-all duration-300">
         <div className="flex justify-between items-center px-6 md:px-12 h-20 w-full max-w-[1440px] mx-auto">
           
@@ -150,7 +150,7 @@ export default function Navigation() {
                   {category.name}
                 </span>
                 
-                {/* ── Editorial Mega Menu Dropdown ── */}
+                {/* Editorial Mega Menu Dropdown */}
                 <div className="absolute top-20 left-0 w-full bg-surface-bright/95 backdrop-blur-2xl opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all duration-500 border-t border-outline-variant/20 shadow-2xl">
                   <div className="max-w-[1440px] mx-auto grid grid-cols-12 gap-8 p-12">
                     

@@ -61,7 +61,7 @@ export default function AdminOrders() {
   return (
     <div className="p-12 max-w-[1440px] mx-auto min-h-screen bg-[#FFF8F5]">
       
-      {/* ── HEADER ── */}
+      {/* HEADER */}
       <div className="flex justify-between items-end mb-16 border-b border-[#D1C4BC] pb-8">
         <div>
           <h1 className="text-6xl font-headline italic text-[#1A1109] tracking-tight leading-none mb-4">
@@ -73,7 +73,7 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      {/* ── BRUTALIST LEDGER ── */}
+      {/* BRUTALIST LEDGER */}
       <div className="bg-[#FFF8F5] border-t-2 border-[#1A1109]">
         <table className="w-full text-left border-collapse">
           <thead>

@@ -25,7 +25,7 @@ public interface ProductService {
 
     List<Product> recentlyAddedProduct();
 
-    // ── This is the method that needed the 'String search' added to the end! ──
+    // This is the method that needed the 'String search' added to the end!
     Page<Product> getAllProduct(
             String category,
             List<String> colors,

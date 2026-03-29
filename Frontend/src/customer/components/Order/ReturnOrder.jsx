@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "../../../config/api";
@@ -50,8 +50,6 @@ export default function ReturnOrder() {
     
     setSubmitting(true);
     try {
-      // NOTE: We are sending the array of IDs as your API currently expects. 
-      // If your backend is updated to accept reasons, you can append `returnReason` here!
       await api.put(`/api/orders/${orderId}/return-items`, selectedItems);
       
       // Navigate back to the order page after success
@@ -80,7 +78,7 @@ export default function ReturnOrder() {
   return (
     <div className="bg-background text-on-background font-body min-h-screen pt-32 pb-24 px-8 md:px-24 max-w-[1440px] mx-auto">
       
-      {/* ── Header Section ── */}
+      {/* Header Section */}
       <header className="mb-24 flex flex-col md:flex-row md:items-end justify-between gap-8">
         <div className="max-w-2xl">
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 font-label text-[10px] uppercase tracking-widest text-outline hover:text-primary transition-colors mb-8">
@@ -109,7 +107,7 @@ export default function ReturnOrder() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
           
-          {/* ── Left: Purchases Grid ── */}
+          {/* Left: Purchases Grid */}
           <div className="lg:col-span-7 space-y-12">
             <h2 className="font-label text-[0.6875rem] font-bold uppercase tracking-[0.2rem] border-b border-outline-variant/20 pb-4 mb-8">
               Select Items
@@ -164,7 +162,7 @@ export default function ReturnOrder() {
             </div>
           </div>
 
-          {/* ── Right: Return Form Column ── */}
+          {/* Right: Return Form Column */}
           <div className="lg:col-span-5 lg:sticky lg:top-32">
             <motion.div 
               initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: [0.25, 1, 0.5, 1] }}

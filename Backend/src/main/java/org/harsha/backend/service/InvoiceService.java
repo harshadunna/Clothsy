@@ -26,10 +26,10 @@ public class InvoiceService {
 
         document.open();
 
-        // ── 1. Color Palette & Fonts ──
-        Color brandOrange = new Color(200, 116, 42); // #c8742a
-        Color darkText = new Color(26, 17, 9);       // #1a1109
-        Color lightGray = new Color(232, 221, 213);  // #e8ddd5 border color
+        // 1. Color Palette & Fonts
+        Color brandOrange = new Color(200, 116, 42); 
+        Color darkText = new Color(26, 17, 9);       
+        Color lightGray = new Color(232, 221, 213);  
 
         Font brandFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 28, brandOrange);
         Font invoiceTitleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, darkText);
@@ -38,7 +38,7 @@ public class InvoiceService {
         Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 10, Color.DARK_GRAY);
         Font smallFont = FontFactory.getFont(FontFactory.HELVETICA, 8, Color.GRAY);
 
-        // ── 2. Top Header (Logo & Invoice Label) ──
+        // 2. Top Header (Logo & Invoice Label)
         PdfPTable headerTable = new PdfPTable(2);
         headerTable.setWidthPercentage(100);
         headerTable.setWidths(new float[]{1, 1});
@@ -59,7 +59,7 @@ public class InvoiceService {
         document.add(headerTable);
         document.add(new Paragraph("\n"));
 
-        // ── 3. Address & Meta Information Section ──
+        // 3. Address & Meta Information Section
         PdfPTable infoTable = new PdfPTable(2);
         infoTable.setWidthPercentage(100);
         infoTable.setWidths(new float[]{1, 1});
@@ -102,7 +102,7 @@ public class InvoiceService {
 
         document.add(infoTable);
 
-        // ── 4. Line Items Table ──
+        // 4. Line Items Table
         PdfPTable table = new PdfPTable(5);
         table.setWidthPercentage(100);
         table.setWidths(new float[]{0.8f, 4.2f, 1.5f, 2f, 2f}); // Adjusted widths
@@ -151,7 +151,7 @@ public class InvoiceService {
         document.add(table);
         document.add(new Paragraph("\n"));
 
-        // ── 5. Financial Summary (Right Aligned) ──
+        // 5. Financial Summary (Right Aligned)
         double subtotal = (double) order.getTotalPrice();
         double totalPaid = (double) order.getTotalDiscountedPrice();
         double discount = subtotal - totalPaid;
@@ -181,7 +181,7 @@ public class InvoiceService {
 
         document.add(summaryTable);
 
-        // ── 6. Footer ──
+        // 6. Footer
         document.add(new Paragraph("\n\n\n")); // Push footer down
 
         PdfPTable footerTable = new PdfPTable(1);

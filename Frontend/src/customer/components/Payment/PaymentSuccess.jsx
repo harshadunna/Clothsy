@@ -61,7 +61,7 @@ export default function PaymentSuccess() {
     <main className="min-h-screen pt-32 pb-24 flex flex-col items-center justify-center px-6 bg-background">
       <AnimatePresence mode="wait">
         
-        {/* ── Loading State ── */}
+        {/* Loading State */}
         {status === "updating" && (
           <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
             <div className="w-12 h-12 border-2 border-t-transparent border-primary animate-spin mb-8 mx-auto"></div>
@@ -70,7 +70,7 @@ export default function PaymentSuccess() {
           </motion.div>
         )}
 
-        {/* ── Error State ── */}
+        {/* Error State */}
         {status === "error" && (
           <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center max-w-md">
             <span className="material-symbols-outlined text-6xl text-error mb-6">error_outline</span>
@@ -80,7 +80,7 @@ export default function PaymentSuccess() {
           </motion.div>
         )}
 
-        {/* ── Success State ── */}
+        {/* Success State */}
         {status === "success" && (
           <motion.div key="success" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="w-full max-w-5xl">
             

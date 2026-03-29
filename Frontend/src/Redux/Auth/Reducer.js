@@ -19,13 +19,11 @@ const initialState = {
 
 const authReducer = (state = initialState, action) => {
   switch (action.type) {
-    // ONLY Auth-critical actions trigger global loading
     case REGISTER_REQUEST:
     case LOGIN_REQUEST:
     case GET_USER_REQUEST:
       return { ...state, isLoading: true, error: null };
 
-    // --- ANTI-GRAVITY FIX: ADDRESS ACTIONS ARE COMPLETELY SILENT ---
     case DELETE_ADDRESS_REQUEST:
     case UPDATE_ADDRESS_REQUEST:
       return { ...state, error: null, isLoading: false };
@@ -51,7 +49,6 @@ const authReducer = (state = initialState, action) => {
       return { ...state, isLoading: false, customers: action.payload };
 
     case DELETE_ADDRESS_SUCCESS:
-      // We explicitly keep the existing user object and just swap the addresses array
       return {
         ...state,
         isLoading: false,
@@ -73,14 +70,12 @@ const authReducer = (state = initialState, action) => {
         },
       };
 
-    // --- NEW: UPDATE ADDRESS SUCCESS ---
     case UPDATE_ADDRESS_SUCCESS:
       return {
         ...state,
         isLoading: false,
         user: {
           ...state.user,
-          // Map over the array: if the ID matches the updated one, swap it out. Otherwise, keep the old one.
           addresses: (state.user?.addresses || []).map((addr) =>
             addr.id === action.payload.id ? action.payload : addr
           ),

@@ -4,7 +4,6 @@ import customerProductReducer from "./Customers/Product/Reducer";
 import cartReducer from "./Customers/Cart/Reducer";
 import productReducer from "./Customers/Product/Reducer";
 import { orderReducer } from "./Customers/Order/Reducer";
-// ── ADD THIS ──
 import { wishlistReducer } from "./Customers/Wishlist/Reducer";
 
 export const store = configureStore({

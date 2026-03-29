@@ -1,4 +1,3 @@
-import React from 'react';
 
 const AddressCard = ({ address, selected, onEdit, onDelete, showActions = true }) => {
   return (

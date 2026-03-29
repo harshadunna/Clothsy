@@ -73,7 +73,7 @@ export default function LoginForm() {
               required
               id="password"
               name="password"
-              type={showPassword ? "text" : "password"} // ── TOGGLE TYPE ──
+              type={showPassword ? "text" : "password"} 
               onFocus={() => setFocusedField("password")}
               onBlur={() => setFocusedField(null)}
               className="w-full bg-transparent border-0 px-0 py-2 text-on-surface placeholder:text-outline/40 focus:ring-0 focus:outline-none outline-none shadow-none font-body text-sm"
@@ -81,7 +81,7 @@ export default function LoginForm() {
             />
             <button 
               type="button" 
-              onClick={() => setShowPassword(!showPassword)} // ── TOGGLE FUNCTION ──
+              onClick={() => setShowPassword(!showPassword)} 
               className="p-2 text-outline-variant hover:text-primary transition-colors focus:outline-none"
             >
               <span className="material-symbols-outlined text-[18px]">

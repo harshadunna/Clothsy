@@ -6,7 +6,7 @@ import org.harsha.backend.model.Cart;
 import org.harsha.backend.model.CartItem;
 import org.harsha.backend.model.Product;
 import org.harsha.backend.model.User;
-import org.harsha.backend.repository.CartItemRepository; // ── ADDED
+import org.harsha.backend.repository.CartItemRepository;
 import org.harsha.backend.repository.CartRepository;
 import org.harsha.backend.request.AddItemRequest;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,7 @@ public class CartServiceImplementation implements CartService {
     private final CartItemService cartItemService;
     private final ProductService productService;
     private final UserService userService;
-    private final CartItemRepository cartItemRepository; // ── ADDED
+    private final CartItemRepository cartItemRepository;
 
     @Override
     public Cart createCart(User user) {
@@ -102,7 +102,6 @@ public class CartServiceImplementation implements CartService {
         return createdCartItem;
     }
 
-    // ── NEW: Method to fully clear the cart from the database ──
     @Override
     @Transactional
     public void clearCart(Long userId) {

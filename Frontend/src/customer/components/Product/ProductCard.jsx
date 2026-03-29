@@ -5,31 +5,49 @@ import { HeartIcon as HeartOutline } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
 
 const ProductCard = ({ product }) => {
-  const { title, brand, imageUrl, price, discountedPrice, color, discountPercent, id } = product;
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  
-  const { wishlist } = useSelector((store) => store.wishlist);
-  const isWishlisted = wishlist?.products?.some((p) => p.id === id);
 
-  const handleNavigate = () => navigate(`/product/${id}`);
+  const { 
+    title = "Archival Silhouette", 
+    brand = "CLOTHSY Atelier", 
+    imageUrl = "https://via.placeholder.com/400x600?text=Archive",
+    price = 0, 
+    discountedPrice = 0, 
+    color = "Signature Palette", 
+    discountPercent = 0, 
+    id 
+  } = product || {};
+  
+  const wishlistState = useSelector((store) => store.wishlist);
+  const isWishlisted = wishlistState?.wishlist?.products?.some((p) => p.id === id) || false;
+
+  const handleNavigate = () => {
+    if (id) navigate(`/product/${id}`);
+  };
 
   const handleToggleWishlist = (e) => {
     e.stopPropagation();
-    dispatch(toggleWishlistItem(id));
+    if (id) dispatch(toggleWishlistItem(id));
   };
+
+  if (!product || !id) return null;
 
   return (
     <div 
       onClick={handleNavigate}
       className="group cursor-pointer w-full flex flex-col bg-transparent"
     >
-      {/* ── IMAGE CONTAINER ── */}
+      {/* IMAGE CONTAINER */}
       <div className="aspect-[3/4] overflow-hidden bg-[#E8E1DE] mb-6 relative border border-transparent group-hover:border-[#D1C4BC] transition-colors duration-500">
         <img
           src={imageUrl}
           alt={title}
           className="w-full h-full object-cover grayscale-[15%] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
+          onError={(e) => {
+            // If the image link is dead, swap it to a fallback image so the UI doesn't look broken
+            e.target.src = "https://via.placeholder.com/400x600?text=Image+Unavailable";
+          }}
         />
         
         {/* Badges */}
@@ -52,10 +70,10 @@ const ProductCard = ({ product }) => {
         </button>
       </div>
 
-      {/* ── EDITORIAL TYPOGRAPHY ── */}
+      {/* EDITORIAL TYPOGRAPHY */}
       <div className="flex flex-col gap-1 pr-4">
         <p className="font-label text-[0.55rem] font-black uppercase tracking-[0.3em] text-[#C8742A]">
-          {brand || "CLOTHSY Atelier"}
+          {brand}
         </p>
         
         <h2 className="font-headline text-2xl md:text-3xl italic text-[#1A1109] group-hover:text-[#C8742A] transition-colors duration-300 truncate mt-1">
@@ -63,7 +81,7 @@ const ProductCard = ({ product }) => {
         </h2>
         
         <p className="font-label text-[0.6rem] uppercase tracking-[0.15em] text-[#7F756E] truncate mt-1">
-          {color || "Signature Palette"}
+          {color}
         </p>
         
         <div className="flex items-baseline gap-3 mt-3">

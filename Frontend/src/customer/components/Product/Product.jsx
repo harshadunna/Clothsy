@@ -84,7 +84,7 @@ export default function Product() {
     ? `Results for "${searchParams.get("search")}"` 
     : (levelThree ? levelThree.replace(/-/g, " ") : "The Archive");
 
-  // ── Brutalist Architectural Filters ──
+  // Brutalist Architectural Filters
   const FilterSidebar = () => (
     <div className="space-y-12 pr-8">
       {filters.map((section) => (
@@ -135,7 +135,7 @@ export default function Product() {
   return (
     <div className="bg-[#FFF8F5] text-[#1A1109] min-h-screen pt-32 px-8 md:px-12 pb-24 font-body selection:bg-[#C8742A] selection:text-[#FFF8F5]">
       
-      {/* ── Header Area ── */}
+      {/* Header Area */}
       <header className="mb-24 flex flex-col md:flex-row justify-between items-end gap-8 border-b border-[#D1C4BC] pb-12">
         <div className="max-w-2xl">
           <motion.h1 
@@ -204,7 +204,7 @@ export default function Product() {
         </motion.div>
       </header>
 
-      {/* ── Main Layout ── */}
+      {/* Main Layout */}
       <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
         
         {/* Desktop Sidebar */}
@@ -252,14 +252,13 @@ export default function Product() {
             <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-24 gap-x-12">
               {products.map((item) => (
                 <motion.div key={item.id} variants={cardVariants}>
-                  {/* Assuming your ProductCard component renders the item */}
                   <ProductCard product={item} />
                 </motion.div>
               ))}
             </motion.div>
           )}
 
-          {/* ── Brutalist Pagination ── */}
+          {/* Brutalist Pagination */}
           {totalPages > 1 && (
             <div className="mt-32 flex justify-between items-center border-t border-[#D1C4BC] pt-12">
               <button

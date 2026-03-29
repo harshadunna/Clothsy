@@ -23,7 +23,7 @@ export default function Checkout() {
     <div className="bg-background text-on-background font-body min-h-screen pt-32 pb-24 px-6 md:px-12 lg:px-24">
       <div className="max-w-7xl mx-auto">
         
-        {/* ── Editorial Header & Minimalist Stepper ── */}
+        {/* Editorial Header & Minimalist Stepper */}
         <header className="mb-16">
           <motion.h1 
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}
@@ -50,7 +50,7 @@ export default function Checkout() {
           </motion.div>
         </header>
 
-        {/* ── Dynamic Content ── */}
+        {/* Dynamic Content */}
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={step}

@@ -7,6 +7,7 @@ import org.harsha.backend.model.Wishlist;
 import org.harsha.backend.repository.ProductRepository;
 import org.harsha.backend.repository.WishlistRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class WishlistService {
@@ -29,6 +30,8 @@ public class WishlistService {
         return wishlist;
     }
 
+    // Added Transactional to lock the DB while updating collections
+    @Transactional
     public Wishlist toggleWishlistItem(User user, Long productId) throws ProductException {
         Wishlist wishlist = getWishlistByUser(user);
         Product product = productRepository.findById(productId)

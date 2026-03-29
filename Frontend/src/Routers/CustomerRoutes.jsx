@@ -1,8 +1,6 @@
-import React from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
-// Components
 import Navigation from "../customer/components/Navigation/Navigation";
 import Footer from "../customer/components/Footer/Footer";
 import HomePage from "../customer/pages/HomePage";
@@ -19,8 +17,8 @@ import Wishlist from "../customer/pages/Wishlist";
 import Profile from "../customer/components/Account/Profile";
 import NotFound from "../customer/pages/NotFound";
 import Contact from "../customer/pages/Contact";
-import Craftsmanship from "../customer/pages/Craftsmanship"; 
-import CurationPage from "../customer/pages/CurationPage"; 
+import Craftsmanship from "../customer/pages/Craftsmanship";
+import CurationPage from "../customer/pages/CurationPage";
 
 const PageTransition = ({ children }) => (
   <motion.div
@@ -52,11 +50,12 @@ const CustomerRoutes = () => {
           <Route path="/product/:productId/rate" element={<PageTransition><RateProduct /></PageTransition>} />
           <Route path="/product/:productId" element={<PageTransition><ProductDetails /></PageTransition>} />
           <Route path="/products" element={<PageTransition><Product /></PageTransition>} />
-          
-          {/* ── Editorial Curation Route ── */}
+
+          {/* Editorial Curation Routes */}
+          <Route path="/collections/curations/:editName" element={<PageTransition><CurationPage /></PageTransition>} />
           <Route path="/atelier/curations/:editName" element={<PageTransition><CurationPage /></PageTransition>} />
 
-          {/* Dynamic Category Routes (L1/L2/L3) */}
+          {/* Dynamic Category Routes */}
           <Route path="/:levelOne/:levelTwo/:levelThree" element={<PageTransition><Product /></PageTransition>} />
 
           {/* Shopping & Checkout */}

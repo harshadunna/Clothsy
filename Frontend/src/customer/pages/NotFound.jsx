@@ -11,7 +11,7 @@ export default function NotFound({ productImage }) {
   return (
     <main className="relative min-h-screen flex items-center justify-center pt-24 px-8 overflow-hidden bg-background">
       
-      {/* ── ghosted Architectural Background ── */}
+      {/* ghosted Architectural Background */}
       <div className="absolute inset-0 z-0 pointer-events-none opacity-10 flex justify-center items-center">
         <span className="font-headline italic font-bold text-[30rem] md:text-[40rem] text-outline-variant select-none leading-none">
           404
@@ -20,7 +20,7 @@ export default function NotFound({ productImage }) {
 
       <div className="max-w-7xl w-full grid grid-cols-1 md:grid-cols-12 gap-8 items-center relative z-10">
         
-        {/* ── Left Side: SYNCED IMAGE ── */}
+        {/* Left Side: SYNCED IMAGE */}
         <motion.div 
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
@@ -39,7 +39,7 @@ export default function NotFound({ productImage }) {
           </div>
         </motion.div>
 
-        {/* ── Right Side: Message ── */}
+        {/* Right Side: Message */}
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -74,8 +74,6 @@ export default function NotFound({ productImage }) {
               Shop Products
             </button>
           </div>
-
-          {/* ── DELETED THE TECHNICAL NOTE SECTION FROM HERE ── */}
 
         </motion.div>
       </div>

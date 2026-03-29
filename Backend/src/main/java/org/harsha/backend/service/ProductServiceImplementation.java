@@ -30,7 +30,7 @@ public class ProductServiceImplementation implements ProductService {
     @Override
     public Product createProduct(CreateProductRequest req) throws ProductException {
 
-        // ── Resolve or create Top Level Category ──────────────
+        // Resolve or create Top Level Category
         Category topLevel = categoryRepository.findByName(req.getTopLevelCategory());
         if (topLevel == null) {
             Category newTopLevel = new Category();
@@ -39,7 +39,7 @@ public class ProductServiceImplementation implements ProductService {
             topLevel = categoryRepository.save(newTopLevel);
         }
 
-        // ── Resolve or create Second Level Category ──────
+        // Resolve or create Second Level Category
         Category secondLevel = null;
         try {
             secondLevel = categoryRepository.findByNameAndParent(
@@ -56,7 +56,7 @@ public class ProductServiceImplementation implements ProductService {
             secondLevel = categoryRepository.save(newSecondLevel);
         }
 
-        // ── Resolve or create Third Level Category ─────
+        // Resolve or create Third Level Category
         Category thirdLevel = null;
         try {
             thirdLevel = categoryRepository.findByNameAndParent(
@@ -75,7 +75,7 @@ public class ProductServiceImplementation implements ProductService {
 
         Set<Size> sizes = req.getSizes();
 
-        // ── Build and persist the Product entity ────────────────────────────
+        // Build and persist the Product entity
         Product product = new Product();
         product.setTitle(req.getTitle());
         product.setColor(req.getColor());
@@ -92,7 +92,7 @@ public class ProductServiceImplementation implements ProductService {
         product.setCategory(thirdLevel);
         product.setCreatedAt(LocalDateTime.now());
 
-        // ── Set multiple images if provided ─────────────────────────────────
+        // Set multiple images if provided
         if (req.getImages() != null && !req.getImages().isEmpty()) {
             product.setImages(req.getImages());
         }
@@ -112,7 +112,7 @@ public class ProductServiceImplementation implements ProductService {
     public Product updateProduct(Long productId, Product req) throws ProductException {
         Product product = findProductById(productId);
 
-        // ── Update Text Fields ─────────────────────────────────────────────
+        // Update Text Fields
         if (req.getTitle() != null) product.setTitle(req.getTitle());
         if (req.getDescription() != null) product.setDescription(req.getDescription());
         if (req.getMaterials() != null) product.setMaterials(req.getMaterials()); // NEW
@@ -121,19 +121,19 @@ public class ProductServiceImplementation implements ProductService {
         if (req.getColor() != null) product.setColor(req.getColor());
         if (req.getImageUrl() != null) product.setImageUrl(req.getImageUrl());
 
-        // ── Update Pricing & Inventory ─────────────────────────────────────
+        // Update Pricing & Inventory
         product.setPrice(req.getPrice());
         product.setDiscountedPrice(req.getDiscountedPrice());
         product.setDiscountPercent(req.getDiscountPercent());
         product.setQuantity(req.getQuantity());
 
-        // ── Update Sizes ───────────────────────────────────────────────────
+        // Update Sizes
         if (req.getSizes() != null) {
             product.getSizes().clear();
             product.getSizes().addAll(req.getSizes());
         }
 
-        // ── Update Multiple Images ─────────────────────────────────────────
+        // Update Multiple Images
         if (req.getImages() != null) {
             product.getImages().clear();
             product.getImages().addAll(req.getImages());
@@ -182,12 +182,12 @@ public class ProductServiceImplementation implements ProductService {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
-        // ── Fetch base filtered list from repository ──────────────────────────
+        // Fetch base filtered list from repository
         List<Product> products = productRepository.filterProducts(
                 category, minPrice, maxPrice, minDiscount, sort
         );
 
-        // ── Apply color filter ────────────────────────────────────────────────
+        // Apply color filter
         if (colors != null && !colors.isEmpty() && !(colors.size() == 1 && colors.get(0).isEmpty())) {
             products = products.stream()
                     .filter(p -> colors.stream()
@@ -195,7 +195,7 @@ public class ProductServiceImplementation implements ProductService {
                     .collect(Collectors.toList());
         }
 
-        // ── Apply size filter ─────────────────────────────────────────────────
+        // Apply size filter
         if (sizes != null && !sizes.isEmpty() && !(sizes.size() == 1 && sizes.get(0).isEmpty())) {
             products = products.stream()
                     .filter(p -> p.getSizes().stream()
@@ -203,7 +203,7 @@ public class ProductServiceImplementation implements ProductService {
                     .collect(Collectors.toList());
         }
 
-        // ── Apply stock filter ────────────────────────────────────────────────
+        // Apply stock filter
         if (stock != null && !stock.isEmpty()) {
             if (stock.equals("in_stock")) {
                 products = products.stream()
@@ -216,7 +216,7 @@ public class ProductServiceImplementation implements ProductService {
             }
         }
 
-        // ── Apply Global Search Keyword ──────────────────────────────────
+        // Apply Global Search Keyword
         if (search != null && !search.isEmpty()) {
             String q = search.toLowerCase();
             products = products.stream()
@@ -226,7 +226,7 @@ public class ProductServiceImplementation implements ProductService {
                     .collect(Collectors.toList());
         }
 
-        // ── SAFE Pagination ───────────────────────────────────────────────────
+        // SAFE Pagination
         int startIndex = (int) pageable.getOffset();
 
         if (startIndex >= products.size()) {

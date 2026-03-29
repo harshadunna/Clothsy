@@ -78,7 +78,7 @@ const HomePage = () => {
     <div className="bg-background text-on-background antialiased min-h-screen flex flex-col">
       <main className="flex-grow">
         
-        {/* ── Hero Section (Full Bleed) ── */}
+        {/* Hero Section (Full Bleed) */}
         <section ref={heroRef} className="relative w-full h-[870px] bg-surface-container-highest overflow-hidden">
           <div 
             className="absolute inset-0 bg-cover bg-center" 
@@ -104,7 +104,7 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* ── Asymmetrical Product Grid ── */}
+        {/* Asymmetrical Product Grid */}
         <section className="py-24 px-10 md:px-24 bg-background" ref={gridRef}>
           <div className="flex items-end justify-between mb-16 border-b border-outline-variant/30 pb-4">
             <h2 className="font-headline text-4xl text-on-background font-bold tracking-tight">Curated Pieces</h2>
@@ -153,7 +153,7 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* ── Newsletter Section ── */}
+        {/* Newsletter Section */}
         <section className="bg-surface-container py-32 px-10 text-center">
           <div className="max-w-2xl mx-auto">
             <h2 className="font-headline text-4xl md:text-5xl font-bold text-on-surface mb-6">Join the Editorial</h2>

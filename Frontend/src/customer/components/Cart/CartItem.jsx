@@ -39,7 +39,7 @@ export default function CartItem({ item, showButton = true }) {
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className="grid grid-cols-1 md:grid-cols-6 py-10 border-b border-outline-variant/30 items-center"
     >
-      {/* ── Left: Image & Details ── */}
+      {/* Left: Image & Details */}
       <div className="col-span-3 flex items-center space-x-6">
         <div className="w-32 h-40 bg-surface-container overflow-hidden flex-shrink-0">
           <img
@@ -67,7 +67,7 @@ export default function CartItem({ item, showButton = true }) {
         </div>
       </div>
 
-      {/* ── Center: Quantity ── */}
+      {/* Center: Quantity */}
       <div className="mt-6 md:mt-0 flex justify-start md:justify-center items-center">
         {showButton ? (
           <div className="flex items-center space-x-4 border border-outline-variant/20 px-4 py-2">
@@ -91,7 +91,7 @@ export default function CartItem({ item, showButton = true }) {
         )}
       </div>
 
-      {/* ── Right: Total Price ── */}
+      {/* Right: Total Price */}
       <div className="mt-4 md:mt-0 md:text-right col-span-2">
         <span className="font-headline text-2xl text-on-surface">
           ₹{discountedPrice * quantity}
