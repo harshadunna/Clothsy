@@ -1,267 +1,107 @@
-import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useState, useRef } from "react";
 import HomeSectionCard from "../HomeSectionCard/HomeSectionCard";
 
-gsap.registerPlugin(ScrollTrigger);
+export default function HomeSectionCarousel({ data, sectionName, loading = false }) {
+  const scrollRef       = useRef(null);
+  const [showLeftBlur,  setShowLeftBlur]  = useState(false);
+  const [showRightBlur, setShowRightBlur] = useState(true);
 
-export default function HomeSectionCarousel({ data, sectionName }) {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const itemsPerPage = 5;
-  const canGoPrev = activeIndex > 0;
-  const canGoNext = activeIndex < data.length - itemsPerPage;
+  const scrollAmount = 200;
 
-  const sectionRef = useRef(null);
-  const headerRef = useRef(null);
-  const cardsRef = useRef(null);
-  const gsapCtxRef = useRef(null);
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+    setShowLeftBlur(scrollLeft > 0);
+    setShowRightBlur(scrollLeft < scrollWidth - clientWidth - 10);
+  };
 
-  const slidePrev = () => setActiveIndex((prev) => Math.max(prev - 1, 0));
+  const slidePrev = () =>
+    scrollRef.current?.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+
   const slideNext = () =>
-    setActiveIndex((prev) => Math.min(prev + 1, data.length - itemsPerPage));
+    scrollRef.current?.scrollBy({ left: scrollAmount, behavior: "smooth" });
 
-  // GSAP: Header + cards stagger on scroll into view
-  useEffect(() => {
-    if (gsapCtxRef.current) gsapCtxRef.current.revert();
+  // ── Loading skeleton ──────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <section className="bg-[#FFF8F5] py-10 overflow-hidden border-t border-[#D1C4BC]">
+        <div className="px-6 md:px-12 mb-5 max-w-[1440px] mx-auto">
+          <div className="w-12 h-2 bg-[#E8E1DE] rounded mb-2 animate-pulse" />
+          <div className="w-32 h-4 bg-[#E8E1DE] rounded animate-pulse" />
+        </div>
+        <div className="flex gap-4 px-6 md:px-12 max-w-[1440px] mx-auto overflow-hidden">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <div key={i} className="flex-shrink-0" style={{ width: "180px" }}>
+              <div
+                className="bg-[#E8E1DE] animate-pulse rounded-none"
+                style={{ width: "180px", height: "240px" }}
+              />
+              <div className="pt-2.5 space-y-1.5">
+                <div className="h-2 bg-[#E8E1DE] rounded animate-pulse w-3/4" />
+                <div className="h-2 bg-[#E8E1DE] rounded animate-pulse w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
 
-    gsapCtxRef.current = gsap.context(() => {
-      // Header line reveal
-      gsap.fromTo(
-        headerRef.current,
-        { x: -30, opacity: 0 },
-        {
-          x: 0,
-          opacity: 1,
-          duration: 0.7,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top 88%",
-            toggleActions: "play none none reverse",
-          },
-        }
-      );
-
-      // Cards stagger
-      const cards = cardsRef.current?.querySelectorAll(".gsap-card");
-      if (cards?.length) {
-        gsap.fromTo(
-          cards,
-          { y: 40, opacity: 0, scale: 0.97 },
-          {
-            y: 0,
-            opacity: 1,
-            scale: 1,
-            duration: 0.65,
-            ease: "power3.out",
-            stagger: 0.08,
-            scrollTrigger: {
-              trigger: sectionRef.current,
-              start: "top 82%",
-              toggleActions: "play none none reverse",
-            },
-          }
-        );
-      }
-    }, sectionRef);
-
-    return () => gsapCtxRef.current?.revert();
-  }, [data]);
-
-  // GSAP: Arrow button hover
-  const handleArrowEnter = (el) => {
-    gsap.to(el, { scale: 1.12, duration: 0.2, ease: "power2.out" });
-  };
-  const handleArrowLeave = (el) => {
-    gsap.to(el, { scale: 1, duration: 0.3, ease: "elastic.out(1, 0.6)" });
-  };
-  const handleArrowDown = (el) => {
-    gsap.to(el, { scale: 0.9, duration: 0.1, ease: "power2.out" });
-  };
-  const handleArrowUp = (el) => {
-    gsap.to(el, { scale: 1, duration: 0.3, ease: "elastic.out(1, 0.5)" });
-  };
+  if (!data || data.length === 0) return null;
 
   return (
-    <div ref={sectionRef} className="px-4 sm:px-6 lg:px-8 py-4">
+    <section className="bg-[#FFF8F5] py-10 overflow-hidden border-t border-[#D1C4BC]">
 
-      {/* Section Header */}
-      <div className="flex items-center justify-between mb-5">
-        <div ref={headerRef} className="flex items-center gap-4" style={{ opacity: 0 }}>
-          {/* Decorative accent line */}
-          <span
-            className="hidden sm:block h-6 w-[3px] rounded-full"
-            style={{ background: "#c8742a" }}
-          />
-          <h2
-            className="text-xl sm:text-2xl font-black tracking-tight"
-            style={{ color: "#1a1109", fontFamily: "'Georgia', serif" }}
-          >
+      {/* Header */}
+      <div className="px-6 md:px-12 flex justify-between items-end mb-5 max-w-[1440px] mx-auto">
+        <div>
+          <span className="text-[8px] uppercase tracking-[0.3em] font-bold text-[#7F756E]">
+            {sectionName === "New Acquisitions" ? "Discover" : "Archive Sale"}
+          </span>
+          <h2 className="font-headline font-light text-lg italic text-[#1A1109] mt-1">
             {sectionName}
           </h2>
         </div>
 
-        {/* Arrow buttons */}
-        <div className="hidden sm:flex items-center gap-2">
+        <div className="hidden md:flex space-x-2">
           <button
-            onMouseEnter={(e) => handleArrowEnter(e.currentTarget)}
-            onMouseLeave={(e) => handleArrowLeave(e.currentTarget)}
-            onMouseDown={(e) => handleArrowDown(e.currentTarget)}
-            onMouseUp={(e) => handleArrowUp(e.currentTarget)}
             onClick={slidePrev}
-            disabled={!canGoPrev}
-            className="w-9 h-9 rounded-full flex items-center justify-center border transition-colors duration-200"
-            style={{
-              borderColor: canGoPrev ? "#e8ddd5" : "#f0ebe6",
-              background: canGoPrev ? "#fff" : "#faf6f2",
-              color: canGoPrev ? "#c8742a" : "#d9cfc6",
-              cursor: canGoPrev ? "pointer" : "not-allowed",
-            }}
-            aria-label="Previous"
+            className="w-7 h-7 flex items-center justify-center border border-[#1A1109] text-[#1A1109] hover:bg-[#1A1109] hover:text-[#FFF8F5] transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
-            </svg>
+            <span className="material-symbols-outlined text-[14px]">chevron_left</span>
           </button>
-
           <button
-            onMouseEnter={(e) => handleArrowEnter(e.currentTarget)}
-            onMouseLeave={(e) => handleArrowLeave(e.currentTarget)}
-            onMouseDown={(e) => handleArrowDown(e.currentTarget)}
-            onMouseUp={(e) => handleArrowUp(e.currentTarget)}
             onClick={slideNext}
-            disabled={!canGoNext}
-            className="w-9 h-9 rounded-full flex items-center justify-center border transition-colors duration-200"
-            style={{
-              borderColor: canGoNext ? "#e8ddd5" : "#f0ebe6",
-              background: canGoNext ? "#fff" : "#faf6f2",
-              color: canGoNext ? "#c8742a" : "#d9cfc6",
-              cursor: canGoNext ? "pointer" : "not-allowed",
-            }}
-            aria-label="Next"
+            className="w-7 h-7 flex items-center justify-center border border-[#1A1109] text-[#1A1109] hover:bg-[#1A1109] hover:text-[#FFF8F5] transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
-            </svg>
+            <span className="material-symbols-outlined text-[14px]">chevron_right</span>
           </button>
         </div>
       </div>
 
-      {/* ── Carousel Track ── */}
-      <div
-        className="relative rounded-2xl overflow-hidden border"
-        style={{ borderColor: "#e8ddd5", background: "#fdf8f4" }}
-      >
-        <div ref={cardsRef} className="overflow-hidden px-4 py-5">
-          <motion.div
-            animate={{ x: `-${activeIndex * (100 / itemsPerPage)}%` }}
-            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-            className="flex"
-          >
-            {data.map((item, index) => (
-              <div
-                key={index}
-                className="gsap-card flex justify-center px-2"
-                style={{
-                  minWidth: `${100 / itemsPerPage}%`,
-                  flexShrink: 0,
-                  opacity: 0, // starts hidden, GSAP reveals
-                }}
-              >
-                <HomeSectionCard product={item} />
-              </div>
-            ))}
-          </motion.div>
-        </div>
-
-        {/* Left fade + mobile arrow */}
-        <AnimatePresence>
-          {canGoPrev && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="absolute inset-y-0 left-0 flex items-center z-10"
-              style={{
-                background:
-                  "linear-gradient(to right, rgba(253,248,244,0.95) 0%, transparent 100%)",
-                width: "4rem",
-              }}
-            >
-              <button
-                onClick={slidePrev}
-                className="ml-2 w-9 h-9 rounded-full flex items-center justify-center sm:hidden"
-                style={{
-                  background: "#fff",
-                  border: "1px solid #e8ddd5",
-                  color: "#c8742a",
-                  boxShadow: "0 2px 12px rgba(200,116,42,0.12)",
-                }}
-                aria-label="Previous"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Right fade + mobile arrow */}
-        <AnimatePresence>
-          {canGoNext && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="absolute inset-y-0 right-0 flex items-center justify-end z-10"
-              style={{
-                background:
-                  "linear-gradient(to left, rgba(253,248,244,0.95) 0%, transparent 100%)",
-                width: "4rem",
-              }}
-            >
-              <button
-                onClick={slideNext}
-                className="mr-2 w-9 h-9 rounded-full flex items-center justify-center sm:hidden"
-                style={{
-                  background: "#fff",
-                  border: "1px solid #e8ddd5",
-                  color: "#c8742a",
-                  boxShadow: "0 2px 12px rgba(200,116,42,0.12)",
-                }}
-                aria-label="Next"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Dot indicators */}
-      {data.length > itemsPerPage && (
-        <div className="flex justify-center gap-1.5 mt-4">
-          {Array.from({ length: data.length - itemsPerPage + 1 }).map((_, i) => (
-            <motion.button
-              key={i}
-              onClick={() => setActiveIndex(i)}
-              animate={{
-                width: activeIndex === i ? 20 : 6,
-                background: activeIndex === i ? "#c8742a" : "#e8ddd5",
-              }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="h-1.5 rounded-full"
-              aria-label={`Go to page ${i + 1}`}
-            />
+      {/* Scroll track */}
+      <div className="relative max-w-[1440px] mx-auto">
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="flex gap-4 px-6 md:px-12 overflow-x-auto scroll-smooth snap-x snap-mandatory"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {data.map((item, index) => (
+            <div key={`${item.id}-${index}`} className="snap-start shrink-0">
+              <HomeSectionCard product={item} />
+            </div>
           ))}
         </div>
-      )}
-    </div>
+
+        {showLeftBlur && (
+          <div className="absolute top-0 left-0 bottom-0 w-10 bg-gradient-to-r from-[#FFF8F5] to-transparent pointer-events-none" />
+        )}
+        {showRightBlur && (
+          <div className="absolute top-0 right-0 bottom-0 w-10 bg-gradient-to-l from-[#FFF8F5] to-transparent pointer-events-none" />
+        )}
+      </div>
+
+    </section>
   );
 }

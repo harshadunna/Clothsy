@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
-export default function Craftsmanship() {
+export default function About() {
   const navigate = useNavigate();
   
   // Parallax Setup for Hero
@@ -19,7 +19,7 @@ export default function Craftsmanship() {
   return (
     <div className="bg-background text-on-surface font-body overflow-x-hidden pt-20">
       
-      {/* Hero Section: The Monolith Concept */}
+      {/* Hero Section: The Monolith Concept (Image kept same) */}
       <section ref={heroRef} className="relative h-screen w-full flex items-center justify-center overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0 z-0">
           <img 
@@ -52,7 +52,7 @@ export default function Craftsmanship() {
         </motion.div>
       </section>
 
-      {/* Section 1: Archival Precision */}
+      {/* Section 1: Archival Precision (Image kept same) */}
       <section className="bg-surface-container-low py-32 md:py-48 px-8 md:px-24">
         <div className="max-w-screen-2xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-16 md:gap-0 items-start">
           <motion.div 
@@ -93,7 +93,7 @@ export default function Craftsmanship() {
         </div>
       </section>
 
-      {/* Section 2: Full Bleed Texture (Liquid Architecture) */}
+      {/* Section 2: Full Bleed Texture - Liquid Architecture (Image kept same) */}
       <section ref={liquidRef} className="relative h-[80vh] md:h-[1200px] w-full flex items-center overflow-hidden">
         <motion.div style={{ y: liquidY }} className="absolute inset-0 scale-125">
           <img 
@@ -133,19 +133,28 @@ export default function Craftsmanship() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-            {/* Bento Item 1 */}
+            
+            {/* ── REPLACED: Bento Item 1 (Okayama / Cotton) using Zara Poplin image ── */}
             <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="md:col-span-8 group relative overflow-hidden h-[500px] bg-surface-container">
-              <img src="https://images.unsplash.com/photo-1489987707023-af68f8691515?auto=format&fit=crop&w=1200&q=80" alt="Minimalist fabric layers" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2000ms] grayscale-[40%]" />
-              <div className="absolute inset-0 bg-gradient-to-t from-stone-900/80 via-stone-900/20 to-transparent flex flex-col justify-end p-12">
+              <img 
+                src="https://static.zara.net/assets/public/bdc5/524f/a73f42059efa/6b56ec3fea18/06103407250-p/06103407250-p.jpg?ts=1770278470760&w=1024" 
+                alt="Structure-First Cotton Minimalist Fabric" 
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2000ms] grayscale-[40%]" 
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-stone-900/90 via-stone-900/30 to-transparent flex flex-col justify-end p-12">
                 <span className="text-white/60 font-label text-[0.6rem] uppercase tracking-widest mb-2">Origin 01: Okayama</span>
                 <h3 className="text-white font-headline italic text-4xl">Structure-First Cotton</h3>
               </div>
             </motion.div>
 
-            {/* Bento Item 2 */}
+            {/* ── REPLACED: Bento Item 2 (Biella / Wool) using H&M Architectural Tailoring image ── */}
             <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="md:col-span-4 group relative overflow-hidden h-[500px] bg-surface-container">
-              <img src="https://images.unsplash.com/photo-1618220179428-22790b46a0eb?auto=format&fit=crop&w=800&q=80" alt="Wool details" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2000ms] grayscale-[40%]" />
-              <div className="absolute inset-0 bg-gradient-to-t from-stone-900/80 via-stone-900/20 to-transparent flex flex-col justify-end p-12">
+              <img 
+                src="https://image.hm.com/assets/hm/dd/64/dd64de2cfe48fdb6c31636d39a28e49b6234e8d2.jpg?imwidth=2160" 
+                alt="Architectural Heavy Wool weave" 
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2000ms] grayscale-[40%] object-top" 
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-stone-900/90 via-stone-900/30 to-transparent flex flex-col justify-end p-12">
                 <span className="text-white/60 font-label text-[0.6rem] uppercase tracking-widest mb-2">Origin 02: Biella</span>
                 <h3 className="text-white font-headline italic text-4xl">Architectural Wool</h3>
               </div>
@@ -165,13 +174,21 @@ export default function Craftsmanship() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="bg-on-surface py-32 px-8 text-center">
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-          <h2 className="font-headline italic text-4xl md:text-6xl text-surface mb-12">Experience the Weight.</h2>
+      {/* ── REPLACED: CTA Section (Experience the Weight) using moody H&M Suiting Season image ── */}
+      <section className="relative py-32 md:py-48 px-8 text-center overflow-hidden bg-on-surface">
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="https://image.hm.com/assets/hm/54/e9/54e9bd506e4f7f2f267ce0da9fa92a52edd9a68b.jpg?imwidth=2160" 
+            alt="Experience the weight silhouette" 
+            className="w-full h-full object-cover grayscale-[30%] opacity-40 object-top" 
+          />
+          <div className="absolute inset-0 bg-stone-900/60"></div>
+        </div>
+        <motion.div className="relative z-10" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+          <h2 className="font-headline italic text-4xl md:text-6xl text-surface mb-12 drop-shadow-lg">Experience the Weight.</h2>
           <button 
             onClick={() => navigate('/products')}
-            className="bg-surface text-on-surface px-16 py-6 text-[0.6875rem] font-bold uppercase tracking-[0.2rem] transition-all hover:bg-primary hover:text-on-primary active:scale-95 duration-300"
+            className="bg-surface text-on-surface px-16 py-6 text-[0.6875rem] font-bold uppercase tracking-[0.2rem] transition-all hover:bg-primary hover:text-on-primary active:scale-95 duration-300 shadow-xl"
           >
             Explore The Collection
           </button>

@@ -7,7 +7,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -61,8 +60,10 @@ public class JwtTokenValidator extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
             } catch (Exception e) {
+                // Don't throw — just clear context and let Spring Security decide
+                // based on the endpoint's authorization rules (permitAll vs authenticated).
+                // This prevents 500 errors on public endpoints when an expired JWT is sent.
                 SecurityContextHolder.clearContext();
-                throw new BadCredentialsException("Invalid Token from JwtTokenValidator");
             }
         }
 

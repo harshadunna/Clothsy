@@ -17,8 +17,9 @@ import Wishlist from "../customer/pages/Wishlist";
 import Profile from "../customer/components/Account/Profile";
 import NotFound from "../customer/pages/NotFound";
 import Contact from "../customer/pages/Contact";
-import Craftsmanship from "../customer/pages/Craftsmanship";
+import About from "../customer/pages/About";
 import CurationPage from "../customer/pages/CurationPage";
+import Journal from "../customer/pages/Journal"; 
 
 const PageTransition = ({ children }) => (
   <motion.div
@@ -74,8 +75,11 @@ const CustomerRoutes = () => {
 
           {/* Editorial / Info */}
           <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
-          <Route path="/about" element={<PageTransition><Craftsmanship /></PageTransition>} />
-          <Route path="/craftsmanship" element={<PageTransition><Craftsmanship /></PageTransition>} />
+          <Route path="/about" element={<PageTransition><About /></PageTransition>} />
+          <Route path="/craftsmanship" element={<PageTransition><About /></PageTransition>} />
+          
+          {/* Journal */}
+          <Route path="/journal" element={<PageTransition><Journal /></PageTransition>} />
 
           {/* 404 */}
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
