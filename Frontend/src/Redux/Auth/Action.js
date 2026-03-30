@@ -75,6 +75,17 @@ export const logout = () => (dispatch) => {
   dispatch({ type: LOGOUT });
 };
 
+export const updateUserProfile = (userData) => async (dispatch) => {
+  dispatch({ type: "UPDATE_USER_REQUEST" });
+  try {
+    const { data } = await api.put("/api/users/profile", userData);
+    dispatch({ type: "UPDATE_USER_SUCCESS", payload: data });
+    dispatch(getUser(localStorage.getItem("jwt")));
+  } catch (error) {
+    dispatch({ type: "UPDATE_USER_FAILURE", payload: error.response?.data?.message || error.message });
+  }
+};
+
 export const deleteAddress = (addressId) => async (dispatch) => {
   dispatch({ type: "DELETE_ADDRESS_REQUEST" });
   try {

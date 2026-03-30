@@ -12,8 +12,7 @@ import {
 import { gsap } from 'gsap'
 import AuthModel from '../Auth/AuthModel'
 
-/* 
-   NAV DATA — Women / Men + real product images from JSON
+/* NAV DATA — Women / Men + real product images from JSON
 */
 const NAV = [
   {
@@ -93,8 +92,7 @@ const ANNOUNCEMENT_ITEMS = [
   'COMPLIMENTARY GIFTWRAPPING ON ALL ORDERS',
 ]
 
-/* 
-   ANNOUNCEMENT BAR — GSAP ticker
+/* ANNOUNCEMENT BAR — GSAP ticker
 */
 function AnnouncementBar() {
   const trackRef = useRef(null)
@@ -117,8 +115,7 @@ function AnnouncementBar() {
   )
 }
 
-/* 
-   HOVER PREVIEW — tiny product image next to hovered item
+/* HOVER PREVIEW — tiny product image next to hovered item
 */
 function HoverPreview({ src }) {
   const ref = useRef(null)
@@ -148,8 +145,7 @@ function HoverPreview({ src }) {
   )
 }
 
-/* 
-   MEGA MENU
+/* MEGA MENU
 */
 function MegaMenu({ category, visible, topOffset }) {
   const panelRef = useRef(null)
@@ -296,8 +292,7 @@ function MegaMenu({ category, visible, topOffset }) {
   )
 }
 
-/* 
-   BADGE
+/* BADGE
 */
 function Badge({ count, dark }) {
   if (!count || count <= 0) return null
@@ -316,8 +311,7 @@ function Badge({ count, dark }) {
   )
 }
 
-/* 
-   NAVIGATION  — main export
+/* NAVIGATION  — main export
 */
 export default function Navigation() {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -425,7 +419,6 @@ export default function Navigation() {
   const iconBase = {
     background: 'none', border: 'none', padding: 0,
     cursor: 'pointer', position: 'relative',
-    display: 'flex', alignItems: 'center',
     transition: 'color 200ms ease', lineHeight: 1,
     fontFamily: 'inherit',
   }
@@ -462,16 +455,18 @@ export default function Navigation() {
         }}
         onMouseLeave={closeMenu}
       >
-        <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 48px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="px-6 md:px-12" style={{ maxWidth: 1440, margin: '0 auto', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
 
-          <button onClick={() => setMobileOpen(true)} className="lg:hidden" style={{ ...iconBase, color: textHi }}>
-            <span className="mat">menu</span>
-          </button>
+          <div className="flex items-center gap-4 lg:gap-0">
+            <button onClick={() => setMobileOpen(true)} className="flex items-center lg:hidden" style={{ ...iconBase, color: textHi }}>
+              <span className="mat">menu</span>
+            </button>
 
-          <Link ref={logoRef} to="/"
-            style={{ fontFamily:"'Cormorant Garamond',serif", fontWeight:300, fontSize:26, letterSpacing:'0.35em', color:textHi, textDecoration:'none', textTransform:'uppercase', transition:'color 320ms ease', flexShrink:0, opacity:0 }}>
-            CLOTHSY
-          </Link>
+            <Link ref={logoRef} to="/"
+              style={{ fontFamily:"'Cormorant Garamond',serif", fontWeight:300, fontSize:26, letterSpacing:'0.35em', color:textHi, textDecoration:'none', textTransform:'uppercase', transition:'color 320ms ease', flexShrink:0, opacity:0 }}>
+              CLOTHSY
+            </Link>
+          </div>
 
           <div className="hidden lg:flex items-center" style={{ gap:36, height:'100%' }}>
             {NAV.map((cat, i) => (
@@ -496,6 +491,7 @@ export default function Navigation() {
           <div ref={iconsRef} style={{ display:'flex', alignItems:'center', gap:20, opacity:0 }}>
             <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center" style={{ gap:8, color:textLo }}>
               <button type="button" onClick={() => setSearchOpen(v => !v)}
+                className="flex items-center"
                 style={{ ...iconBase, color: searchOpen ? textHi : textLo }}
                 onMouseEnter={e => e.currentTarget.style.color = textHi}
                 onMouseLeave={e => e.currentTarget.style.color = searchOpen ? textHi : textLo}>
@@ -508,7 +504,7 @@ export default function Navigation() {
                 onBlur={() => { if (!searchInput) setSearchOpen(false) }} />
             </form>
 
-            <Link to="/wishlist" className="hidden sm:flex"
+            <Link to="/wishlist" className="hidden sm:flex items-center"
               style={{ ...iconBase, color:textLo, textDecoration:'none' }}
               onMouseEnter={e => e.currentTarget.style.color = textHi}
               onMouseLeave={e => e.currentTarget.style.color = textLo}>
@@ -516,7 +512,7 @@ export default function Navigation() {
               <Badge count={wishlistCount} dark={transparent} />
             </Link>
 
-            <Link to="/cart" style={{ ...iconBase, color:textLo, textDecoration:'none' }}
+            <Link to="/cart" className="flex items-center" style={{ ...iconBase, color:textLo, textDecoration:'none' }}
               onMouseEnter={e => e.currentTarget.style.color = textHi}
               onMouseLeave={e => e.currentTarget.style.color = textLo}>
               <span className="mat">shopping_bag</span>
@@ -525,7 +521,7 @@ export default function Navigation() {
 
             {isLoggedIn ? (
               <Menu as="div" style={{ position:'relative' }}>
-                <MenuButton style={{ ...iconBase, color:textLo }}
+                <MenuButton className="flex items-center" style={{ ...iconBase, color:textLo }}
                   onMouseEnter={e => e.currentTarget.style.color = textHi}
                   onMouseLeave={e => e.currentTarget.style.color = textLo}>
                   <span className="mat">person</span>
@@ -542,6 +538,7 @@ export default function Navigation() {
                   <div style={{ padding:'6px 0' }}>
                     <MenuItem><Link to="/account/profile" className="aitem">Profile</Link></MenuItem>
                     <MenuItem><Link to="/account/orders" className="aitem">My Orders</Link></MenuItem>
+                    <MenuItem><Link to="/returns" className="aitem">Returns & Exchanges</Link></MenuItem>
                   </div>
                   <div style={{ borderTop:'1px solid #E8E8E8', padding:'6px 0' }}>
                     <MenuItem>
@@ -551,7 +548,7 @@ export default function Navigation() {
                 </MenuItems>
               </Menu>
             ) : (
-              <button onClick={() => navigate('/login')} style={{ ...iconBase, color:textLo }}
+              <button onClick={() => navigate('/login')} className="flex items-center" style={{ ...iconBase, color:textLo }}
                 onMouseEnter={e => e.currentTarget.style.color = textHi}
                 onMouseLeave={e => e.currentTarget.style.color = textLo}>
                 <span className="mat">person</span>

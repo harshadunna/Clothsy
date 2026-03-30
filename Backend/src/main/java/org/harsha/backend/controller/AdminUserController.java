@@ -5,12 +5,10 @@ import org.harsha.backend.exception.UserException;
 import org.harsha.backend.model.User;
 import org.harsha.backend.service.UserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * AdminUserController
@@ -42,5 +40,22 @@ public class AdminUserController {
 
         List<User> users = userService.findAllUsers();
         return ResponseEntity.ok(users);
+    }
+
+    /**
+     * Updates a specific user's role (e.g., Promote to Admin or Revoke).
+     *
+     * @param userId ID of the user to update
+     * @param roleRequest Map containing the new role string
+     * @return the updated User entity
+     */
+    @PutMapping("/users/{userId}/role")
+    public ResponseEntity<User> updateUserRole(
+            @PathVariable Long userId,
+            @RequestBody Map<String, String> roleRequest) throws UserException {
+        
+        String newRole = roleRequest.get("role");
+        User updatedUser = userService.updateUserRole(userId, newRole);
+        return ResponseEntity.ok(updatedUser);
     }
 }

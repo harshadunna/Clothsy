@@ -1,11 +1,16 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import api from "../../config/api";
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
+  const highlightRef = useRef(null);
+
+  // Grab the order ID to highlight from the router state (passed from Dashboard)
+  const highlightOrderId = location.state?.highlightOrderId || null;
 
   const fetchOrders = async () => {
     try {
@@ -22,6 +27,15 @@ export default function AdminOrders() {
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  // Effect to scroll to the highlighted order once the orders load
+  useEffect(() => {
+    if (!loading && highlightOrderId && highlightRef.current) {
+      setTimeout(() => {
+        highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300); 
+    }
+  }, [loading, highlightOrderId]);
 
   const updateOrderStatus = async (orderId, action) => {
     try {
@@ -61,6 +75,20 @@ export default function AdminOrders() {
   return (
     <div className="p-12 max-w-[1440px] mx-auto min-h-screen bg-[#FFF8F5]">
       
+      {/* INJECT CUSTOM BLINK ANIMATION */}
+      <style>{`
+        @keyframes blink-row {
+          0% { background-color: transparent; }
+          25% { background-color: #F2DFD1; } /* Tobacco accent low opacity */
+          50% { background-color: transparent; }
+          75% { background-color: #F2DFD1; }
+          100% { background-color: transparent; }
+        }
+        .animate-blink {
+          animation: blink-row 2.5s ease-in-out;
+        }
+      `}</style>
+
       {/* HEADER */}
       <div className="flex justify-between items-end mb-16 border-b border-[#D1C4BC] pb-8">
         <div>
@@ -95,9 +123,16 @@ export default function AdminOrders() {
               orders.map((order) => {
                 // Get image from first item for the editorial thumbnail look
                 const previewImg = order.orderItems?.[0]?.product?.imageUrl;
+                
+                // Check if this is the row we need to highlight
+                const isHighlighted = order.id === highlightOrderId;
 
                 return (
-                  <tr key={order.id} className="border-b border-[#D1C4BC] hover:bg-[#F9F2EF] transition-colors group">
+                  <tr 
+                    key={order.id} 
+                    ref={isHighlighted ? highlightRef : null}
+                    className={`border-b border-[#D1C4BC] hover:bg-[#F9F2EF] transition-colors group ${isHighlighted ? 'animate-blink' : ''}`}
+                  >
                     
                     <td className="py-6 px-6">
                       <div className="flex items-center gap-6">

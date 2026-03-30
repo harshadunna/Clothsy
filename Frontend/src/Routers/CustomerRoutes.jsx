@@ -21,6 +21,7 @@ import About from "../customer/pages/About";
 import CurationPage from "../customer/pages/CurationPage";
 import Journal from "../customer/pages/Journal"; 
 import Returns from "../customer/pages/Returns"; 
+import Track from "../customer/pages/Track"; 
 
 const PageTransition = ({ children }) => (
   <motion.div
@@ -84,6 +85,7 @@ const CustomerRoutes = () => {
           
           {/* NEW ROUTE ADDED HERE */}
           <Route path="/returns" element={<PageTransition><Returns /></PageTransition>} />
+          <Route path="/track" element={<PageTransition><Track /></PageTransition>} /> 
 
           {/* 404 */}
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />

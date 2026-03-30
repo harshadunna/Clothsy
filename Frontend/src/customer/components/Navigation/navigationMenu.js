@@ -43,7 +43,6 @@ export const navigation = {
           ],
         },
         {
-          // Womenswear curations → /collections/curations/:id
           id: 'curations',
           name: 'Curations',
           items: [
@@ -96,8 +95,6 @@ export const navigation = {
           ],
         },
         {
-          // Menswear curations → /atelier/curations/:id
-          // All IDs are prefixed with "mens-" to avoid clashing with womenswear
           id: 'curations',
           name: 'Curations',
           items: [

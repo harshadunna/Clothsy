@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import api from "../../config/api"; 
+import api from "../../config/api";
 
 export default function Returns() {
   const navigate = useNavigate();
@@ -10,9 +10,9 @@ export default function Returns() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    
+
     // FETCH ORDERS AND EXTRACT RETURN ITEMS 
-    api.get("/api/orders/user") 
+    api.get("/api/orders/user")
       .then((res) => {
         const allOrders = res.data || [];
         const extractedReturns = [];
@@ -22,7 +22,7 @@ export default function Returns() {
           if (order.orderItems && Array.isArray(order.orderItems)) {
             order.orderItems.forEach(item => {
               const statusStr = String(item.itemStatus || "").toUpperCase();
-              
+
               // If the status contains RETURN or REFUND, it belongs on this dashboard
               if (statusStr.includes("RETURN") || statusStr.includes("REFUND")) {
                 extractedReturns.push({ item, order });
@@ -31,9 +31,12 @@ export default function Returns() {
           }
         });
 
-        // Sort newest first based on the order ID
-        const sortedReturns = extractedReturns.sort((a, b) => (b.order?.id || 0) - (a.order?.id || 0));
-        
+        // Sort newest orders first, then sort by item ID for consistency
+        const sortedReturns = extractedReturns.sort((a, b) => {
+          const orderDiff = (b.order?.id || 0) - (a.order?.id || 0);
+          return orderDiff !== 0 ? orderDiff : (b.item?.id || 0) - (a.item?.id || 0);
+        });
+
         setReturns(sortedReturns);
         setLoading(false);
       })
@@ -54,27 +57,34 @@ export default function Returns() {
   // PROGRESS BAR COMPONENT 
   const ReturnProgress = ({ currentStatus }) => {
     const statusString = String(currentStatus).toUpperCase();
-    
+
     // Map backend statuses to display steps
     const steps = ["RETURN_REQUESTED", "RETURN_PICKED", "RETURN_RECEIVED", "REFUND_COMPLETED"];
     const displaySteps = ["Requested", "In Transit", "Inspected", "Refunded"];
-    
+
     // Determine the active step
     let currentIndex = steps.findIndex(step => statusString.includes(step));
+
+    // Map REFUND_INITIATED to "Inspected" (Index 2)
+    if (statusString === "REFUND_INITIATED") {
+      currentIndex = 2;
+    }
     
-    // Edge case fallbacks
-    if (currentIndex === -1 && statusString.includes("REFUND_INITIATED")) currentIndex = 2; 
-    if (currentIndex === -1 && statusString === "RETURNED") currentIndex = 3; 
-    if (currentIndex === -1) currentIndex = 0; 
+    // Fallback for generic returned status to "Refunded" (Index 3)
+    if (statusString === "RETURNED") {
+      currentIndex = 3;
+    }
+
+    if (currentIndex === -1) currentIndex = 0;
 
     return (
       <div className="mt-10 relative w-full max-w-2xl">
         {/* Background Track */}
         <div className="absolute top-[5px] left-0 w-full h-[1px] bg-[#D1C4BC]"></div>
-        
+
         {/* Active Track */}
-        <div 
-          className="absolute top-[5px] left-0 h-[1px] bg-[#1A1109] transition-all duration-1000 ease-out" 
+        <div
+          className="absolute top-[5px] left-0 h-[1px] bg-[#1A1109] transition-all duration-1000 ease-out"
           style={{ width: `${(currentIndex / (steps.length - 1)) * 100}%` }}
         ></div>
 
@@ -84,7 +94,7 @@ export default function Returns() {
             const isActive = i === currentIndex;
             return (
               <div key={step} className="flex flex-col items-center gap-3 bg-[#FFF8F5] px-2 -ml-2">
-                <div 
+                <div
                   className={`w-2.5 h-2.5 rounded-full border transition-colors duration-500 
                     ${isCompleted ? 'border-[#1A1109] bg-[#1A1109]' : 'border-[#D1C4BC] bg-[#FFF8F5]'}`
                   }
@@ -113,16 +123,16 @@ export default function Returns() {
   return (
     <div className="bg-[#FFF8F5] text-[#1A1109] font-body min-h-screen pt-32 pb-24 px-6 md:px-12 selection:bg-[#C8742A] selection:text-[#FFF8F5]">
       <main className="max-w-[1000px] mx-auto">
-        
+
         {/* HEADER */}
         <header className="mb-16 md:mb-24">
-          <motion.h1 
+          <motion.h1
             initial="hidden" animate="visible" variants={fadeUp}
             className="font-headline text-5xl md:text-7xl italic tracking-tighter mb-4 text-[#1A1109]"
           >
             Returns Archive.
           </motion.h1>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2, duration: 0.8 }}
             className="font-label uppercase tracking-[0.2em] text-[10px] text-[#7F756E] font-bold"
           >
@@ -132,8 +142,7 @@ export default function Returns() {
 
         {/* CONDITIONAL RENDERING */}
         {isEmpty ? (
-          /* EMPTY STATE */
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }}
             className="flex flex-col items-center justify-center py-24 relative w-full text-center border-t border-[#D1C4BC]"
           >
@@ -148,14 +157,14 @@ export default function Returns() {
                 Your returns archive is currently empty. If you need to initiate a return, please visit your Orders history.
               </p>
               <div className="pt-8 flex flex-col md:flex-row gap-4 justify-center">
-                <button 
-                  onClick={() => navigate('/account/orders')} 
+                <button
+                  onClick={() => navigate('/account/orders')}
                   className="bg-[#1A1109] text-[#FFF8F5] px-10 py-4 font-label font-black text-[0.65rem] tracking-[0.2em] uppercase border border-[#1A1109] hover:bg-[#C8742A] hover:border-[#C8742A] transition-colors duration-500"
                 >
                   View Orders
                 </button>
-                <button 
-                  onClick={() => navigate('/products')} 
+                <button
+                  onClick={() => navigate('/products')}
                   className="bg-transparent text-[#1A1109] px-10 py-4 font-label font-black text-[0.65rem] tracking-[0.2em] uppercase border border-[#D1C4BC] hover:border-[#1A1109] transition-colors duration-500"
                 >
                   Continue Shopping
@@ -164,8 +173,7 @@ export default function Returns() {
             </div>
           </motion.div>
         ) : (
-          /* POPULATED RETURNS LIST */
-          <motion.div 
+          <motion.div
             initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
             className="space-y-16"
           >
@@ -180,16 +188,16 @@ export default function Returns() {
               const status = item?.itemStatus || "RETURN_REQUESTED";
 
               return (
-                <motion.div 
+                <motion.div
                   key={`${order?.id}-${item?.id}`} variants={fadeUp}
                   className="flex flex-col md:flex-row gap-8 md:gap-12 border-t border-[#D1C4BC] pt-12"
                 >
                   {/* Left: Image */}
                   <div className="w-full md:w-48 aspect-[3/4] flex-shrink-0 bg-[#E8E1DE] overflow-hidden cursor-pointer group" onClick={() => navigate(`/product/${productObj.id || ''}`)}>
-                    <img 
-                      src={imageUrl} 
-                      alt={title} 
-                      className="w-full h-full object-cover object-top grayscale-[15%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-[1.5s]" 
+                    <img
+                      src={imageUrl}
+                      alt={title}
+                      className="w-full h-full object-cover object-top grayscale-[15%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-[1.5s]"
                     />
                   </div>
 
@@ -201,7 +209,7 @@ export default function Returns() {
                           <span className="font-label text-[0.6rem] font-bold uppercase tracking-[0.25em] text-[#7F756E] mb-2 block">
                             Return Ref: {order?.id ? `RTN-${order.id}` : 'PENDING'}
                           </span>
-                          <h3 
+                          <h3
                             onClick={() => navigate(`/product/${productObj.id || ''}`)}
                             className="font-headline text-3xl italic text-[#1A1109] tracking-tight mb-2 hover:text-[#C8742A] transition-colors cursor-pointer"
                           >

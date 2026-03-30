@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { motion, AnimatePresence } from "framer-motion"; 
 import api from "../../config/api";
 import HomeSectionCarousel from "../components/HomeSectionCarousel/HomeSectionCarousel";
 
@@ -62,6 +63,24 @@ const HomePage = () => {
   const [curatedProducts,  setCuratedProducts]  = useState([]);
   const [carouselProducts, setCarouselProducts] = useState([]);
   const [carouselLoading,  setCarouselLoading]  = useState(true);
+
+  // Notification State
+  const [showNotification, setShowNotification] = useState(false);
+  const [email, setEmail] = useState("");
+
+  const handleSubscribe = (e) => {
+    e.preventDefault();
+    if (!email) return;
+
+    // Trigger local notification
+    setShowNotification(true);
+    setEmail(""); // Clear input
+
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      setShowNotification(false);
+    }, 3000);
+  };
 
   // Fetch curated grid: 2 random mens + 2 random womens
   useEffect(() => {
@@ -176,6 +195,26 @@ const HomePage = () => {
 
   return (
     <div className="bg-[#FFF8F5] text-[#1A1109] antialiased min-h-screen flex flex-col selection:bg-[#C8742A] selection:text-[#FFF8F5]">
+      
+      {/* 0. SUBSCRIPTION NOTIFICATION */}
+      <AnimatePresence>
+        {showNotification && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-24 left-0 w-full flex justify-center z-[100] px-6 pointer-events-none"
+          >
+            <div className="bg-[#1A1109] text-[#FFF8F5] px-8 py-4 shadow-2xl border border-[#C8742A]/30 flex items-center gap-4">
+              <span className="material-symbols-outlined text-sm text-[#C8742A]" style={{ fontVariationSettings: "'FILL' 1" }}>mail</span>
+              <p className="font-label text-[10px] uppercase tracking-[0.2em] font-black">
+                Archive Access Granted. Welcome to the Editorial.
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <main className="flex-grow">
 
         {/* 1. HERO */}
@@ -299,7 +338,7 @@ const HomePage = () => {
             </p>
             <form
               className="flex flex-col md:flex-row gap-4 justify-center items-center"
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={handleSubscribe}
             >
               <div className="relative w-full md:w-80">
                 <input
@@ -307,6 +346,8 @@ const HomePage = () => {
                   placeholder="EMAIL ADDRESS"
                   required
                   type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
               <button

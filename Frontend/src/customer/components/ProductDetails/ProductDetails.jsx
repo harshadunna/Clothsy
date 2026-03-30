@@ -14,6 +14,7 @@ import { findProductById } from "../../../Redux/Customers/Product/Action";
 import { addItemToCart, getCart } from "../../../Redux/Customers/Cart/Action";
 import { getWishlist, toggleWishlistItem } from "../../../Redux/Customers/Wishlist/Action";
 import api from "../../../config/api";
+
 // Accordion
 const Accordion = ({ title, content, isOpen, onClick }) => (
   <div className="border-b border-[#D1C4BC] first:border-t">
@@ -415,9 +416,39 @@ export default function ProductDetails() {
         </aside>
       </main>
 
-      {/* Reviews */}
+      {/* Reviews Section */}
       <section className="max-w-7xl mx-auto px-6 md:px-12 py-24 border-t border-[#D1C4BC]">
-        {/* Reviews content here */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+          <div>
+            <h2 className="font-headline italic text-4xl md:text-5xl text-[#1A1109] tracking-tighter leading-none mb-3">
+              Client Perspectives
+            </h2>
+            <p className="font-label text-[0.65rem] font-black uppercase tracking-[0.3em] text-[#C8742A]">
+              {reviews.length} {reviews.length === 1 ? 'Review' : 'Reviews'}
+            </p>
+          </div>
+          
+          <button
+            onClick={() => navigate(`/account/rate/${product.id}`)}
+            className="px-8 py-4 border border-[#1A1109] text-[#1A1109] bg-transparent font-label text-[0.7rem] font-bold uppercase tracking-[0.2em] hover:bg-[#1A1109] hover:text-[#FFF8F5] transition-colors"
+          >
+            Draft a Review
+          </button>
+        </div>
+
+        {reviews.length === 0 ? (
+          <div className="py-12 border-t border-[#D1C4BC]">
+            <p className="font-body text-[#7F756E] italic text-lg">
+              No perspectives have been recorded for this piece yet.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
+            {reviews.map((review, index) => (
+              <ProductReviewCard key={review.id || index} item={review} />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Similar Products */}
@@ -443,7 +474,6 @@ export default function ProductDetails() {
               </button>
             </div>
 
-            {/* Cards — fully self-contained, no Redux loading collision */}
             <SimilarProducts
               category={categoryName}
               currentProductId={product.id}

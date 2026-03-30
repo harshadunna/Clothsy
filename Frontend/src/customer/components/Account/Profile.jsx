@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { logout } from "../../../Redux/Auth/Action";
+import { logout, updateUserProfile } from "../../../Redux/Auth/Action";
 import { getWishlist } from "../../../Redux/Customers/Wishlist/Action";
+import { motion, AnimatePresence } from "framer-motion";
 import Order from "../Order/Order"; 
 
 export default function Profile() {
@@ -12,13 +13,34 @@ export default function Profile() {
   const { auth, wishlist } = useSelector((store) => store);
   const user = auth.user;
 
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: ""
+  });
+
   useEffect(() => {
     dispatch(getWishlist());
   }, [dispatch]);
 
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        firstName: user.firstName || "",
+        lastName: user.lastName || ""
+      });
+    }
+  }, [user, isUpdateModalOpen]);
+
   const handleLogout = () => {
     dispatch(logout());
     navigate("/");
+  };
+
+  const handleUpdateSubmit = (e) => {
+    e.preventDefault();
+    dispatch(updateUserProfile(formData));
+    setIsUpdateModalOpen(false);
   };
 
   if (!user) {
@@ -34,8 +56,68 @@ export default function Profile() {
   return (
     <div className="bg-background text-on-background font-body antialiased min-h-screen flex pt-20">
       
-      {/* Left Sidebar (Desktop Only) */}
-      <aside className="hidden lg:flex fixed left-0 top-20 h-[calc(100vh-5rem)] z-40 flex-col py-10 w-80 border-r border-outline-variant/30 bg-surface-container-low">
+      <AnimatePresence>
+        {isUpdateModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              exit={{ opacity: 0, y: 20 }} 
+              className="bg-surface-container border border-outline-variant shadow-2xl w-full max-w-lg"
+            >
+              <div className="p-8 border-b border-outline-variant/30 flex justify-between items-center">
+                <div>
+                  <h3 className="text-3xl font-headline italic tracking-tighter text-on-surface">Update Details</h3>
+                  <p className="font-label text-[10px] uppercase tracking-widest text-outline mt-2">Modify your registry identity.</p>
+                </div>
+                <button onClick={() => setIsUpdateModalOpen(false)} className="text-outline hover:text-on-surface">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+              
+              <form onSubmit={handleUpdateSubmit} className="p-8 space-y-6">
+                <div>
+                  <label className="font-label text-[10px] tracking-[0.2em] text-primary uppercase font-bold block mb-2">First Name</label>
+                  <input
+                    type="text"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    className="w-full bg-transparent border-b border-outline-variant/50 focus:border-primary px-0 py-3 text-on-surface font-body text-sm outline-none transition-colors"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="font-label text-[10px] tracking-[0.2em] text-primary uppercase font-bold block mb-2">Last Name</label>
+                  <input
+                    type="text"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    className="w-full bg-transparent border-b border-outline-variant/50 focus:border-primary px-0 py-3 text-on-surface font-body text-sm outline-none transition-colors"
+                    required
+                  />
+                </div>
+                <div className="flex gap-4 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setIsUpdateModalOpen(false)}
+                    className="flex-1 py-4 font-label text-[10px] font-bold uppercase tracking-widest text-on-surface border border-outline-variant hover:bg-outline-variant/20 transition-colors"
+                  >
+                    Abort
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-4 font-label text-[10px] font-bold uppercase tracking-widest text-surface bg-on-surface hover:bg-primary transition-colors"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <aside className="hidden lg:flex fixed left-0 top-20 h-[calc(100vh-5rem)] overflow-y-auto z-40 flex-col pt-10 pb-24 w-80 border-r border-outline-variant/30 bg-surface-container-low">
         <div className="px-8 mb-12 mt-4">
           <div className="w-16 h-16 bg-surface-container mb-4 overflow-hidden flex items-center justify-center text-2xl font-headline italic text-primary">
             {user.firstName ? user.firstName[0].toUpperCase() : "U"}
@@ -44,7 +126,7 @@ export default function Profile() {
           <p className="font-headline italic text-outline mt-1">Curated Selection</p>
         </div>
         
-        <nav className="flex flex-col gap-2">
+        <nav className="flex flex-col gap-2 mb-8">
           <button onClick={() => navigate('/')} className="flex items-center gap-4 py-4 text-outline hover:text-on-surface hover:bg-surface-container transition-colors font-headline text-xl italic pl-8 text-left">
             Home
           </button>
@@ -56,17 +138,15 @@ export default function Profile() {
           </button>
         </nav>
 
-        <div className="mt-auto px-8">
+        <div className="mt-auto px-8 pt-4">
           <button onClick={handleLogout} className="w-full bg-on-surface text-surface py-4 font-label text-[10px] tracking-[0.2em] uppercase transition-all hover:bg-primary font-bold">
             Sign Out
           </button>
         </div>
       </aside>
 
-      {/* Main Content Canvas */}
       <main className="flex-1 lg:ml-80 px-6 md:px-16 py-12 max-w-6xl">
         
-        {/* Header Section */}
         <header className="mb-24">
           <h1 className="font-headline italic text-6xl md:text-8xl tracking-tighter mb-4 opacity-90 text-on-surface">Account Profile</h1>
           <p className="font-label text-[10px] tracking-[0.3em] uppercase text-outline">
@@ -74,13 +154,15 @@ export default function Profile() {
           </p>
         </header>
 
-        {/* Profile Bento Section */}
         <section className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-32">
           <div className="md:col-span-4 bg-surface-container p-8">
             <div className="aspect-[4/5] w-full bg-outline-variant/20 mb-8 flex items-center justify-center border border-outline-variant/30">
               <span className="material-symbols-outlined text-8xl text-outline-variant opacity-50">person</span>
             </div>
-            <button className="w-full border border-outline-variant py-3 font-label text-[10px] tracking-widest uppercase hover:bg-on-surface hover:text-surface transition-colors">
+            <button 
+              onClick={() => setIsUpdateModalOpen(true)}
+              className="w-full border border-outline-variant py-3 font-label text-[10px] tracking-widest uppercase hover:bg-on-surface hover:text-surface transition-colors"
+            >
               Update Details
             </button>
           </div>
@@ -114,10 +196,8 @@ export default function Profile() {
           </div>
         </section>
 
-        {/* Embedded Order History Timeline */}
         <Order />
 
-        {/* Embedded Wishlist Grid */}
         <section className="mb-32">
           <div className="flex justify-between items-end mb-12 border-b border-outline-variant/30 pb-6">
             <h2 className="font-headline italic text-4xl text-on-surface">Archive Selection</h2>

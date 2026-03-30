@@ -68,7 +68,7 @@ export default function OrderDetails() {
 
   useEffect(() => {
     fetchOrder();
-    window.scrollTo(0,0);
+    window.scrollTo(0, 0);
   }, [orderId]);
 
   const handleDownloadInvoice = async () => {
@@ -119,7 +119,7 @@ export default function OrderDetails() {
   const isDeliveredOrReturned = orderStatusStr === "DELIVERED" || orderStatusStr.includes("RETURN") || orderStatusStr.includes("REFUND");
 
   const eligibleItemsForCancellation = order?.orderItems?.filter(item => item.itemStatus !== "CANCELLED" && item.itemStatus !== "DELIVERED" && !String(item.itemStatus).includes("RETURN")) || [];
-  
+
   const eligibleItemsForReturn = order?.orderItems?.filter(item => {
     if (item.itemStatus !== "DELIVERED") return false;
     const { isEligible } = checkReturnEligibility(item.deliveryDate || order.deliveryDate);
@@ -128,10 +128,10 @@ export default function OrderDetails() {
 
   const timelineSteps = ["PLACED", "CONFIRMED", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED"];
   const displayLabels = ["Confirmed", "Tailored", "Dispatched", "In Transit", "Delivered"];
-  
+
   let currentStepIndex = 0;
   if (isDeliveredOrReturned) {
-    currentStepIndex = 4; 
+    currentStepIndex = 4;
   } else {
     const foundIndex = timelineSteps.indexOf(order?.orderStatus);
     currentStepIndex = foundIndex >= 0 ? foundIndex : 0;
@@ -139,7 +139,7 @@ export default function OrderDetails() {
 
   return (
     <div className="bg-[#FFF8F5] text-[#1A1109] font-body min-h-screen pt-32 pb-24 px-6 md:px-12 flex flex-col items-center selection:bg-[#C8742A] selection:text-[#FFF8F5]">
-      
+
       {/* Cancel Items Modal */}
       <AnimatePresence>
         {isCancelModalOpen && (
@@ -188,23 +188,23 @@ export default function OrderDetails() {
       </section>
 
       <div className="max-w-4xl w-full space-y-24">
-        
+
         {/* 2. Interactive Tracker (Horizontal Timeline) */}
         <section className="w-full overflow-hidden px-4">
-          <motion.div 
-            variants={containerVariants} 
-            initial="hidden" 
-            animate="show" 
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
             className="relative flex justify-between items-start pt-8"
           >
             {/* Background Line */}
             <div className="absolute top-[41px] left-0 w-full h-[1px] bg-[#D1C4BC] -z-10"></div>
-            
+
             {/* Progress Line */}
             {!isFullyCancelled && (
-              <motion.div 
-                initial={{ scaleX: 0 }} 
-                animate={{ scaleX: currentStepIndex / (timelineSteps.length - 1) }} 
+              <motion.div
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: currentStepIndex / (timelineSteps.length - 1) }}
                 transition={{ duration: 1.5, ease: "easeInOut" }}
                 className="absolute top-[41px] left-0 w-full h-[1px] bg-[#1A1109] -z-10 origin-left"
               />
@@ -218,7 +218,7 @@ export default function OrderDetails() {
               displayLabels.map((label, index) => {
                 const isActive = index <= currentStepIndex;
                 const isCurrent = index === currentStepIndex;
-                
+
                 return (
                   <motion.div key={label} variants={nodeVariants} className="flex flex-col items-center text-center">
                     <div className={`w-6 h-6 mb-4 flex items-center justify-center transition-colors duration-500
@@ -237,53 +237,91 @@ export default function OrderDetails() {
         </section>
 
         {/* 3. Shipment Contents (Horizontal Scroll) */}
+        {/* 3. Shipment Contents (Horizontal Scroll) */}
         <section className="border-t border-[#D1C4BC] pt-16">
           <div className="flex justify-between items-end mb-8">
-            <h2 className="font-label text-[0.6875rem] uppercase tracking-[0.2em] font-black text-[#7F756E]">Shipment Contents</h2>
-            
-            {/* Navigates to actual initiation page */}
-            {eligibleItemsForReturn.length > 0 && (
-              <button 
-                onClick={() => navigate(`/account/order/${orderId}/return`)} 
-                className="font-label text-[10px] uppercase tracking-[0.2em] text-[#1A1109] font-black border-b border-[#1A1109] hover:text-[#C8742A] hover:border-[#C8742A] pb-0.5 transition-colors"
-              >
-                Request Return
-              </button>
-            )}
+            <h2 className="font-label text-[0.6875rem] uppercase tracking-[0.2em] font-black text-[#7F756E]">
+              Shipment Contents
+            </h2>
+
+            <div className="flex gap-6">
+              {eligibleItemsForReturn.length > 0 && (
+                <button
+                  onClick={() => navigate(`/account/order/${orderId}/return`)}
+                  className="font-label text-[10px] uppercase tracking-[0.2em] text-[#1A1109] font-black border-b border-[#1A1109] hover:text-[#C8742A] hover:border-[#C8742A] pb-0.5 transition-colors"
+                >
+                  Request Return
+                </button>
+              )}
+
+              {order?.orderItems?.some(item => String(item.itemStatus).includes("RETURN")) && (
+                <button
+                  onClick={() => navigate(`/returns`)}
+                  className="font-label text-[10px] uppercase tracking-[0.2em] text-[#C8742A] font-black border-b border-[#C8742A] pb-0.5 transition-colors"
+                >
+                  Track Returns
+                </button>
+              )}
+            </div>
           </div>
-          
+
           <div className="flex gap-12 overflow-x-auto pb-8 snap-x" style={{ scrollbarWidth: 'none' }}>
             {order?.orderItems?.map((item, index) => {
               const isItemCancelled = item.itemStatus === "CANCELLED";
               const returnBadgeText = getReturnBadgeConfig(item.itemStatus);
-              
+
               return (
-                <div key={item.id || index} className={`flex items-center gap-6 flex-shrink-0 snap-start w-80 ${isItemCancelled ? 'opacity-50' : ''}`}>
-                  <div 
+                <div
+                  key={item.id || index}
+                  className={`flex items-center gap-6 flex-shrink-0 snap-start w-80 ${isItemCancelled ? 'opacity-50' : ''
+                    }`}
+                >
+                  <div
                     onClick={() => navigate(`/product/${item?.product?.id}`)}
                     className="w-24 h-32 bg-[#E8E1DE] overflow-hidden cursor-pointer relative"
                   >
-                    {isItemCancelled && <div className="absolute inset-0 bg-[#FFF8F5]/50 flex items-center justify-center z-10"><span className="text-[8px] font-bold uppercase tracking-widest text-red-800">Cancelled</span></div>}
-                    {returnBadgeText && <div className="absolute top-0 left-0 bg-[#1A1109] text-[#FFF8F5] px-1 py-0.5 z-10"><span className="text-[7px] font-bold uppercase tracking-widest">{returnBadgeText}</span></div>}
-                    <img 
-                      src={item.product?.imageUrl} 
-                      alt={item.product?.title} 
-                      className="w-full h-full object-cover object-top grayscale-[15%] hover:grayscale-0 hover:scale-105 transition-transform duration-[1.5s]" 
+                    {isItemCancelled && (
+                      <div className="absolute inset-0 bg-[#FFF8F5]/50 flex items-center justify-center z-10">
+                        <span className="text-[8px] font-bold uppercase tracking-widest text-red-800">
+                          Cancelled
+                        </span>
+                      </div>
+                    )}
+                    {returnBadgeText && (
+                      <div className="absolute top-0 left-0 bg-[#1A1109] text-[#FFF8F5] px-1 py-0.5 z-10">
+                        <span className="text-[7px] font-bold uppercase tracking-widest">
+                          {returnBadgeText}
+                        </span>
+                      </div>
+                    )}
+                    <img
+                      src={item.product?.imageUrl}
+                      alt={item.product?.title}
+                      className="w-full h-full object-cover object-top grayscale-[15%] hover:grayscale-0 hover:scale-105 transition-transform duration-[1.5s]"
                     />
                   </div>
+
                   <div className="space-y-1">
-                    <p className="font-label text-[0.625rem] uppercase tracking-[0.2em] text-[#7F756E] font-bold">{item.product?.brand}</p>
-                    <h4 
+                    <p className="font-label text-[0.625rem] uppercase tracking-[0.2em] text-[#7F756E] font-bold">
+                      {item.product?.brand}
+                    </p>
+
+                    <h4
                       onClick={() => navigate(`/product/${item?.product?.id}`)}
                       className="font-headline italic text-xl cursor-pointer hover:text-[#C8742A] transition-colors line-clamp-2 text-[#1A1109]"
                     >
                       {item.product?.title}
                     </h4>
-                    <p className="font-label text-[0.625rem] uppercase tracking-widest text-[#7F756E] font-bold mt-2">Size: {item.size} / Qty: {item.quantity}</p>
-                    
-                    {/* Rate product link if delivered */}
+
+                    <p className="font-label text-[0.625rem] uppercase tracking-widest text-[#7F756E] font-bold mt-2">
+                      Size: {item.size} / Qty: {item.quantity}
+                    </p>
+
                     {(item.itemStatus === "DELIVERED" || String(item.itemStatus).includes("RETURN")) && (
-                      <button onClick={() => navigate(`/product/${item?.product?.id}/rate`)} className="mt-4 font-label text-[9px] uppercase tracking-widest text-[#1A1109] border-b border-[#1A1109] font-black pb-0.5 hover:text-[#C8742A] hover:border-[#C8742A] transition-colors">
+                      <button
+                        onClick={() => navigate(`/product/${item?.product?.id}/rate`)}
+                        className="mt-4 font-label text-[9px] uppercase tracking-widest text-[#1A1109] border-b border-[#1A1109] font-black pb-0.5 hover:text-[#C8742A] hover:border-[#C8742A] transition-colors"
+                      >
                         Leave Narrative
                       </button>
                     )}
@@ -296,9 +334,9 @@ export default function OrderDetails() {
 
         {/* 4. Document & Post-Delivery Actions */}
         <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          
-          <button 
-            onClick={handleDownloadInvoice} 
+
+          <button
+            onClick={handleDownloadInvoice}
             disabled={downloading || isFullyCancelled}
             className="w-full border border-[#1A1109] text-[#1A1109] py-6 font-label text-[0.7rem] uppercase tracking-[0.2em] font-black hover:bg-[#1A1109] hover:text-[#FFF8F5] transition-all duration-300 disabled:opacity-50 flex justify-center items-center gap-2"
           >
@@ -307,7 +345,7 @@ export default function OrderDetails() {
           </button>
 
           {!isFullyCancelled && !isDeliveredOrReturned && eligibleItemsForCancellation.length > 0 && (
-            <button 
+            <button
               onClick={() => setIsCancelModalOpen(true)}
               className="w-full border border-red-800 text-red-800 py-6 font-label text-[0.7rem] uppercase tracking-[0.2em] font-black hover:bg-red-800 hover:text-[#FFF8F5] transition-all duration-300"
             >
@@ -317,7 +355,7 @@ export default function OrderDetails() {
 
           {/* Navigates to actual initiation page  */}
           {eligibleItemsForReturn.length > 0 && (
-            <button 
+            <button
               onClick={() => navigate(`/account/order/${orderId}/return`)}
               className="w-full bg-[#1A1109] text-[#FFF8F5] py-6 font-label text-[0.7rem] uppercase tracking-[0.2em] font-black hover:bg-[#C8742A] transition-all duration-300"
             >
@@ -331,10 +369,10 @@ export default function OrderDetails() {
       {/* 5. Editorial Accent Image */}
       <div className="mt-32 w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-12 items-center border-t border-[#D1C4BC] pt-16">
         <div className="aspect-[4/5] overflow-hidden bg-[#E8E1DE]">
-          <img 
-            src="https://images.unsplash.com/photo-1550614000-4895a10e1bfd?auto=format&fit=crop&w=800&q=80" 
-            alt="Close-up of luxury fabric" 
-            className="w-full h-full object-cover grayscale-[15%] transition-transform duration-[1.5s] hover:scale-105" 
+          <img
+            src="https://images.unsplash.com/photo-1550614000-4895a10e1bfd?auto=format&fit=crop&w=800&q=80"
+            alt="Close-up of luxury fabric"
+            className="w-full h-full object-cover grayscale-[15%] transition-transform duration-[1.5s] hover:scale-105"
           />
         </div>
         <div className="space-y-6">

@@ -13,9 +13,15 @@ export default function AuthModel({ handleClose, open }) {
 
   useEffect(() => {
     if (auth.user && open) {
-      handleClose();
+      handleClose(); 
+
+      const userRole = String(auth.user?.role || "").toUpperCase();
+
+      if (userRole === "ADMIN" || userRole === "ROLE_ADMIN") {
+        navigate("/admin"); 
+      }
     }
-  }, [auth.user, open]);
+  }, [auth.user, open, navigate, handleClose]);
 
   useEffect(() => {
     if (open) {
@@ -39,19 +45,16 @@ export default function AuthModel({ handleClose, open }) {
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className="fixed inset-0 z-[100] flex min-h-screen w-full bg-background"
         >
-          {/* Left Side: Editorial Image (60% Desktop) */}
           <section className="hidden lg:block lg:w-[60%] h-screen relative bg-surface-container-highest overflow-hidden">
             <img
               src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=80"
               alt="Avant-garde high fashion model"
               className="w-full h-full object-cover grayscale-[20%]"
             />
-            {/* Branding Overlay */}
             <div className="absolute top-12 left-12">
               <h1 className="font-headline font-bold tracking-tighter text-5xl text-white mix-blend-difference">CLOTHSY</h1>
               <p className="font-headline italic text-white mix-blend-difference mt-2 text-xl">The Architectural Monolith</p>
             </div>
-            {/* Image Caption */}
             <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end">
               <div className="max-w-xs">
                 <span className="font-label uppercase tracking-[0.2em] text-[10px] text-white/70 block mb-2">Editorial Series 04</span>
@@ -61,10 +64,7 @@ export default function AuthModel({ handleClose, open }) {
             </div>
           </section>
 
-          {/* Right Side: Auth Form (40% Desktop, 100% Mobile) */}
           <section className="w-full lg:w-[40%] h-screen bg-surface relative overflow-y-auto">
-            
-            {/* Close Button (Fixed to viewport) */}
             <button
               onClick={handleClose}
               className="fixed top-8 right-8 z-[110] w-10 h-10 flex items-center justify-center text-outline hover:text-primary transition-colors"
@@ -72,16 +72,12 @@ export default function AuthModel({ handleClose, open }) {
               <span className="material-symbols-outlined text-[28px]">close</span>
             </button>
 
-            {/* Content Wrapper (Allows scrolling without cropping top) */}
             <div className="min-h-full flex flex-col justify-center px-8 sm:px-16 lg:px-20 py-24">
-              
-              {/* Mobile Brand Header */}
               <div className="lg:hidden mb-12">
                 <h1 className="font-headline font-bold tracking-tighter text-3xl text-primary">CLOTHSY</h1>
               </div>
 
               <div className="w-full max-w-md mx-auto">
-                {/* Form Switcher */}
                 <nav className="flex gap-8 mb-16 items-baseline border-b border-outline-variant/30">
                   <button
                     onClick={() => navigate("/login")}
@@ -99,7 +95,6 @@ export default function AuthModel({ handleClose, open }) {
                   </button>
                 </nav>
 
-                {/* Form Content */}
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={isLogin ? "login" : "register"}
@@ -112,7 +107,6 @@ export default function AuthModel({ handleClose, open }) {
                   </motion.div>
                 </AnimatePresence>
 
-                {/* Legal / Footer */}
                 <div className="mt-20">
                   <p className="font-body text-[10px] text-outline leading-relaxed max-w-xs uppercase tracking-widest">
                     By entering, you agree to our <a className="underline hover:text-primary underline-offset-4" href="#">Terms of Service</a> and <a className="underline hover:text-primary underline-offset-4" href="#">Editorial Guidelines</a>.

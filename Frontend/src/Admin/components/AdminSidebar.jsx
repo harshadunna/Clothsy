@@ -1,27 +1,30 @@
 import { useNavigate, useLocation } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { logout } from "../../Redux/Auth/Action"; 
 
 const menuItems = [
-  { name: "Management Hub", path: "/admin", icon: "layers" },
-  { name: "Inventory Ledger", path: "/admin/products", icon: "inventory_2" },
-  { name: "Atelier Blueprint", path: "/admin/product/create", icon: "auto_stories" },
-  { name: "Order Logistics", path: "/admin/orders", icon: "local_shipping" },
-  { name: "Client Archive", path: "/admin/customers", icon: "history" },
+  { name: "Dashboard", path: "/admin", icon: "dashboard" },
+  { name: "Products", path: "/admin/products", icon: "inventory_2" },
+  { name: "Add Product", path: "/admin/product/create", icon: "add_circle" },
+  { name: "Orders", path: "/admin/orders", icon: "local_shipping" },
+  { name: "Customers", path: "/admin/customers", icon: "people" },
   { name: "Analytics", path: "/admin/analytics", icon: "monitoring" },
 ];
 
 export default function AdminSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
 
   const handleLogout = () => {
-    localStorage.clear();
+    dispatch(logout()); 
     navigate("/");
   };
 
   return (
-    <aside className="w-64 h-screen bg-[#1A1109] flex flex-col py-8 border-r border-[#1A1109] z-50 shrink-0">
+    <aside className="w-64 h-screen sticky top-0 overflow-y-auto bg-[#1A1109] flex flex-col py-8 border-r border-[#1A1109] z-50 shrink-0 custom-scrollbar">
       
-      <div className="px-8 mb-12">
+      <div className="px-8 mb-12 shrink-0">
         <h1 className="text-2xl font-black text-[#FFF8F5] tracking-widest font-headline uppercase">CLOTHSY</h1>
         <p className="text-[0.65rem] font-bold text-[#C8742A] tracking-[0.2em] font-label mt-1 uppercase">Admin Suite</p>
       </div>
@@ -52,22 +55,22 @@ export default function AdminSidebar() {
         })}
       </nav>
 
-      <div className="px-6 mt-8">
+      <div className="px-6 mt-8 shrink-0">
         <button 
           onClick={() => navigate("/admin/product/create")}
           className="w-full bg-[#C8742A] text-white font-label text-[0.7rem] font-black tracking-widest py-4 uppercase hover:bg-[#924C00] transition-colors"
         >
-          New Blueprint
+          Add Product
         </button>
       </div>
 
-      <div className="mt-auto px-8 space-y-4 pt-8 border-t border-white/10">
+      <div className="mt-auto px-8 space-y-4 pt-8 pb-28 border-t border-white/10 shrink-0">
         <button 
           onClick={handleLogout}
           className="flex items-center w-full text-[#FFF8F5] opacity-60 hover:opacity-100 transition-opacity font-label text-[0.7rem] font-bold tracking-widest uppercase"
         >
           <span className="material-symbols-outlined mr-3 text-sm">logout</span>
-          Secure Logout
+          Logout
         </button>
       </div>
     </aside>

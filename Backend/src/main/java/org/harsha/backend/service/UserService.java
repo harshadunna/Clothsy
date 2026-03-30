@@ -43,4 +43,14 @@ public interface UserService {
     List<User> findAllUsers();
 
     Address addAddress(User user, Address address);
+
+    /**
+     * Updates the role of a user in the database.
+     *
+     * @param userId the ID of the user to update
+     * @param role the new role string (e.g., "ADMIN" or "CUSTOMER")
+     * @return the updated User entity
+     * @throws UserException if the user is not found
+     */
+    User updateUserRole(Long userId, String role) throws UserException;
 }

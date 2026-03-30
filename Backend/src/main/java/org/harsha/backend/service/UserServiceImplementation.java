@@ -52,4 +52,11 @@ public class UserServiceImplementation implements UserService {
         userRepository.save(user);
         return saved;
     }
+
+    @Override
+    public User updateUserRole(Long userId, String role) throws UserException {
+        User user = findUserById(userId);
+        user.setRole(role);
+        return userRepository.save(user);
+    }
 }

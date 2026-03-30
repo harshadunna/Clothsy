@@ -6,31 +6,44 @@ export default function AdminCustomers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null); 
 
-  useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const { data } = await api.get("/api/admin/users"); 
-        
-        if (Array.isArray(data)) {
-          setCustomers(data);
-        } else {
-          console.error("Backend did not return an array:", data);
-          setCustomers([]);
-        }
-        
-      } catch (error) {
-        console.error("Error fetching customers:", error);
-        setError(error.response?.data?.message || "Failed to load the Client Archive. Check your admin permissions.");
-      } finally {
-        setLoading(false);
+  const fetchCustomers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const { data } = await api.get("/api/admin/users"); 
+      if (Array.isArray(data)) {
+        setCustomers(data);
+      } else {
+        setCustomers([]);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+      setError(error.response?.data?.message || "Failed to load the Client Archive.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchCustomers();
   }, []);
+
+  // NEW: Function to handle role promotion/demotion
+  const handleRoleChange = async (userId, currentRole) => {
+    const newRole = currentRole === "ADMIN" ? "CUSTOMER" : "ADMIN";
+    const actionText = newRole === "ADMIN" ? "promote this user to ADMIN" : "revoke ADMIN privileges for this user";
+    
+    if (!window.confirm(`Are you sure you want to ${actionText}?`)) return;
+
+    try {
+      // Sends request to backend to update role
+      await api.put(`/api/admin/users/${userId}/role`, { role: newRole });
+      fetchCustomers(); // Refresh the list
+    } catch (error) {
+      console.error("Error updating role:", error);
+      setError(error.response?.data?.message || "Failed to update user role. Check backend configuration.");
+    }
+  };
 
   if (loading) {
     return (
@@ -58,7 +71,6 @@ export default function AdminCustomers() {
         </div>
       </section>
 
-      {/* ERROR MESSAGE DISPLAY */}
       {error && (
         <div className="mb-8 p-6 bg-[#FFDAD6] text-[#BA1A1A] border-l-4 border-[#BA1A1A] font-label font-bold text-[0.7rem] tracking-widest uppercase">
           {error}
@@ -90,12 +102,13 @@ export default function AdminCustomers() {
               <th className="py-4 px-6 font-label text-[0.65rem] font-black tracking-[0.1em] text-[#7F756E] uppercase">Contact Origin</th>
               <th className="py-4 px-6 font-label text-[0.65rem] font-black tracking-[0.1em] text-[#7F756E] uppercase">Registry Date</th>
               <th className="py-4 px-6 font-label text-[0.65rem] font-black tracking-[0.1em] text-[#7F756E] uppercase">Role</th>
+              <th className="py-4 px-6 font-label text-[0.65rem] font-black tracking-[0.1em] text-[#7F756E] uppercase text-right">Access Controls</th>
             </tr>
           </thead>
           <tbody>
             {customers.length === 0 ? (
               <tr>
-                <td colSpan="4" className="py-12 text-center font-label text-[0.75rem] tracking-widest uppercase text-[#7F756E]">No clients registered in directory.</td>
+                <td colSpan="5" className="py-12 text-center font-label text-[0.75rem] tracking-widest uppercase text-[#7F756E]">No clients registered in directory.</td>
               </tr>
             ) : (
               customers.map((customer) => (
@@ -126,12 +139,31 @@ export default function AdminCustomers() {
 
                   <td className="py-6 px-6">
                     <span className={`px-3 py-1 font-label text-[0.6rem] font-black tracking-widest uppercase border ${
-                      customer.role === "ADMIN" 
+                      customer.role === "ADMIN" || customer.role === "ROLE_ADMIN"
                         ? "border-[#C8742A] text-[#C8742A] bg-[#C8742A]/10" 
                         : "border-[#1A1109] text-[#1A1109]"
                     }`}>
-                      {customer.role || "CLIENT"}
+                      {customer.role === "ROLE_ADMIN" ? "ADMIN" : (customer.role || "CUSTOMER")}
                     </span>
+                  </td>
+
+                  {/* NEW: Action Buttons */}
+                  <td className="py-6 px-6 text-right">
+                    {customer.role === "ADMIN" || customer.role === "ROLE_ADMIN" ? (
+                      <button 
+                        onClick={() => handleRoleChange(customer.id, "ADMIN")}
+                        className="font-label text-[0.65rem] font-black uppercase tracking-[0.2em] text-[#BA1A1A] hover:opacity-60 transition-opacity"
+                      >
+                        Revoke Admin
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => handleRoleChange(customer.id, "CUSTOMER")}
+                        className="border border-[#1A1109] text-[#1A1109] hover:bg-[#1A1109] hover:text-[#FFF8F5] px-4 py-2 font-label text-[0.6rem] font-black uppercase tracking-widest transition-colors"
+                      >
+                        Promote to Admin
+                      </button>
+                    )}
                   </td>
 
                 </tr>
