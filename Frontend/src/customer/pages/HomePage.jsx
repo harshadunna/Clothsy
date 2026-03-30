@@ -7,7 +7,7 @@ import HomeSectionCarousel from "../components/HomeSectionCarousel/HomeSectionCa
 
 gsap.registerPlugin(ScrollTrigger);
 
-// ── CATEGORY HELPERS ──────────────────────────────────────────────────────────
+// CATEGORY HELPERS
 const getRootCategory = (product) => {
   let cur = product?.category;
   while (cur?.parentCategory) cur = cur.parentCategory;
@@ -53,7 +53,6 @@ const shuffle = (arr) => {
 
 /** Pick up to `n` random items from an array */
 const pickRandom = (arr, n) => shuffle(arr).slice(0, n);
-// ─────────────────────────────────────────────────────────────────────────────
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -64,7 +63,7 @@ const HomePage = () => {
   const [carouselProducts, setCarouselProducts] = useState([]);
   const [carouselLoading,  setCarouselLoading]  = useState(true);
 
-  // ── Fetch curated grid: 2 random mens + 2 random womens ──────────────────
+  // Fetch curated grid: 2 random mens + 2 random womens
   useEffect(() => {
     const fetchCurated = async () => {
       try {
@@ -105,7 +104,7 @@ const HomePage = () => {
     fetchCurated();
   }, []);
 
-  // ── Fetch carousel: random sample across ALL categories ──────────────────
+  // Fetch carousel: random sample across ALL categories
   useEffect(() => {
     const fetchCarousel = async () => {
       try {
@@ -179,7 +178,7 @@ const HomePage = () => {
     <div className="bg-[#FFF8F5] text-[#1A1109] antialiased min-h-screen flex flex-col selection:bg-[#C8742A] selection:text-[#FFF8F5]">
       <main className="flex-grow">
 
-        {/* ── 1. HERO ─────────────────────────────────────────────────────── */}
+        {/* 1. HERO */}
         <section
           ref={heroRef}
           className="relative w-full h-[85vh] min-h-[600px] max-h-[900px] bg-[#1A1109] overflow-hidden"
@@ -209,7 +208,7 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* ── 2. CURATED EDIT ─────────────────────────────────────────────── */}
+        {/* 2. CURATED EDIT */}
         {curatedProducts.length > 0 && (
           <section
             ref={gridRef}
@@ -281,14 +280,14 @@ const HomePage = () => {
           </section>
         )}
 
-        {/* ── 3. NEW ACQUISITIONS CAROUSEL ────────────────────────────────── */}
+        {/* 3. NEW ACQUISITIONS CAROUSEL */}
         <HomeSectionCarousel
           data={carouselProducts}
           sectionName="New Acquisitions"
           loading={carouselLoading}
         />
 
-        {/* ── 4. NEWSLETTER ───────────────────────────────────────────────── */}
+        {/* 4. NEWSLETTER */}
         <section className="bg-[#E8E1DE] py-24 md:py-32 px-6 md:px-12 text-center border-t border-[#D1C4BC]">
           <div className="max-w-2xl mx-auto">
             <h2 className="font-headline italic text-4xl md:text-5xl text-[#1A1109] mb-6 tracking-tighter">

@@ -21,7 +21,7 @@ export default function HomeSectionCarousel({ data, sectionName, loading = false
   const slideNext = () =>
     scrollRef.current?.scrollBy({ left: scrollAmount, behavior: "smooth" });
 
-  // ── Loading skeleton ──────────────────────────────────────────────────────
+  // Loading skeleton 
   if (loading) {
     return (
       <section className="bg-[#FFF8F5] py-10 overflow-hidden border-t border-[#D1C4BC]">

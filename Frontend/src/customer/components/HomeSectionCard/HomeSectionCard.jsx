@@ -13,10 +13,8 @@ export default function HomeSectionCard({ product }) {
       ref={cardRef}
       onClick={() => navigate(`/product/${product?.id}`)}
       className="group cursor-pointer flex-shrink-0"
-      // ── Fixed pixel width so the card never stretches to fill the viewport ──
       style={{ width: "180px" }}
     >
-      {/* Fixed-height image box — 240px tall, never grows */}
       <div
         className="relative overflow-hidden bg-[#E8E8E8]"
         style={{ width: "180px", height: "240px" }}

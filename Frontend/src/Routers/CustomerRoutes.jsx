@@ -20,6 +20,7 @@ import Contact from "../customer/pages/Contact";
 import About from "../customer/pages/About";
 import CurationPage from "../customer/pages/CurationPage";
 import Journal from "../customer/pages/Journal"; 
+import Returns from "../customer/pages/Returns"; 
 
 const PageTransition = ({ children }) => (
   <motion.div
@@ -78,8 +79,11 @@ const CustomerRoutes = () => {
           <Route path="/about" element={<PageTransition><About /></PageTransition>} />
           <Route path="/craftsmanship" element={<PageTransition><About /></PageTransition>} />
           
-          {/* Journal */}
+          {/* Journal & Returns */}
           <Route path="/journal" element={<PageTransition><Journal /></PageTransition>} />
+          
+          {/* NEW ROUTE ADDED HERE */}
+          <Route path="/returns" element={<PageTransition><Returns /></PageTransition>} />
 
           {/* 404 */}
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />

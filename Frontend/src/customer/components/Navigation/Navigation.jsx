@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { logout, getUser } from '../../../Redux/Auth/Action'
@@ -12,9 +12,9 @@ import {
 import { gsap } from 'gsap'
 import AuthModel from '../Auth/AuthModel'
 
-/* ─────────────────────────────────────────────────────────────
+/* 
    NAV DATA — Women / Men + real product images from JSON
-───────────────────────────────────────────────────────────── */
+*/
 const NAV = [
   {
     label: 'WOMEN',
@@ -93,9 +93,9 @@ const ANNOUNCEMENT_ITEMS = [
   'COMPLIMENTARY GIFTWRAPPING ON ALL ORDERS',
 ]
 
-/* ─────────────────────────────────────────────────────────────
+/* 
    ANNOUNCEMENT BAR — GSAP ticker
-───────────────────────────────────────────────────────────── */
+*/
 function AnnouncementBar() {
   const trackRef = useRef(null)
   useEffect(() => {
@@ -117,9 +117,9 @@ function AnnouncementBar() {
   )
 }
 
-/* ─────────────────────────────────────────────────────────────
+/* 
    HOVER PREVIEW — tiny product image next to hovered item
-───────────────────────────────────────────────────────────── */
+*/
 function HoverPreview({ src }) {
   const ref = useRef(null)
   useEffect(() => {
@@ -148,10 +148,10 @@ function HoverPreview({ src }) {
   )
 }
 
-/* ─────────────────────────────────────────────────────────────
+/* 
    MEGA MENU
-───────────────────────────────────────────────────────────── */
-function MegaMenu({ category, visible }) {
+*/
+function MegaMenu({ category, visible, topOffset }) {
   const panelRef = useRef(null)
   const itemRefs = useRef([])
   const imgRefs  = useRef([])
@@ -195,7 +195,7 @@ function MegaMenu({ category, visible }) {
       ref={panelRef}
       style={{
         position: 'fixed',
-        top: 100, 
+        top: topOffset, 
         left: 0, width: '100vw',
         background: '#FFFFFF',
         borderTop: '1px solid #E8E8E8',
@@ -204,6 +204,7 @@ function MegaMenu({ category, visible }) {
         opacity: 0,
         zIndex: 90,
         boxShadow: '0 20px 60px rgba(0,0,0,0.06)',
+        transition: 'top 320ms ease',
       }}
     >
       <div
@@ -215,7 +216,6 @@ function MegaMenu({ category, visible }) {
           gap: 32,
         }}
       >
-        {/* ── FIXED: zIndex mathematically staggered so left columns overlay right columns ── */}
         {category.sections.map((section, sIdx) => (
           <div key={section.id} style={{ gridColumn: 'span 3', position: 'relative', zIndex: 50 - sIdx }}>
             <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.28em', textTransform: 'uppercase', color: '#BBBBBB', marginBottom: 16 }}>
@@ -296,9 +296,9 @@ function MegaMenu({ category, visible }) {
   )
 }
 
-/* ─────────────────────────────────────────────────────────────
+/* 
    BADGE
-───────────────────────────────────────────────────────────── */
+*/
 function Badge({ count, dark }) {
   if (!count || count <= 0) return null
   return (
@@ -316,9 +316,9 @@ function Badge({ count, dark }) {
   )
 }
 
-/* ─────────────────────────────────────────────────────────────
+/* 
    NAVIGATION  — main export
-───────────────────────────────────────────────────────────── */
+*/
 export default function Navigation() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -365,7 +365,7 @@ export default function Navigation() {
     return () => window.removeEventListener('scroll', fn)
   }, [])
 
-  /* ── GSAP mount entrance ── */
+  /* GSAP mount entrance */
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.fromTo(logoRef.current,
@@ -386,7 +386,7 @@ export default function Navigation() {
     return () => ctx.revert()
   }, [])
 
-  /* ── GSAP search expand / collapse ── */
+  /* GSAP search expand / collapse */
   useEffect(() => {
     if (!searchRef.current) return
     if (searchOpen) {
@@ -415,7 +415,7 @@ export default function Navigation() {
   const openMenu  = id => { clearTimeout(menuTimeoutRef.current); if (id) setActiveMenu(id) }
   const closeMenu = ()  => { menuTimeoutRef.current = setTimeout(() => setActiveMenu(null), 130) }
 
-  /* ── Appearance ── */
+  /* Appearance */
   const transparent  = isHomePage && !scrolled
   const navBg        = transparent ? 'linear-gradient(to bottom,rgba(0,0,0,0.62) 0%,rgba(0,0,0,0) 100%)' : '#FFFFFF'
   const textHi       = transparent ? '#FFFFFF' : '#0A0A0A'
@@ -454,9 +454,11 @@ export default function Navigation() {
       <nav
         ref={navRef}
         style={{
-          position: 'fixed', top: 36, left: 0, width: '100%', zIndex: 100, height: 64,
+          position: 'fixed', 
+          top: scrolled ? 0 : 36,
+          left: 0, width: '100%', zIndex: 100, height: 64,
           background: navBg, borderBottom: `1px solid ${borderColor}`,
-          transition: 'background 320ms ease, border-color 320ms ease',
+          transition: 'background 320ms ease, border-color 320ms ease, top 320ms ease',
         }}
         onMouseLeave={closeMenu}
       >
@@ -559,7 +561,7 @@ export default function Navigation() {
         </div>
 
         {NAV.filter(c => c.sections.length > 0).map(cat => (
-          <MegaMenu key={cat.id} category={cat} visible={activeMenu === cat.id} />
+          <MegaMenu key={cat.id} category={cat} visible={activeMenu === cat.id} topOffset={scrolled ? 64 : 100} />
         ))}
       </nav>
 

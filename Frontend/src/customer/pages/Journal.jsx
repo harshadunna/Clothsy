@@ -1,8 +1,8 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { findProducts } from "../../Redux/Customers/Product/Action"; // Make sure this path is correct for your structure
+import { findProducts } from "../../Redux/Customers/Product/Action"; 
 
 export default function Journal() {
   const dispatch = useDispatch();
@@ -49,7 +49,7 @@ export default function Journal() {
       
       <main className="max-w-[1440px] mx-auto">
         
-        {/* ── MASTHEAD ── */}
+        {/* MASTHEAD */}
         <motion.header 
           initial="hidden" 
           animate="visible" 
@@ -68,7 +68,7 @@ export default function Journal() {
           <div className="w-full mt-24 border-b border-[#D1C4BC]"></div>
         </motion.header>
 
-        {/* ── LEAD FEATURE ── */}
+        {/* LEAD FEATURE */}
         <motion.section 
           initial="hidden" 
           whileInView="visible" 
@@ -112,7 +112,7 @@ export default function Journal() {
           </div>
         </motion.section>
 
-        {/* ── ASYMMETRIC ARCHIVE ── */}
+        {/* ASYMMETRIC ARCHIVE */}
         <section className="px-6 md:px-12">
           <div className="flex justify-between items-end border-b border-[#D1C4BC] pb-6 mb-16">
             <h2 className="font-headline italic text-3xl md:text-5xl text-[#1A1109] tracking-tighter">

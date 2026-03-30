@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
@@ -147,7 +147,6 @@ export default function About() {
               </div>
             </motion.div>
 
-            {/* ── REPLACED: Bento Item 2 (Biella / Wool) using H&M Architectural Tailoring image ── */}
             <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="md:col-span-4 group relative overflow-hidden h-[500px] bg-surface-container">
               <img 
                 src="https://image.hm.com/assets/hm/dd/64/dd64de2cfe48fdb6c31636d39a28e49b6234e8d2.jpg?imwidth=2160" 
@@ -174,7 +173,6 @@ export default function About() {
         </div>
       </section>
 
-      {/* ── REPLACED: CTA Section (Experience the Weight) using moody H&M Suiting Season image ── */}
       <section className="relative py-32 md:py-48 px-8 text-center overflow-hidden bg-on-surface">
         <div className="absolute inset-0 z-0">
           <img 

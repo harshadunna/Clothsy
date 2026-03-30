@@ -20,7 +20,18 @@ import java.util.Map;
 /**
  * OrderController
  *
- * Handles all order-related endpoints for authenticated users.
+ * REST controller handling all order-related endpoints for authenticated users.
+ * All endpoints require a valid JWT token in the Authorization header.
+ *
+ * Base path: /api/orders
+ *
+ * Endpoint summary:
+ * POST   /api/orders              → Create a new order from the user's cart
+ * GET    /api/orders/user         → Get full order history for the logged-in user
+ * GET    /api/orders/{id}         → Get a specific order by ID
+ * PUT    /api/orders/{id}/cancel-items  → Partially or fully cancel items
+ * PUT    /api/orders/{id}/return-items  → Request a return for delivered items
+ * GET    /api/orders/{id}/invoice → Download PDF invoice for an order
  */
 @RestController
 @RequestMapping("/api/orders")
@@ -32,7 +43,21 @@ public class OrderController {
     private final InvoiceService invoiceService;
 
     /**
-     * Places a new order using an existing saved address.
+     * POST /api/orders
+     *
+     * Creates a new order from the authenticated user's current cart.
+     * Expects a JSON body with the ID of a saved address:
+     * { "addressId": 5 }
+     *
+     * Flow:
+     * 1. Resolve user from JWT
+     * 2. Extract addressId from request body
+     * 3. Delegate to OrderService to build and persist the order
+     * 4. Return the created Order with HTTP 201 CREATED
+     *
+     * @param body JSON map containing "addressId" key
+     * @param jwt  Bearer token from Authorization header
+     * @return the newly created Order
      */
     @PostMapping({"", "/"})
     public ResponseEntity<Order> createOrder(
@@ -40,8 +65,6 @@ public class OrderController {
             @RequestHeader("Authorization") String jwt) throws UserException {
 
         User user = userService.findUserProfileByJwt(jwt);
-
-        // Safely extract the addressId
         Long addressId = body.get("addressId");
         Order order = orderService.createOrder(user, addressId);
 
@@ -49,7 +72,17 @@ public class OrderController {
     }
 
     /**
-     * Retrieves the full order history for the authenticated user.
+     * GET /api/orders/user
+     *
+     * Returns the full order history for the authenticated user.
+     * Only returns orders with meaningful statuses (PLACED, CONFIRMED,
+     * SHIPPED, DELIVERED, RETURN_*, REFUND_*, CANCELLED).
+     *
+     * Each Order includes its fully-loaded orderItems array
+     * (fixed via JOIN FETCH in OrderRepository).
+     *
+     * @param jwt Bearer token from Authorization header
+     * @return list of Orders belonging to the user
      */
     @GetMapping("/user")
     public ResponseEntity<List<Order>> getUserOrderHistory(
@@ -62,14 +95,21 @@ public class OrderController {
     }
 
     /**
-     * Retrieves a specific order by its ID.
+     * GET /api/orders/{orderId}
+     *
+     * Retrieves a single order by its database ID.
+     * Uses findByIdWithItems() under the hood so orderItems
+     * are always populated in the response.
+     *
+     * @param orderId the primary key of the order
+     * @param jwt     Bearer token from Authorization header
+     * @return the matching Order
      */
     @GetMapping("/{orderId}")
     public ResponseEntity<Order> findOrderById(
             @PathVariable Long orderId,
             @RequestHeader("Authorization") String jwt) throws OrderException, UserException {
 
-        // Verify the user exists
         userService.findUserProfileByJwt(jwt);
         Order order = orderService.findOrderById(orderId);
 
@@ -77,8 +117,19 @@ public class OrderController {
     }
 
     /**
-     * Partially (or fully) cancels items within an order.
-     * Expects a JSON array of OrderItem IDs: [1, 5, 8]
+     * PUT /api/orders/{orderId}/cancel-items
+     *
+     * Cancels specific items within an order.
+     * If all items end up cancelled, the whole order is marked CANCELLED.
+     * Inventory is restocked for each cancelled item.
+     *
+     * Request body: JSON array of OrderItem IDs to cancel
+     * Example: [1, 5, 8]
+     *
+     * @param orderId        the ID of the order containing the items
+     * @param itemIdsToCancel list of OrderItem IDs to cancel
+     * @param jwt            Bearer token from Authorization header
+     * @return the updated Order reflecting the cancellation
      */
     @PutMapping("/{orderId}/cancel-items")
     public ResponseEntity<Order> cancelOrderItems(
@@ -86,16 +137,26 @@ public class OrderController {
             @RequestBody List<Long> itemIdsToCancel,
             @RequestHeader("Authorization") String jwt) throws OrderException, UserException {
 
-        // Verify user owns the token
         userService.findUserProfileByJwt(jwt);
-
         Order updatedOrder = orderService.cancelOrderItems(orderId, itemIdsToCancel);
+
         return new ResponseEntity<>(updatedOrder, HttpStatus.OK);
     }
 
     /**
-     * Requests a return for specific items within an order.
-     * Enforces the 7-day return policy on the backend.
+     * PUT /api/orders/{orderId}/return-items
+     *
+     * Initiates a return request for specific delivered items.
+     * Enforces the 7-day return window on the backend — items
+     * delivered more than 7 days ago are silently skipped.
+     *
+     * Request body: JSON array of OrderItem IDs to return
+     * Example: [3, 7]
+     *
+     * @param orderId         the ID of the order containing the items
+     * @param itemIdsToReturn list of OrderItem IDs to return
+     * @param jwt             Bearer token from Authorization header
+     * @return the updated Order with RETURN_REQUESTED status
      */
     @PutMapping("/{orderId}/return-items")
     public ResponseEntity<Order> returnOrderItems(
@@ -103,32 +164,43 @@ public class OrderController {
             @RequestBody List<Long> itemIdsToReturn,
             @RequestHeader("Authorization") String jwt) throws OrderException, UserException {
 
-        // Verify user owns the token
         userService.findUserProfileByJwt(jwt);
-
         Order updatedOrder = orderService.returnOrderItems(orderId, itemIdsToReturn);
+
         return new ResponseEntity<>(updatedOrder, HttpStatus.OK);
     }
 
     /**
-     * Downloads the PDF Invoice for a specific order.
+     * GET /api/orders/{orderId}/invoice
+     *
+     * Generates and streams a PDF invoice for the specified order.
+     *
+     * Flow:
+     * 1. Verify JWT and resolve user
+     * 2. Load the order (with all items) via findOrderById
+     * 3. Generate PDF bytes via InvoiceService
+     * 4. Return as application/pdf with Content-Disposition: attachment
+     *
+     * @param orderId the ID of the order to invoice
+     * @param jwt     Bearer token from Authorization header
+     * @return PDF bytes as a downloadable file attachment
      */
     @GetMapping("/{orderId}/invoice")
     public ResponseEntity<byte[]> downloadInvoice(
             @PathVariable Long orderId,
             @RequestHeader("Authorization") String jwt) throws Exception {
 
-        // 1. Verify user and get order
         userService.findUserProfileByJwt(jwt);
         Order order = orderService.findOrderById(orderId);
 
-        // 2. Generate PDF
         byte[] pdfBytes = invoiceService.generateInvoicePdf(order);
 
-        // 3. Set headers for file download
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDispositionFormData("attachment", "Invoice_Order_" + orderId + ".pdf");
+        headers.setContentDispositionFormData(
+                "attachment",
+                "Invoice_Order_" + orderId + ".pdf"
+        );
         headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
 
         return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
