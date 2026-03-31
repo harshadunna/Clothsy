@@ -39,4 +39,6 @@ public interface ProductService {
             Integer pageSize,
             String search
     );
+
+    List<Product> getRecommendedProducts(Long productId);
 }

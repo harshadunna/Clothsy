@@ -8,8 +8,8 @@ import org.harsha.backend.model.User;
 import org.harsha.backend.repository.ProductRepository;
 import org.harsha.backend.repository.ReviewRepository;
 import org.harsha.backend.request.ReviewRequest;
-import org.harsha.backend.service.ReviewService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,22 +21,14 @@ public class ReviewServiceImplementation implements ReviewService {
     private final ReviewRepository reviewRepository;
     private final ProductRepository productRepository;
 
-    /**
-     * Creates and persists a new Review.
-     *
-     * FIX 1: Sets createdAt to LocalDateTime.now() — previously this was never set,
-     *         causing the review card to fall back to "Recent" for every review.
-     *
-     * FIX 2: Saves req.getRating() directly onto the Review entity — previously the
-     *         frontend made two separate API calls (one for rating, one for review)
-     *         and the review card had no way to display the correct star value.
-     */
     @Override
+    @Transactional
     public Review createReview(ReviewRequest req, User user) throws ProductException {
         Product product = productRepository.findById(req.getProductId())
                 .orElseThrow(() -> new ProductException(
                         "Product not found with id: " + req.getProductId()));
 
+        // 1. Create and save the new review
         Review review = new Review();
         review.setReview(req.getReview());
         review.setRating(req.getRating());      
@@ -44,7 +36,28 @@ public class ReviewServiceImplementation implements ReviewService {
         review.setUser(user);
         review.setCreatedAt(LocalDateTime.now());
 
-        return reviewRepository.save(review);
+        Review savedReview = reviewRepository.save(review);
+
+        // 2. Fetch all reviews to calculate the new true average
+        List<Review> allReviews = reviewRepository.getAllProductsReview(product.getId());
+        
+        double totalRating = 0;
+        for (Review r : allReviews) {
+            totalRating += r.getRating();
+        }
+        
+        // 3. Calculate the average (with a safety check to prevent division by zero)
+        int totalReviewCount = allReviews.size();
+        double averageRating = totalReviewCount > 0 ? (totalRating / totalReviewCount) : 0.0;
+
+        // 4. Update the Product entity so the frontend can display the accurate stars
+        product.setNumRatings(totalReviewCount);
+        
+        product.setAverageRating(averageRating); 
+
+        productRepository.save(product);
+
+        return savedReview;
     }
 
     @Override

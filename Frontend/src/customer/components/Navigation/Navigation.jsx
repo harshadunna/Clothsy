@@ -12,8 +12,6 @@ import {
 import { gsap } from 'gsap'
 import AuthModel from '../Auth/AuthModel'
 
-/* NAV DATA — Women / Men + real product images from JSON
-*/
 const NAV = [
   {
     label: 'WOMEN',
@@ -92,8 +90,6 @@ const ANNOUNCEMENT_ITEMS = [
   'COMPLIMENTARY GIFTWRAPPING ON ALL ORDERS',
 ]
 
-/* ANNOUNCEMENT BAR — GSAP ticker
-*/
 function AnnouncementBar() {
   const trackRef = useRef(null)
   useEffect(() => {
@@ -115,8 +111,6 @@ function AnnouncementBar() {
   )
 }
 
-/* HOVER PREVIEW — tiny product image next to hovered item
-*/
 function HoverPreview({ src }) {
   const ref = useRef(null)
   useEffect(() => {
@@ -145,8 +139,6 @@ function HoverPreview({ src }) {
   )
 }
 
-/* MEGA MENU
-*/
 function MegaMenu({ category, visible, topOffset }) {
   const panelRef = useRef(null)
   const itemRefs = useRef([])
@@ -252,7 +244,6 @@ function MegaMenu({ category, visible, topOffset }) {
           </div>
         ))}
 
-        {/* Featured tiles — 3 cols each */}
         {category.featured.map((f, fi) => {
           const currentImgIndex = imgIdx++;
           return (
@@ -281,7 +272,6 @@ function MegaMenu({ category, visible, topOffset }) {
           )
         })}
 
-        {/* View all */}
         <div style={{ gridColumn: '1/-1', paddingTop: 28, borderTop: '1px solid #EBEBEB', display: 'flex', justifyContent: 'flex-end' }}>
           <Link to={`/${category.id}`} style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#0A0A0A', textDecoration: 'none', borderBottom: '1px solid #0A0A0A', paddingBottom: 2 }}>
             View all {category.label.charAt(0) + category.label.slice(1).toLowerCase()} →
@@ -292,8 +282,6 @@ function MegaMenu({ category, visible, topOffset }) {
   )
 }
 
-/* BADGE
-*/
 function Badge({ count, dark }) {
   if (!count || count <= 0) return null
   return (
@@ -311,8 +299,6 @@ function Badge({ count, dark }) {
   )
 }
 
-/* NAVIGATION  — main export
-*/
 export default function Navigation() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -352,14 +338,12 @@ export default function Navigation() {
     }
   }, [auth.user, dispatch])
 
-  /* scroll */
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 20)
     window.addEventListener('scroll', fn, { passive: true })
     return () => window.removeEventListener('scroll', fn)
   }, [])
 
-  /* GSAP mount entrance */
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.fromTo(logoRef.current,
@@ -380,7 +364,6 @@ export default function Navigation() {
     return () => ctx.revert()
   }, [])
 
-  /* GSAP search expand / collapse */
   useEffect(() => {
     if (!searchRef.current) return
     if (searchOpen) {
@@ -409,7 +392,6 @@ export default function Navigation() {
   const openMenu  = id => { clearTimeout(menuTimeoutRef.current); if (id) setActiveMenu(id) }
   const closeMenu = ()  => { menuTimeoutRef.current = setTimeout(() => setActiveMenu(null), 130) }
 
-  /* Appearance */
   const transparent  = isHomePage && !scrolled
   const navBg        = transparent ? 'linear-gradient(to bottom,rgba(0,0,0,0.62) 0%,rgba(0,0,0,0) 100%)' : '#FFFFFF'
   const textHi       = transparent ? '#FFFFFF' : '#0A0A0A'

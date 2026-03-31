@@ -56,25 +56,20 @@ public class UserProductController {
         return ResponseEntity.ok(products);
     }
 
-    // CURATION ENDPOINT
-    // Level-1 category names from DB:
-    //   'collections' = Womenswear (id=4)
-    //   'atelier'     = Menswear   (id=11)
-    //
-    // Womenswear curation tags: monolith-edit, core-foundations, nocturnal, archive-sale
-    // Menswear curation tags:   mens-monolith-edit, mens-urban-brutalism, mens-heritage-tailoring
+    @GetMapping("/products/{productId}/recommendations")
+    public ResponseEntity<List<Product>> getProductRecommendations(@PathVariable Long productId) {
+        List<Product> recommendations = productService.getRecommendedProducts(productId);
+        return ResponseEntity.ok(recommendations);
+    }
+
     @GetMapping("/products/curations/{tag}")
     public ResponseEntity<List<Product>> getCuratedProducts(@PathVariable String tag) {
         String normalizedTag = tag.toLowerCase();
 
-        // 1. Try exact DB tag match first — this is now the primary path
-        //    since all products are correctly tagged in the DB
         List<Product> products = productRepository.findByCurationTag(normalizedTag);
 
-        // 2. Fallbacks — only fires if DB tag lookup returns nothing
         if (products.isEmpty()) {
 
-            // MENSWEAR FALLBACKS (mens- prefix checked first)
             if (normalizedTag.startsWith("mens-monolith")) {
                 products = productRepository.findByCategoryFallback(
                         Arrays.asList("overcoats", "suits", "poplin-shirts", "trousers", "fine-knits"),
@@ -91,7 +86,6 @@ public class UserProductController {
                         "atelier"
                 );
 
-                // WOMENSWEAR FALLBACKS
             } else if (normalizedTag.contains("monolith")) {
                 products = productRepository.findMonolithEditFallback();
             } else if (normalizedTag.contains("core")) {
@@ -109,7 +103,6 @@ public class UserProductController {
             }
         }
 
-        // 3. Ultimate safety net
         if (products.isEmpty()) {
             products = productRepository.findSafetyNetFallback();
         }

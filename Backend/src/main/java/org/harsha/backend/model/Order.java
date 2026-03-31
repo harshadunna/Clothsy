@@ -27,13 +27,12 @@ public class Order {
     @ManyToOne
     private User user;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, 
-               orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL,
+               orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    private LocalDate orderDate = LocalDate.now();
-
+    private LocalDate orderDate;
     private LocalDate deliveryDate;
 
     @ManyToOne
@@ -44,14 +43,27 @@ public class Order {
     private PaymentDetails paymentDetails = new PaymentDetails();
 
     private double totalPrice;
-
     private Integer totalDiscountedPrice;
-
     private Integer discount;
 
     private String orderStatus;
-
     private int totalItem;
 
     private LocalDateTime createdAt;
+
+    private String trackingNumber;
+    private LocalDateTime shippedAt;
+    private LocalDateTime estimatedDeliveryAt;
+    private LocalDateTime returnRequestedAt;
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "order_tracking_history", joinColumns = @JoinColumn(name = "order_id"))
+    @Column(name = "tracking_event")
+    private List<String> trackingHistory = new ArrayList<>();
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (orderDate == null) orderDate = LocalDate.now();
+    }
 }

@@ -5,6 +5,7 @@ export default function AdminCustomers() {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null); 
+  const [isExporting, setIsExporting] = useState(false); 
 
   const fetchCustomers = async () => {
     try {
@@ -28,7 +29,6 @@ export default function AdminCustomers() {
     fetchCustomers();
   }, []);
 
-  // NEW: Function to handle role promotion/demotion
   const handleRoleChange = async (userId, currentRole) => {
     const newRole = currentRole === "ADMIN" ? "CUSTOMER" : "ADMIN";
     const actionText = newRole === "ADMIN" ? "promote this user to ADMIN" : "revoke ADMIN privileges for this user";
@@ -36,12 +36,42 @@ export default function AdminCustomers() {
     if (!window.confirm(`Are you sure you want to ${actionText}?`)) return;
 
     try {
-      // Sends request to backend to update role
       await api.put(`/api/admin/users/${userId}/role`, { role: newRole });
-      fetchCustomers(); // Refresh the list
+      fetchCustomers(); 
     } catch (error) {
       console.error("Error updating role:", error);
       setError(error.response?.data?.message || "Failed to update user role. Check backend configuration.");
+    }
+  };
+
+  // Function to securely download the CSV file
+  const handleExportData = async () => {
+    try {
+      setIsExporting(true);
+      setError(null);
+      
+      // Request the file as a Blob (Binary Large Object)
+      const response = await api.get("/api/admin/users/export", {
+        responseType: "blob" 
+      });
+
+      // Create a temporary hidden link to force the browser to download the file
+      const blob = new Blob([response.data], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "clothsy_client_archive.csv"); 
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up the temporary link
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export failed:", error);
+      setError("Failed to export data. Please try again.");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -56,7 +86,7 @@ export default function AdminCustomers() {
   return (
     <div className="p-12 max-w-[1440px] mx-auto min-h-screen bg-[#FFF8F5]">
       
-      {/* ── HEADER ── */}
+      {/* HEADER */}
       <section className="flex justify-between items-end mb-12 border-b border-[#D1C4BC] pb-8">
         <div className="max-w-2xl">
           <h2 className="font-headline text-6xl italic text-[#1A1109] mb-4 leading-none">The Directory</h2>
@@ -65,8 +95,13 @@ export default function AdminCustomers() {
           </p>
         </div>
         <div className="flex gap-4">
-          <button className="border border-[#1A1109] text-[#1A1109] px-8 py-4 font-label text-[0.7rem] font-black tracking-[0.1em] hover:bg-[#1A1109] hover:text-[#FFF8F5] transition-colors">
-            EXPORT DATA
+          {/* WIRED UP EXPORT BUTTON */}
+          <button 
+            onClick={handleExportData}
+            disabled={isExporting || customers.length === 0}
+            className="border border-[#1A1109] text-[#1A1109] px-8 py-4 font-label text-[0.7rem] font-black tracking-[0.1em] hover:bg-[#1A1109] hover:text-[#FFF8F5] transition-colors disabled:opacity-50"
+          >
+            {isExporting ? "GENERATING FILE..." : "EXPORT DATA"}
           </button>
         </div>
       </section>
@@ -77,7 +112,7 @@ export default function AdminCustomers() {
         </div>
       )}
 
-      {/* ── METRICS BAR ── */}
+      {/* METRICS BAR */}
       <div className="grid grid-cols-1 md:grid-cols-3 bg-white mb-12 border border-[#D1C4BC]">
         <div className="p-8 border-b md:border-b-0 md:border-r border-[#D1C4BC]">
           <p className="font-label text-[0.65rem] font-black tracking-widest text-[#C8742A] mb-2 uppercase">Total Patrons</p>
@@ -93,7 +128,7 @@ export default function AdminCustomers() {
         </div>
       </div>
 
-      {/* ── BRUTALIST LEDGER ── */}
+      {/* BRUTALIST LEDGER */}
       <div className="bg-[#FFF8F5] border-t-2 border-[#1A1109]">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -147,7 +182,6 @@ export default function AdminCustomers() {
                     </span>
                   </td>
 
-                  {/* NEW: Action Buttons */}
                   <td className="py-6 px-6 text-right">
                     {customer.role === "ADMIN" || customer.role === "ROLE_ADMIN" ? (
                       <button 

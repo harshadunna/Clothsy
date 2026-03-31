@@ -14,7 +14,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
            "LEFT JOIN FETCH oi.product " +
            "WHERE o.user.id = :userId " +
            "AND o.orderStatus IN (" +
-           "  'PENDING', 'PLACED', 'CONFIRMED', 'SHIPPED', 'DELIVERED', " + 
+           "  'PENDING', 'PLACED', 'CONFIRMED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED', " + 
            "  'RETURN_REQUESTED', 'RETURN_PICKED', 'RETURN_RECEIVED', " +
            "  'REFUND_INITIATED', 'REFUND_COMPLETED', 'CANCELLED'" +
            ")")
@@ -27,4 +27,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Optional<Order> findByIdWithItems(@Param("orderId") Long orderId);
 
     List<Order> findAllByOrderByCreatedAtDesc();
+
+    List<Order> findByOrderStatus(String orderStatus);
 }

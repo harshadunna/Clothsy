@@ -22,7 +22,7 @@ public interface OrderService {
 
     Order deliveredOrder(Long orderId) throws OrderException;
 
-    Order cancledOrder(Long orderId) throws OrderException;
+    Order cancelOrder(Long orderId) throws OrderException;
 
     List<Order> getAllOrders();
 

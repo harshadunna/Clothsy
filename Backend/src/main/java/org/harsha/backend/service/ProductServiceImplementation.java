@@ -6,6 +6,7 @@ import org.harsha.backend.model.Category;
 import org.harsha.backend.model.Product;
 import org.harsha.backend.model.Size;
 import org.harsha.backend.repository.CategoryRepository;
+import org.harsha.backend.repository.OrderItemRepository;
 import org.harsha.backend.repository.ProductRepository;
 import org.harsha.backend.request.CreateProductRequest;
 import org.springframework.data.domain.Page;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -26,11 +28,11 @@ public class ProductServiceImplementation implements ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final OrderItemRepository orderItemRepository;
 
     @Override
     public Product createProduct(CreateProductRequest req) throws ProductException {
 
-        // Resolve or create Top Level Category
         Category topLevel = categoryRepository.findByName(req.getTopLevelCategory());
         if (topLevel == null) {
             Category newTopLevel = new Category();
@@ -39,7 +41,6 @@ public class ProductServiceImplementation implements ProductService {
             topLevel = categoryRepository.save(newTopLevel);
         }
 
-        // Resolve or create Second Level Category
         Category secondLevel = null;
         try {
             secondLevel = categoryRepository.findByNameAndParent(
@@ -56,7 +57,6 @@ public class ProductServiceImplementation implements ProductService {
             secondLevel = categoryRepository.save(newSecondLevel);
         }
 
-        // Resolve or create Third Level Category
         Category thirdLevel = null;
         try {
             thirdLevel = categoryRepository.findByNameAndParent(
@@ -75,13 +75,12 @@ public class ProductServiceImplementation implements ProductService {
 
         Set<Size> sizes = req.getSizes();
 
-        // Build and persist the Product entity
         Product product = new Product();
         product.setTitle(req.getTitle());
         product.setColor(req.getColor());
         product.setDescription(req.getDescription());
-        product.setMaterials(req.getMaterials()); // NEW
-        product.setFit(req.getFit());             // NEW
+        product.setMaterials(req.getMaterials());
+        product.setFit(req.getFit());
         product.setDiscountedPrice(req.getDiscountedPrice());
         product.setDiscountPercent(req.getDiscountPercent());
         product.setImageUrl(req.getImageUrl());
@@ -92,7 +91,6 @@ public class ProductServiceImplementation implements ProductService {
         product.setCategory(thirdLevel);
         product.setCreatedAt(LocalDateTime.now());
 
-        // Set multiple images if provided
         if (req.getImages() != null && !req.getImages().isEmpty()) {
             product.setImages(req.getImages());
         }
@@ -112,28 +110,24 @@ public class ProductServiceImplementation implements ProductService {
     public Product updateProduct(Long productId, Product req) throws ProductException {
         Product product = findProductById(productId);
 
-        // Update Text Fields
         if (req.getTitle() != null) product.setTitle(req.getTitle());
         if (req.getDescription() != null) product.setDescription(req.getDescription());
-        if (req.getMaterials() != null) product.setMaterials(req.getMaterials()); // NEW
-        if (req.getFit() != null) product.setFit(req.getFit());                   // NEW
+        if (req.getMaterials() != null) product.setMaterials(req.getMaterials());
+        if (req.getFit() != null) product.setFit(req.getFit());
         if (req.getBrand() != null) product.setBrand(req.getBrand());
         if (req.getColor() != null) product.setColor(req.getColor());
         if (req.getImageUrl() != null) product.setImageUrl(req.getImageUrl());
 
-        // Update Pricing & Inventory
         product.setPrice(req.getPrice());
         product.setDiscountedPrice(req.getDiscountedPrice());
         product.setDiscountPercent(req.getDiscountPercent());
         product.setQuantity(req.getQuantity());
 
-        // Update Sizes
         if (req.getSizes() != null) {
             product.getSizes().clear();
             product.getSizes().addAll(req.getSizes());
         }
 
-        // Update Multiple Images
         if (req.getImages() != null) {
             product.getImages().clear();
             product.getImages().addAll(req.getImages());
@@ -163,39 +157,44 @@ public class ProductServiceImplementation implements ProductService {
 
     @Override
     public List<Product> searchProduct(String query) {
-        return productRepository.searchProduct(query);
+        List<Product> allProducts = productRepository.findAll();
+        if (query == null || query.trim().isEmpty()) {
+            return allProducts;
+        }
+
+        List<String> stopWords = Arrays.asList("the", "a", "an", "and", "or", "for", "in", "on", "with", "of", "to");
+        List<String> keywords = Arrays.stream(query.toLowerCase().split("\\s+"))
+                .filter(word -> !stopWords.contains(word))
+                .collect(Collectors.toList());
+
+        return allProducts.stream()
+                .filter(p -> {
+                    String searchableText = buildSearchableText(p);
+                    for (String keyword : keywords) {
+                        if (!isFuzzyMatch(searchableText, keyword)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
     public Page<Product> getAllProduct(
-            String category,
-            List<String> colors,
-            List<String> sizes,
-            Integer minPrice,
-            Integer maxPrice,
-            Integer minDiscount,
-            String sort,
-            String stock,
-            Integer pageNumber,
-            Integer pageSize,
-            String search) {
+            String category, List<String> colors, List<String> sizes,
+            Integer minPrice, Integer maxPrice, Integer minDiscount,
+            String sort, String stock, Integer pageNumber, Integer pageSize, String search) {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        List<Product> products = productRepository.filterProducts(category, minPrice, maxPrice, minDiscount, sort);
 
-        // Fetch base filtered list from repository
-        List<Product> products = productRepository.filterProducts(
-                category, minPrice, maxPrice, minDiscount, sort
-        );
-
-        // Apply color filter
         if (colors != null && !colors.isEmpty() && !(colors.size() == 1 && colors.get(0).isEmpty())) {
             products = products.stream()
-                    .filter(p -> colors.stream()
-                            .anyMatch(c -> c.equalsIgnoreCase(p.getColor())))
+                    .filter(p -> colors.stream().anyMatch(c -> c.equalsIgnoreCase(p.getColor())))
                     .collect(Collectors.toList());
         }
 
-        // Apply size filter
         if (sizes != null && !sizes.isEmpty() && !(sizes.size() == 1 && sizes.get(0).isEmpty())) {
             products = products.stream()
                     .filter(p -> p.getSizes().stream()
@@ -203,32 +202,34 @@ public class ProductServiceImplementation implements ProductService {
                     .collect(Collectors.toList());
         }
 
-        // Apply stock filter
         if (stock != null && !stock.isEmpty()) {
             if (stock.equals("in_stock")) {
-                products = products.stream()
-                        .filter(p -> p.getQuantity() > 0)
-                        .collect(Collectors.toList());
+                products = products.stream().filter(p -> p.getQuantity() > 0).collect(Collectors.toList());
             } else if (stock.equals("out_of_stock")) {
-                products = products.stream()
-                        .filter(p -> p.getQuantity() < 1)
-                        .collect(Collectors.toList());
+                products = products.stream().filter(p -> p.getQuantity() < 1).collect(Collectors.toList());
             }
         }
 
-        // Apply Global Search Keyword
-        if (search != null && !search.isEmpty()) {
-            String q = search.toLowerCase();
+        if (search != null && !search.trim().isEmpty()) {
+            List<String> stopWords = Arrays.asList("the", "a", "an", "and", "or", "for", "in", "on", "with", "of", "to");
+            List<String> keywords = Arrays.stream(search.toLowerCase().split("\\s+"))
+                    .filter(word -> !stopWords.contains(word))
+                    .collect(Collectors.toList());
+
             products = products.stream()
-                    .filter(p -> p.getTitle().toLowerCase().contains(q) ||
-                            (p.getBrand() != null && p.getBrand().toLowerCase().contains(q)) ||
-                            (p.getDescription() != null && p.getDescription().toLowerCase().contains(q)))
+                    .filter(p -> {
+                        String searchableText = buildSearchableText(p);
+                        for (String keyword : keywords) {
+                            if (!isFuzzyMatch(searchableText, keyword)) {
+                                return false; 
+                            }
+                        }
+                        return true;
+                    })
                     .collect(Collectors.toList());
         }
 
-        // SAFE Pagination
         int startIndex = (int) pageable.getOffset();
-
         if (startIndex >= products.size()) {
             return new PageImpl<>(List.of(), pageable, products.size());
         }
@@ -242,5 +243,65 @@ public class ProductServiceImplementation implements ProductService {
     @Override
     public List<Product> recentlyAddedProduct() {
         return productRepository.findTop10ByOrderByCreatedAtDesc();
+    }
+
+    @Override
+    public List<Product> getRecommendedProducts(Long productId) {
+        // Only returns items if there is actual historical purchase overlap
+        return orderItemRepository.findFrequentlyBoughtTogether(productId, PageRequest.of(0, 4));
+    }
+
+    private String buildSearchableText(Product p) {
+        return (
+                (p.getTitle() != null ? p.getTitle() : "") + " " +
+                (p.getDescription() != null ? p.getDescription() : "") + " " +
+                (p.getBrand() != null ? p.getBrand() : "") + " " +
+                (p.getColor() != null ? p.getColor() : "") + " " +
+                (p.getCategory() != null ? p.getCategory().getName() : "")
+        ).toLowerCase();
+    }
+
+    private boolean isFuzzyMatch(String searchableText, String keyword) {
+        if (searchableText.contains(keyword)) {
+            return true;
+        }
+
+        int maxAllowedDistance = keyword.length() <= 3 ? 0 : (keyword.length() <= 6 ? 1 : 2);
+        
+        if (maxAllowedDistance == 0) {
+            return false;
+        }
+
+        String[] textWords = searchableText.split("\\s+");
+        for (String word : textWords) {
+            if (Math.abs(word.length() - keyword.length()) <= maxAllowedDistance) {
+                int distance = calculateLevenshteinDistance(word, keyword);
+                if (distance <= maxAllowedDistance) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private int calculateLevenshteinDistance(String a, String b) {
+        int[][] dp = new int[a.length() + 1][b.length() + 1];
+
+        for (int i = 0; i <= a.length(); i++) {
+            for (int j = 0; j <= b.length(); j++) {
+                if (i == 0) {
+                    dp[i][j] = j;
+                } else if (j == 0) {
+                    dp[i][j] = i;
+                } else {
+                    int cost = (a.charAt(i - 1) == b.charAt(j - 1)) ? 0 : 1;
+                    dp[i][j] = Math.min(
+                            Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1), 
+                            dp[i - 1][j - 1] + cost
+                    );
+                }
+            }
+        }
+        return dp[a.length()][b.length()];
     }
 }

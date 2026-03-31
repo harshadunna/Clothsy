@@ -45,7 +45,6 @@ public class Product {
 
     private String imageUrl;
 
-    // NEW: Curation Tag for Editorial Collections
     @Column(name = "curation_tag")
     private String curationTag;
 
@@ -71,11 +70,15 @@ public class Product {
     @JsonIgnore
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    private int numRatings;
-
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
 
     private LocalDateTime createdAt;
+
+    @Column(name = "num_ratings")
+    private int numRatings;
+
+    @Column(name = "average_rating")
+    private double averageRating;
 }

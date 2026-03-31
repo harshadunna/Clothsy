@@ -28,7 +28,6 @@ const getReturnBadgeConfig = (status) => {
   }
 };
 
-// Animation Variants
 const containerVariants = {
   hidden: { opacity: 0 },
   show: {
@@ -70,6 +69,16 @@ export default function OrderDetails() {
     fetchOrder();
     window.scrollTo(0, 0);
   }, [orderId]);
+
+  // Set an interval to auto-refresh the order every 10 seconds while it is active in transit
+  useEffect(() => {
+    if (order && (order.orderStatus === "SHIPPED" || order.orderStatus === "OUT_FOR_DELIVERY")) {
+      const interval = setInterval(() => {
+        fetchOrder();
+      }, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [order?.orderStatus]);
 
   const handleDownloadInvoice = async () => {
     setDownloading(true);
@@ -113,7 +122,6 @@ export default function OrderDetails() {
     );
   }
 
-  // Determine Overall States
   const isFullyCancelled = order?.orderStatus === "CANCELLED";
   const orderStatusStr = String(order?.orderStatus || "");
   const isDeliveredOrReturned = orderStatusStr === "DELIVERED" || orderStatusStr.includes("RETURN") || orderStatusStr.includes("REFUND");
@@ -173,7 +181,6 @@ export default function OrderDetails() {
         )}
       </AnimatePresence>
 
-      {/* 1. Hero Branding */}
       <section className="max-w-4xl w-full text-center mb-16 relative">
         <button onClick={() => navigate("/account/orders")} className="absolute left-0 top-0 flex items-center gap-2 font-label text-[10px] uppercase tracking-widest text-[#7F756E] hover:text-[#C8742A] transition-colors font-bold">
           <span className="material-symbols-outlined text-[14px]">arrow_back</span>
@@ -189,7 +196,6 @@ export default function OrderDetails() {
 
       <div className="max-w-4xl w-full space-y-24">
 
-        {/* 2. Interactive Tracker (Horizontal Timeline) */}
         <section className="w-full overflow-hidden px-4">
           <motion.div
             variants={containerVariants}
@@ -197,10 +203,8 @@ export default function OrderDetails() {
             animate="show"
             className="relative flex justify-between items-start pt-8"
           >
-            {/* Background Line */}
             <div className="absolute top-[41px] left-0 w-full h-[1px] bg-[#D1C4BC] -z-10"></div>
 
-            {/* Progress Line */}
             {!isFullyCancelled && (
               <motion.div
                 initial={{ scaleX: 0 }}
@@ -236,8 +240,46 @@ export default function OrderDetails() {
           </motion.div>
         </section>
 
-        {/* 3. Shipment Contents (Horizontal Scroll) */}
-        {/* 3. Shipment Contents (Horizontal Scroll) */}
+        {/* AUTOMATED LOGISTICS TRACKING LOG */}
+        {order?.trackingNumber && (
+          <section className="w-full">
+            <div className="bg-[#F9F2EF] p-8 border border-[#D1C4BC] flex flex-col md:flex-row justify-between items-start gap-8">
+              <div className="w-full md:w-1/3">
+                <p className="font-label text-[10px] uppercase tracking-[0.2em] text-[#7F756E] font-bold mb-2">Tracking Registry</p>
+                <p className="font-headline italic text-3xl text-[#1A1109] tracking-tighter">{order.trackingNumber}</p>
+                {order.orderStatus === "SHIPPED" || order.orderStatus === "OUT_FOR_DELIVERY" ? (
+                  <div className="mt-4 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-green-600 animate-pulse"></span>
+                    <span className="font-label text-[9px] uppercase tracking-widest text-green-700 font-bold">Active Transit</span>
+                  </div>
+                ) : null}
+              </div>
+              
+              <div className="w-full md:w-2/3 border-l border-[#D1C4BC] pl-0 md:pl-8">
+                <p className="font-label text-[10px] uppercase tracking-[0.2em] text-[#7F756E] font-bold mb-6">Logistics Ledger</p>
+                <div className="max-h-56 overflow-y-auto pr-4 space-y-6" style={{ scrollbarWidth: 'thin' }}>
+                  {[...(order.trackingHistory || [])].reverse().map((entry, idx) => {
+                    const [timestampStr, message] = entry.split("|");
+                    const dateObj = new Date(timestampStr);
+                    const formattedDate = dateObj.toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+                    
+                    return (
+                      <div key={idx} className="flex gap-6 items-start relative">
+                        <div className="w-24 shrink-0 font-label text-[9px] uppercase tracking-widest text-[#7F756E] pt-1">
+                          {formattedDate}
+                        </div>
+                        <div className="relative pl-6 before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:bg-[#C8742A]">
+                          <div className="font-body text-sm text-[#1A1109]">{message}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         <section className="border-t border-[#D1C4BC] pt-16">
           <div className="flex justify-between items-end mb-8">
             <h2 className="font-label text-[0.6875rem] uppercase tracking-[0.2em] font-black text-[#7F756E]">
@@ -332,9 +374,7 @@ export default function OrderDetails() {
           </div>
         </section>
 
-        {/* 4. Document & Post-Delivery Actions */}
         <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-
           <button
             onClick={handleDownloadInvoice}
             disabled={downloading || isFullyCancelled}
@@ -353,7 +393,6 @@ export default function OrderDetails() {
             </button>
           )}
 
-          {/* Navigates to actual initiation page  */}
           {eligibleItemsForReturn.length > 0 && (
             <button
               onClick={() => navigate(`/account/order/${orderId}/return`)}
@@ -366,7 +405,6 @@ export default function OrderDetails() {
 
       </div>
 
-      {/* 5. Editorial Accent Image */}
       <div className="mt-32 w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-12 items-center border-t border-[#D1C4BC] pt-16">
         <div className="aspect-[4/5] overflow-hidden bg-[#E8E1DE]">
           <img

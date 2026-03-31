@@ -10,7 +10,7 @@ import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
 import ProductReviewCard from "./ProductReviewCard";
 import NotFound from "../../pages/NotFound";
 
-import { findProductById } from "../../../Redux/Customers/Product/Action";
+import { findProductById, getProductRecommendations } from "../../../Redux/Customers/Product/Action";
 import { addItemToCart, getCart } from "../../../Redux/Customers/Cart/Action";
 import { getWishlist, toggleWishlistItem } from "../../../Redux/Customers/Wishlist/Action";
 import api from "../../../config/api";
@@ -47,8 +47,7 @@ const Accordion = ({ title, content, isOpen, onClick }) => (
   </div>
 );
 
-
-// Similar Product Card
+// Fallback: Similar Product Card
 const SimilarProductCard = ({ item }) => {
   const navigate = useNavigate();
   const image = item.images?.[0] || item.imageUrl;
@@ -96,7 +95,7 @@ const SimilarProductCard = ({ item }) => {
   );
 };
 
-
+// Fallback: Similar Products
 const SimilarProducts = ({ category, currentProductId }) => {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
@@ -114,11 +113,7 @@ const SimilarProducts = ({ category, currentProductId }) => {
           params: { category, pageNumber: 0, pageSize: 10 },
         });
         const list = Array.isArray(data) ? data : data?.content || [];
-
-        const filtered = list
-          .filter((p) => p.id !== currentProductId)
-          .slice(0, 6);
-
+        const filtered = list.filter((p) => p.id !== currentProductId).slice(0, 4);
         setItems(filtered);
       } catch (err) {
         console.error("Similar products fetch failed:", err);
@@ -133,7 +128,7 @@ const SimilarProducts = ({ category, currentProductId }) => {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-12">
         {[...Array(4)].map((_, i) => (
           <div key={i} className="aspect-[3/4] bg-[#E8E1DE] animate-pulse" />
         ))}
@@ -145,13 +140,11 @@ const SimilarProducts = ({ category, currentProductId }) => {
 
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-12">
         {items.map((item) => (
           <SimilarProductCard key={item.id} item={item} />
         ))}
       </div>
-
-      {/* Mobile View All */}
       <div className="mt-12 flex justify-center md:hidden">
         <button
           onClick={() => navigate(`/products?category=${category}`)}
@@ -164,6 +157,54 @@ const SimilarProducts = ({ category, currentProductId }) => {
   );
 };
 
+// Primary: Recommended Product Card
+const RecommendedProductCard = ({ item }) => {
+  const navigate = useNavigate();
+  const image = item.images?.[0] || item.imageUrl;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      viewport={{ once: true, margin: "-60px" }}
+      className="group cursor-pointer flex flex-col"
+      onClick={() => navigate(`/product/${item.id}`)}
+    >
+      <div className="relative overflow-hidden aspect-[3/4] bg-[#E8E1DE] mb-4">
+        <img
+          src={image}
+          alt={item.title}
+          className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
+        />
+        {item.discountPercent > 0 && (
+          <span className="absolute top-3 left-3 bg-[#C8742A] text-[#FFF8F5] font-label text-[0.6rem] font-black tracking-widest px-2 py-1 uppercase">
+            −{item.discountPercent}%
+          </span>
+        )}
+      </div>
+      <div className="flex flex-col gap-1">
+        <p className="font-label text-[0.55rem] font-black uppercase tracking-[0.3em] text-[#C8742A]">
+          {item.brand || "CLOTHSY"}
+        </p>
+        <h3 className="font-headline italic text-lg leading-tight text-[#1A1109] group-hover:text-[#C8742A] transition-colors line-clamp-2">
+          {item.title}
+        </h3>
+        <div className="flex items-center gap-3 mt-1">
+          <span className="font-headline font-bold text-[#1A1109]">
+            ₹{item.discountedPrice}
+          </span>
+          {item.discountPercent > 0 && (
+            <span className="font-body text-sm text-[#7F756E] line-through">
+              ₹{item.price}
+            </span>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 // Main ProductDetails
 export default function ProductDetails() {
   const [selectedSize, setSelectedSize] = useState(null);
@@ -171,6 +212,10 @@ export default function ProductDetails() {
   const [toast, setToast] = useState(null);
   const toastTimerRef = useRef(null);
   const [openAccordion, setOpenAccordion] = useState(null);
+  
+  // Intelligent State for Recommendations vs Fallback
+  const [recommendations, setRecommendations] = useState([]);
+  const [loadingRecs, setLoadingRecs] = useState(true);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -188,13 +233,33 @@ export default function ProductDetails() {
   }, [productId]);
 
   useEffect(() => {
-    if (productId) dispatch(findProductById(productId));
+    if (productId) {
+      dispatch(findProductById(productId));
+    }
   }, [productId, dispatch]);
 
   useEffect(() => {
     dispatch(getCart());
     if (auth?.user) dispatch(getWishlist());
   }, [dispatch, auth?.user]);
+
+  // Fetch true recommendations
+  useEffect(() => {
+    if (product?.id) {
+      const fetchRecs = async () => {
+        setLoadingRecs(true);
+        try {
+          const data = await getProductRecommendations(product.id);
+          setRecommendations(data || []);
+        } catch (err) {
+          setRecommendations([]);
+        } finally {
+          setLoadingRecs(false);
+        }
+      };
+      fetchRecs();
+    }
+  }, [product?.id]);
 
   useEffect(() => {
     if (product?.sizes?.length > 0) {
@@ -244,7 +309,6 @@ export default function ProductDetails() {
     setOpenAccordion(openAccordion === section ? null : section);
   };
 
-  // Only the main product fetch controls the spinner 
   if (customersProduct?.loading) {
     return (
       <div className="min-h-screen flex justify-center items-center bg-[#FFF8F5]">
@@ -263,7 +327,6 @@ export default function ProductDetails() {
     : product.imageUrl ? [product.imageUrl] : [];
   const isOutOfStock = product.quantity <= 0;
 
-  // Extract category — handle object { name } or plain string
   const categoryName =
     typeof product.category === "string"
       ? product.category
@@ -305,7 +368,6 @@ export default function ProductDetails() {
         )}
       </AnimatePresence>
 
-      {/* Hero: Gallery + Sidebar */}
       <main className="flex flex-col lg:flex-row min-h-screen pt-24 lg:pt-28">
 
         {/* Gallery */}
@@ -451,36 +513,51 @@ export default function ProductDetails() {
         )}
       </section>
 
-      {/* Similar Products */}
-      {categoryName && (
+      {/* DYNAMIC RECOMMENDATION SECTION */}
+      {!loadingRecs && recommendations.length > 0 ? (
         <section className="border-t border-[#D1C4BC] px-6 md:px-12 lg:px-20 py-24">
           <div className="max-w-7xl mx-auto">
-
-            {/* Header */}
             <div className="flex items-end justify-between mb-14">
               <div>
                 <p className="font-label text-[0.6rem] font-black uppercase tracking-[0.4em] text-[#C8742A] mb-3">
-                  You May Also Covet
+                  Frequently Bought Together
                 </p>
                 <h2 className="font-headline italic text-4xl md:text-5xl text-[#1A1109] tracking-tighter leading-none">
-                  Similar Pieces
+                  You May Also Covet
                 </h2>
               </div>
-              <button
-                onClick={() => navigate(`/products?category=${categoryName}`)}
-                className="hidden md:block font-label text-[0.65rem] font-black uppercase tracking-[0.2em] text-[#1A1109] border-b border-[#1A1109] pb-0.5 hover:text-[#C8742A] hover:border-[#C8742A] transition-colors whitespace-nowrap"
-              >
-                View All →
-              </button>
             </div>
-
-            <SimilarProducts
-              category={categoryName}
-              currentProductId={product.id}
-            />
-
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-12">
+              {recommendations.map((item) => (
+                <RecommendedProductCard key={item.id} item={item} />
+              ))}
+            </div>
           </div>
         </section>
+      ) : (
+        categoryName && (
+          <section className="border-t border-[#D1C4BC] px-6 md:px-12 lg:px-20 py-24">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex items-end justify-between mb-14">
+                <div>
+                  <p className="font-label text-[0.6rem] font-black uppercase tracking-[0.4em] text-[#C8742A] mb-3">
+                    You May Also Covet
+                  </p>
+                  <h2 className="font-headline italic text-4xl md:text-5xl text-[#1A1109] tracking-tighter leading-none">
+                    Similar Pieces
+                  </h2>
+                </div>
+                <button
+                  onClick={() => navigate(`/products?category=${categoryName}`)}
+                  className="hidden md:block font-label text-[0.65rem] font-black uppercase tracking-[0.2em] text-[#1A1109] border-b border-[#1A1109] pb-0.5 hover:text-[#C8742A] hover:border-[#C8742A] transition-colors whitespace-nowrap"
+                >
+                  View All →
+                </button>
+              </div>
+              <SimilarProducts category={categoryName} currentProductId={product.id} />
+            </div>
+          </section>
+        )
       )}
 
     </div>

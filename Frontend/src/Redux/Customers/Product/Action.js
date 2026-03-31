@@ -43,3 +43,14 @@ export const findProductById = (productId) => async (dispatch) => {
     dispatch({ type: FIND_PRODUCT_BY_ID_FAILURE, payload: error.message });
   }
 };
+
+// Fetch Recommended Products
+export const getProductRecommendations = async (productId) => {
+  try {
+    const { data } = await api.get(`/api/products/${productId}/recommendations`);
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch recommendations:", error);
+    return [];
+  }
+};
