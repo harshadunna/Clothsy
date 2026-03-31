@@ -22,6 +22,7 @@ import CurationPage from "../customer/pages/CurationPage";
 import Journal from "../customer/pages/Journal"; 
 import Returns from "../customer/pages/Returns"; 
 import Track from "../customer/pages/Track"; 
+import ResetPassword from "../customer/pages/ResetPassword"; 
 
 const PageTransition = ({ children }) => (
   <motion.div
@@ -46,6 +47,10 @@ const CustomerRoutes = () => {
           {/* Auth & Home */}
           <Route path="/login" element={<PageTransition><HomePage /></PageTransition>} />
           <Route path="/register" element={<PageTransition><HomePage /></PageTransition>} />
+          
+          {/* NEW ROUTE: Password Reset Handler */}
+          <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
+
           <Route path="/" element={<PageTransition><HomePage /></PageTransition>} />
           <Route path="/home" element={<PageTransition><HomePage /></PageTransition>} />
 
@@ -82,8 +87,6 @@ const CustomerRoutes = () => {
           
           {/* Journal & Returns */}
           <Route path="/journal" element={<PageTransition><Journal /></PageTransition>} />
-          
-          {/* NEW ROUTE ADDED HERE */}
           <Route path="/returns" element={<PageTransition><Returns /></PageTransition>} />
           <Route path="/track" element={<PageTransition><Track /></PageTransition>} /> 
 

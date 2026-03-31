@@ -23,10 +23,60 @@ public class EmailApiService {
     private final InvoiceService invoiceService;
     private final ObjectMapper objectMapper;
 
-    // ── 1. Inject the InvoiceService and ObjectMapper ──
+    // 1. Inject the InvoiceService and ObjectMapper 
     public EmailApiService(InvoiceService invoiceService, ObjectMapper objectMapper) {
         this.invoiceService = invoiceService;
         this.objectMapper = objectMapper;
+    }
+
+    /**
+     * Sends a secure Password Reset Email via Resend
+     */
+    public void sendPasswordResetEmail(String email, String resetLink) {
+        try {
+            String subject = "Reset Your Password - Clothsy";
+            
+            String htmlContent = "<div style=\"font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: auto; padding: 30px; border: 1px solid #e8ddd5; border-radius: 16px; background-color: #ffffff;\">" +
+                    "<div style=\"text-align: center; margin-bottom: 30px;\">" +
+                    "<h2 style=\"color: #1a1109; margin: 0; font-size: 16px; text-transform: uppercase; letter-spacing: 2px;\">Clothsy</h2>" +
+                    "<h1 style=\"color: #c8742a; margin: 10px 0 0 0; font-size: 28px;\">Password Reset Request</h1>" +
+                    "</div>" +
+                    "<p style=\"color: #1a1109; font-size: 16px;\">Hi there,</p>" +
+                    "<p style=\"color: #555555; line-height: 1.6; font-size: 15px;\">We received a request to reset the password for your Clothsy account. If you didn't make this request, you can safely ignore this email.</p>" +
+                    "<p style=\"color: #ba1a1a; font-weight: bold; line-height: 1.6; font-size: 14px;\">For your security, this link will expire in exactly 10 minutes.</p>" +
+                    "<div style=\"text-align: center; margin: 35px 0;\">" +
+                    "<a href=\"" + resetLink + "\" style=\"display: inline-block; background-color: #1a1109; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;\">Reset Password</a>" +
+                    "</div>" +
+                    "<p style=\"color: #1a1109; margin-top: 20px;\">Warm regards,<br><strong style=\"color: #c8742a;\">The Clothsy Security Team</strong></p>" +
+                    "</div>";
+
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("from", "Clothsy <onboarding@resend.dev>");
+            payload.put("to", List.of(email));
+            payload.put("subject", subject);
+            payload.put("html", htmlContent);
+
+            String jsonPayload = objectMapper.writeValueAsString(payload);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://api.resend.com/emails"))
+                    .header("Authorization", "Bearer " + apiKey)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
+                    .build();
+
+            HttpClient client = HttpClient.newHttpClient();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200 || response.statusCode() == 201) {
+                System.out.println("Password reset email sent to: " + email);
+            } else {
+                System.err.println("API Error sending reset email: " + response.body());
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to trigger password reset email API: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -36,7 +86,7 @@ public class EmailApiService {
         String subject;
         String title;
         String message;
-        String themeColor = "#c8742a"; // Clothsy Brand Orange
+        String themeColor = "#c8742a"; 
 
         // 2. Determine Email Content Based on Status
         switch (updateType) {
@@ -54,31 +104,31 @@ public class EmailApiService {
                 subject = "Your order has shipped! - #" + order.getId();
                 title = "It's on the way!";
                 message = "Your order has left our facility and is on its way to you. Keep an eye out for the delivery partner.";
-                themeColor = "#3b82f6"; // Blue
+                themeColor = "#3b82f6"; 
                 break;
             case "DELIVERED":
                 subject = "Delivered: Your package has arrived!";
                 title = "Package Delivered!";
                 message = "Your order has been successfully delivered. We hope you love it! If you have any issues, you have 7 days to request a return.";
-                themeColor = "#16a34a"; // Green
+                themeColor = "#16a34a"; 
                 break;
             case "CANCELLED":
                 subject = "Order Cancelled - #" + order.getId();
                 title = "Order Cancelled";
                 message = "As requested, your order has been cancelled. Any payments made will be refunded to your original payment method within 3-5 business days.";
-                themeColor = "#dc2626"; // Red
+                themeColor = "#dc2626"; 
                 break;
             case "RETURN_REQUESTED":
                 subject = "Return Request Received - #" + order.getId();
                 title = "Return Initiated";
                 message = "We have received your return request. A pickup agent will contact you within 24-48 hours.";
-                themeColor = "#9333ea"; // Purple
+                themeColor = "#9333ea"; 
                 break;
             case "REFUND_COMPLETED":
                 subject = "Refund Processed Successfully - #" + order.getId();
                 title = "Refund Issued";
                 message = "We have successfully processed a refund of ₹" + order.getTotalDiscountedPrice() + " to your original payment method. Please allow a few days for it to reflect in your bank statement.";
-                themeColor = "#16a34a"; // Green
+                themeColor = "#16a34a"; 
                 break;
             default:
                 subject = "Update on your order - #" + order.getId();

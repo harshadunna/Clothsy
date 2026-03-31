@@ -24,7 +24,7 @@ import java.util.Map;
 public class PaymentController {
 
     private final OrderService orderService;
-    private final EmailApiService emailApiService; // ── 1. INJECT EMAIL SERVICE ──
+    private final EmailApiService emailApiService; 
 
     @Value("${stripe.api.key}")
     private String stripeSecretKey;
@@ -32,7 +32,7 @@ public class PaymentController {
     @Value("${stripe.webhook.secret}")
     private String endpointSecret;
 
-    // ── 2. UPDATE CONSTRUCTOR ──
+    // UPDATE CONSTRUCTOR 
     public PaymentController(OrderService orderService, EmailApiService emailApiService) {
         this.orderService = orderService;
         this.emailApiService = emailApiService;
