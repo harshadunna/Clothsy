@@ -5,11 +5,13 @@ import {
   LOGOUT, GET_ALL_CUSTOMERS_REQUEST, GET_ALL_CUSTOMERS_SUCCESS, GET_ALL_CUSTOMERS_FAILURE,
 } from "./ActionTypes";
 import api from "../../config/api";
+import { mergeCart } from "../Customers/Cart/Action"; 
 
 export const socialLoginSuccess = (jwt) => async (dispatch) => {
   localStorage.setItem("jwt", jwt);
   dispatch({ type: LOGIN_SUCCESS, payload: jwt });
   dispatch(getUser(jwt));
+  dispatch(mergeCart()); 
 };
 
 export const register = (userData) => async (dispatch) => {
@@ -20,6 +22,7 @@ export const register = (userData) => async (dispatch) => {
       localStorage.setItem("jwt", data.jwt);
       dispatch({ type: REGISTER_SUCCESS, payload: data.jwt });
       dispatch(getUser(data.jwt));
+      dispatch(mergeCart()); 
     } else {
       dispatch({ type: REGISTER_SUCCESS, payload: data });
     }
@@ -36,6 +39,7 @@ export const login = (userData) => async (dispatch) => {
       localStorage.setItem("jwt", data.jwt);
       dispatch({ type: LOGIN_SUCCESS, payload: data.jwt });
       dispatch(getUser(data.jwt));
+      dispatch(mergeCart()); 
     } else {
       dispatch({ type: LOGIN_SUCCESS, payload: data });
     }
@@ -67,6 +71,8 @@ export const getAllCustomers = () => async (dispatch) => {
 export const logout = () => (dispatch) => {
   localStorage.removeItem("jwt");
   dispatch({ type: LOGOUT });
+  // Make sure cart resets to empty when logged out
+  dispatch({ type: "CLEAR_CART" }); 
 };
 
 export const updateUserProfile = (userData) => async (dispatch) => {

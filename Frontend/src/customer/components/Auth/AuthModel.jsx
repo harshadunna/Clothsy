@@ -13,12 +13,21 @@ export default function AuthModel({ handleClose, open }) {
 
   useEffect(() => {
     if (auth.user && open) {
-      handleClose(); 
-
       const userRole = String(auth.user?.role || "").toUpperCase();
 
       if (userRole === "ADMIN" || userRole === "ROLE_ADMIN") {
-        navigate("/admin"); 
+        handleClose();
+        navigate("/admin");
+        return;
+      }
+
+      // Check if we need to securely redirect to checkout after merging cart!
+      const redirectTarget = localStorage.getItem("postLoginRedirect");
+      if (redirectTarget) {
+        localStorage.removeItem("postLoginRedirect"); 
+        navigate(redirectTarget);
+      } else {
+        handleClose(); 
       }
     }
   }, [auth.user, open, navigate, handleClose]);

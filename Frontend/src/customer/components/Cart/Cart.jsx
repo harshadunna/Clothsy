@@ -6,8 +6,6 @@ import CartItem from "./CartItem";
 import { getCart } from "../../../Redux/Customers/Cart/Action";
 import { findProducts } from "../../../Redux/Customers/Product/Action";
 
-
-
 export default function Cart() {
   const navigate  = useNavigate();
   const dispatch  = useDispatch();
@@ -52,6 +50,7 @@ export default function Cart() {
       })
     );
   }, [dispatch]);
+  
   const crossSellItems = useMemo(() => {
     const allProducts = customersProduct?.products?.content;
     if (!allProducts || allProducts.length === 0) return [];
@@ -78,6 +77,19 @@ export default function Cart() {
 
     return result.slice(0, 4);
   }, [customersProduct?.products?.content]);
+
+  // Checkout Handler with Guest Redirect Memory
+  const handleCheckout = () => {
+    const jwt = localStorage.getItem("jwt");
+    if (jwt) {
+      // If logged in, go straight to checkout
+      navigate("/checkout?step=2");
+    } else {
+      // If guest, save their destination and send to login!
+      localStorage.setItem("postLoginRedirect", "/checkout?step=2");
+      navigate("/login");
+    }
+  };
 
   const isEmpty             = cartItems.length === 0;
   const totalPrice          = cartItems.reduce((sum, item) => sum + (item?.product?.price           || 0) * (item?.quantity || 1), 0);
@@ -210,7 +222,7 @@ export default function Cart() {
                 </div>
 
                 <button
-                  onClick={() => navigate("/checkout?step=2")}
+                  onClick={handleCheckout} 
                   className="w-full py-5 bg-[#1A1109] text-[#FFF8F5] font-label uppercase tracking-[0.2em] text-[10px] font-black hover:bg-[#C8742A] transition-colors duration-300"
                 >
                   Checkout Securely

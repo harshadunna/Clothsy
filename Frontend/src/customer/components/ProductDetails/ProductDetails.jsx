@@ -51,7 +51,6 @@ const LookCard = ({ item, index }) => {
   const navigate = useNavigate();
   const image = item.images?.[0] || item.imageUrl;
 
-  // Derive the category label for the "role" badge (e.g. FOOTWEAR, OUTERWEAR)
   const categoryLabel =
     typeof item.category === "string"
       ? item.category
@@ -66,7 +65,6 @@ const LookCard = ({ item, index }) => {
       className="group cursor-pointer flex flex-col"
       onClick={() => navigate(`/product/${item.id}`)}
     >
-      {/* Image */}
       <div className="relative overflow-hidden aspect-[3/4] bg-[#E8E1DE] mb-5">
         <img
           src={image}
@@ -74,21 +72,18 @@ const LookCard = ({ item, index }) => {
           className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-[1.04] transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
         />
 
-        {/* Category role tag — top left */}
         {categoryLabel && (
           <span className="absolute top-3 left-3 bg-[#FFF8F5]/90 backdrop-blur-sm text-[#1A1109] font-label text-[0.55rem] font-black tracking-[0.25em] uppercase px-2.5 py-1.5">
             {categoryLabel}
           </span>
         )}
 
-        {/* Discount badge — top right */}
         {item.discountPercent > 0 && (
           <span className="absolute top-3 right-3 bg-[#C8742A] text-[#FFF8F5] font-label text-[0.55rem] font-black tracking-widest px-2 py-1 uppercase">
             −{item.discountPercent}%
           </span>
         )}
 
-        {/* Hover overlay CTA */}
         <div className="absolute inset-0 bg-[#1A1109]/0 group-hover:bg-[#1A1109]/10 transition-colors duration-500 flex items-end justify-center pb-6 opacity-0 group-hover:opacity-100">
           <span className="font-label text-[0.6rem] font-black uppercase tracking-[0.25em] text-[#FFF8F5] bg-[#1A1109] px-4 py-2">
             View Piece →
@@ -96,7 +91,6 @@ const LookCard = ({ item, index }) => {
         </div>
       </div>
 
-      {/* Info */}
       <div className="flex flex-col gap-1">
         <p className="font-label text-[0.5rem] font-black uppercase tracking-[0.35em] text-[#C8742A]">
           {item.brand || "CLOTHSY"}
@@ -119,7 +113,6 @@ const LookCard = ({ item, index }) => {
   );
 };
 
-// Skeleton loader for look cards 
 const LookCardSkeleton = () => (
   <div className="flex flex-col gap-4">
     <div className="aspect-[3/4] bg-[#E8E1DE] animate-pulse" />
@@ -129,7 +122,6 @@ const LookCardSkeleton = () => (
   </div>
 );
 
-// Fallback Similar Products  
 const SimilarProductCard = ({ item }) => {
   const navigate = useNavigate();
   const image = item.images?.[0] || item.imageUrl;
@@ -235,7 +227,6 @@ const SimilarProducts = ({ category, currentProductId }) => {
   );
 };
 
-// Main ProductDetails 
 export default function ProductDetails() {
   const [selectedSize, setSelectedSize] = useState(null);
   const [addingToCart, setAddingToCart] = useState(false);
@@ -266,7 +257,6 @@ export default function ProductDetails() {
     if (auth?.user) dispatch(getWishlist());
   }, [dispatch, auth?.user]);
 
-  // Fetch Complete the Look recommendations
   useEffect(() => {
     if (!product?.id) return;
     let cancelled = false;
@@ -304,11 +294,14 @@ export default function ProductDetails() {
   };
 
   const handleAddToCart = async () => {
-    if (!auth?.user) { navigate("/login"); return; }
     if (!selectedSize || product?.quantity <= 0) return;
     setAddingToCart(true);
     try {
-      await dispatch(addItemToCart({ data: { productId: product.id, size: selectedSize.name, quantity: 1 } }));
+      // WE NOW PASS THE ENTIRE PRODUCT SO LOCAL STORAGE HAS THE IMAGE, TITLE, AND PRICES
+      await dispatch(addItemToCart({ 
+          data: { productId: product.id, size: selectedSize.name, quantity: 1 },
+          product: product 
+      }));
       await dispatch(getCart());
       triggerToast("Piece secured in bag.", "cart");
     } catch (err) {
@@ -355,14 +348,12 @@ export default function ProductDetails() {
       ? product.category
       : product.category?.name || product.topLevelCategory || null;
 
-  // Decide which bottom section to show
   const showCompleteTheLook = !loadingRecs && recommendations.length > 0;
   const showLoadingSkeleton = loadingRecs;
   const showFallback = !loadingRecs && recommendations.length === 0 && categoryName;
 
   return (
     <div className="bg-[#FFF8F5] text-[#1A1109] font-body antialiased min-h-screen selection:bg-[#C8742A] selection:text-[#FFF8F5]">
-
       {/* Toast */}
       <AnimatePresence>
         {toast && (
@@ -397,7 +388,6 @@ export default function ProductDetails() {
       </AnimatePresence>
 
       <main className="flex flex-col lg:flex-row min-h-screen pt-24 lg:pt-28">
-
         {/* Gallery */}
         <section className="w-full lg:w-[60%] p-4 md:p-8 lg:px-12 lg:pb-12 space-y-4 lg:space-y-8">
           {images.map((src, idx) => (
@@ -541,8 +531,6 @@ export default function ProductDetails() {
       {/* Complete the Look / Fallback */}
       <section className="border-t border-[#D1C4BC] px-6 md:px-12 lg:px-20 py-24">
         <div className="max-w-7xl mx-auto">
-
-          {/* Section header */}
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-4">
             <div>
               {showCompleteTheLook ? (
@@ -581,14 +569,12 @@ export default function ProductDetails() {
             )}
           </div>
 
-          {/* Loading skeletons */}
           {showLoadingSkeleton && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-12">
               {[...Array(4)].map((_, i) => <LookCardSkeleton key={i} />)}
             </div>
           )}
 
-          {/* Complete the Look grid */}
           {showCompleteTheLook && (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
               {recommendations.map((item, i) => (
@@ -597,7 +583,6 @@ export default function ProductDetails() {
             </div>
           )}
 
-          {/* Fallback similar products */}
           {showFallback && (
             <SimilarProducts category={categoryName} currentProductId={product.id} />
           )}

@@ -10,9 +10,18 @@ export default function OAuth2RedirectHandler() {
 
   useEffect(() => {
     const token = searchParams.get("token");
+    
     if (token) {
       dispatch(socialLoginSuccess(token));
-      navigate("/"); 
+      
+      // Check if they were sent here from the Cart Checkout button
+      const redirectTarget = localStorage.getItem("postLoginRedirect");
+      if (redirectTarget) {
+        localStorage.removeItem("postLoginRedirect"); 
+        navigate(redirectTarget);
+      } else {
+        navigate("/"); 
+      }
     } else {
       navigate("/login");
     }

@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/cart")
 @RequiredArgsConstructor
@@ -37,7 +39,27 @@ public class CartController {
         return new ResponseEntity<>(item, HttpStatus.OK);
     }
 
-    // Endpoint to trigger the clear cart method
+    // Merges local storage cart items into the database cart upon login
+    @PostMapping("/merge")
+    public ResponseEntity<ApiResponse> mergeLocalCart(
+            @RequestBody List<AddItemRequest> localItems,
+            @RequestHeader("Authorization") String jwt) throws UserException {
+
+        User user = userService.findUserProfileByJwt(jwt);
+
+        for (AddItemRequest itemReq : localItems) {
+            try {
+                cartService.addCartItem(user.getId(), itemReq);
+            } catch (ProductException e) {
+                // If a specific local product fails (e.g., deleted by admin), we skip it and continue merging the rest
+                System.out.println("Could not merge local item: " + itemReq.getProductId());
+            }
+        }
+
+        ApiResponse res = new ApiResponse("Cart merged successfully", true);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
     @DeleteMapping("/clear")
     public ResponseEntity<ApiResponse> clearCart(@RequestHeader("Authorization") String jwt) throws UserException {
         User user = userService.findUserProfileByJwt(jwt);
