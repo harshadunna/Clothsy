@@ -42,4 +42,6 @@ public interface ProductService {
     List<Product> getRecommendedProducts(Long productId);
 
     List<Product> getRecommendations(Long productId) throws ProductException;
+
+    List<Product> findAllProducts();
 }

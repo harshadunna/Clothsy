@@ -469,4 +469,9 @@ public class ProductServiceImplementation implements ProductService {
         }
         return dp[a.length()][b.length()];
     }
+
+    @Override
+    public List<Product> findAllProducts() {
+        return productRepository.findAll();
+    }
 }

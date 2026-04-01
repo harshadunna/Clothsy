@@ -1,332 +1,226 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import api from "../../config/api";
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
+import { createProduct } from "../../Redux/Customers/Product/Action";
 
 export default function CreateProduct() {
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState("");
-
-  // Array to hold multiple image URLs
-  const [images, setImages] = useState([""]); 
+  const dispatch = useDispatch();
 
   const [productData, setProductData] = useState({
-    title: "",
+    imageFile: null, 
+    imagePreview: null,
     brand: "",
+    title: "",
     color: "",
-    description: "",
-    materials: "", 
-    fit: "",       
-    price: "",
     discountedPrice: "",
-    discountPercent: "",
-    quantity: "",
-    topLevelCategory: "",
-    secondLevelCategory: "",
-    thirdLevelCategory: "",
-    sizes: [
-      { name: "S", quantity: "" },
-      { name: "M", quantity: "" },
-      { name: "L", quantity: "" },
-      { name: "XL", quantity: "" },
+    price: "",
+    discountPersent: "",
+    size: [
+      { name: "S", quantity: 0 },
+      { name: "M", quantity: 0 },
+      { name: "L", quantity: 0 },
     ],
+    quantity: "",
+    topLavelCategory: "",
+    secondLavelCategory: "",
+    thirdLavelCategory: "",
+    description: "",
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setProductData((prevState) => ({ ...prevState, [name]: value }));
+    setProductData((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
   };
 
   const handleSizeChange = (e, index) => {
-    const { value } = e.target;
-    const newSizes = [...productData.sizes];
-    newSizes[index].quantity = value;
-    setProductData((prevState) => ({ ...prevState, sizes: newSizes }));
+    let { name, value } = e.target;
+    name === "size_quantity" ? (name = "quantity") : (name = e.target.name);
+    const sizes = [...productData.size];
+    sizes[index][name] = value;
+    setProductData((prevState) => ({
+      ...prevState,
+      size: sizes,
+    }));
   };
 
-  // MULTIPLE IMAGES LOGIC
-  const handleImageChange = (index, value) => {
-    const newImages = [...images];
-    newImages[index] = value;
-    setImages(newImages);
-  };
-
-  const addImageField = () => {
-    setImages([...images, ""]);
-  };
-
-  const removeImageField = (index) => {
-    const newImages = images.filter((_, i) => i !== index);
-    setImages(newImages.length > 0 ? newImages : [""]); // Keep at least one field
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    setSuccess(false);
-
-    try {
-      const cleanSizes = productData.sizes
-        .filter(size => size.quantity !== "")
-        .map(size => ({ name: size.name, quantity: Number(size.quantity) }));
-
-      // Clean up empty image strings
-      const validImages = images.filter(img => img.trim() !== "");
-
-      const payload = {
-        ...productData,
-        price: Number(productData.price),
-        discountedPrice: Number(productData.discountedPrice),
-        discountPercent: Number(productData.discountPercent),
-        quantity: Number(productData.quantity),
-        sizes: cleanSizes,
-        // Backend compatibility: send first image as imageUrl, and full array as images
-        imageUrl: validImages[0] || "",
-        images: validImages 
-      };
-
-      console.log("Drafting Payload:", payload);
-
-      await api.post("/api/admin/products", payload);
-      setSuccess(true);
-
-      // Reset
-      setProductData({
-        title: "", brand: "", color: "", description: "", materials: "", fit: "",
-        price: "", discountedPrice: "", discountPercent: "", quantity: "",
-        topLevelCategory: "", secondLevelCategory: "", thirdLevelCategory: "",
-        sizes: [
-          { name: "S", quantity: "" }, { name: "M", quantity: "" },
-          { name: "L", quantity: "" }, { name: "XL", quantity: "" }
-        ],
-      });
-      setImages([""]);
-      setTimeout(() => setSuccess(false), 3000);
-    } catch (err) {
-      console.error("Error creating product:", err);
-      setError(err.response?.data?.message || err.response?.data?.error || "Failed to compile blueprint. Check requirements.");
-    } finally {
-      setLoading(false);
+  // Handle physical file selection and create a temporary URL for preview
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProductData((prevState) => ({
+        ...prevState,
+        imageFile: file,
+        imagePreview: URL.createObjectURL(file),
+      }));
     }
   };
 
-  // Minimalist Editorial Inputs
-  const inputClass = "w-full bg-transparent border-0 border-b border-[#D1C4BC] py-3 font-headline text-xl focus:ring-0 focus:border-[#C8742A] transition-colors px-0 placeholder:opacity-30 text-[#1A1109]";
-  const labelClass = "block font-label font-bold text-[0.65rem] tracking-[0.2em] uppercase text-[#7F756E] mb-1";
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // 1. Create a Multipart FormData object
+    const formData = new FormData();
+
+    // 2. Append the physical image file if it exists
+    if (productData.imageFile) {
+      formData.append("image", productData.imageFile);
+    }
+
+    // 3. Clean up the JSON payload (remove file data from it)
+    const reqData = { ...productData };
+    delete reqData.imageFile;
+    delete reqData.imagePreview;
+
+    // 4. Append the JSON payload as a Blob
+    formData.append("req", new Blob([JSON.stringify(reqData)], { type: "application/json" }));
+
+    // Dispatch the action with FormData!
+    dispatch(createProduct(formData));
+
+    // Reset Form
+    setProductData({
+      imageFile: null,
+      imagePreview: null,
+      brand: "",
+      title: "",
+      color: "",
+      discountedPrice: "",
+      price: "",
+      discountPersent: "",
+      size: [
+        { name: "S", quantity: 0 },
+        { name: "M", quantity: 0 },
+        { name: "L", quantity: 0 },
+      ],
+      quantity: "",
+      topLavelCategory: "",
+      secondLavelCategory: "",
+      thirdLavelCategory: "",
+      description: "",
+    });
+  };
 
   return (
-    <div className="min-h-screen bg-[#FFF8F5] text-[#1A1109] flex flex-col md:flex-row">
-      
-      {/* LEFT PANE: SPECIFICATIONS */}
-      <section className="w-full md:w-[400px] border-r border-[#D1C4BC] bg-[#F9F2EF] flex flex-col h-screen sticky top-0 overflow-y-auto shrink-0 custom-scrollbar">
-        <div className="p-10 border-b border-[#D1C4BC] bg-[#FFF8F5]">
-          <h2 className="font-label font-bold text-[0.7rem] tracking-[0.15em] uppercase text-[#7F756E] mb-2">Atelier Components</h2>
-          <p className="font-headline italic text-4xl">Blueprint Draft</p>
-        </div>
+    <div className="p-8 bg-gray-50 min-h-screen">
+      <div className="mb-8">
+        <h1 className="text-3xl font-black tracking-widest uppercase text-[#1A1109] font-headline">
+          Add New Product
+        </h1>
+        <p className="text-xs font-bold text-[#C8742A] tracking-[0.2em] font-label mt-1 uppercase">
+          Inventory Management
+        </p>
+      </div>
 
-        <div className="p-10 space-y-10">
-          {/* Visual Assets (Multiple Images) */}
-          <div>
-            <h3 className="font-label font-bold text-[0.7rem] tracking-[0.2em] uppercase text-[#1A1109] border-b border-[#1A1109] pb-2 mb-6">Visual Assets</h3>
-            <div className="space-y-6">
-              {images.map((img, index) => (
-                <div key={index} className="relative group">
-                  <label className={labelClass}>Asset URL {index + 1}</label>
-                  <div className="flex items-center gap-2">
-                    <input 
-                      type="text" 
-                      value={img} 
-                      onChange={(e) => handleImageChange(index, e.target.value)} 
-                      className={inputClass} 
-                      placeholder="https://..." 
-                      required={index === 0} // Only first is strictly required
-                    />
-                    {images.length > 1 && (
-                      <button type="button" onClick={() => removeImageField(index)} className="material-symbols-outlined text-[#BA1A1A] opacity-50 hover:opacity-100 pb-2">
-                        close
-                      </button>
-                    )}
+      <div className="bg-white p-8 border border-gray-200 shadow-sm max-w-5xl mx-auto">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          
+          {/* IMAGE UPLOAD SECTION */}
+          <div className="flex flex-col md:flex-row gap-8 items-start">
+            <div className="w-full md:w-1/3">
+              <label className="block text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 mb-3">
+                Product Image (Cloudinary)
+              </label>
+              <div className="relative flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors group overflow-hidden">
+                {productData.imagePreview ? (
+                  <img src={productData.imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <span className="material-symbols-outlined text-4xl text-gray-400 group-hover:text-[#C8742A] transition-colors mb-3">cloud_upload</span>
+                    <p className="mb-2 text-xs text-gray-500 font-bold uppercase tracking-widest"><span className="text-[#C8742A]">Click to upload</span> or drag</p>
+                    <p className="text-[10px] text-gray-400">PNG, JPG or WebP (Max 5MB)</p>
                   </div>
-                  {/* Miniature Preview if URL exists */}
-                  {img && (
-                     <div className="mt-4 w-16 h-20 bg-[#E8E1DE] border border-[#D1C4BC]">
-                       <img src={img} alt="Preview" className="w-full h-full object-cover grayscale" onError={(e) => e.target.style.display='none'}/>
-                     </div>
-                  )}
+                )}
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                  onChange={handleImageChange} 
+                />
+              </div>
+            </div>
+
+            <div className="w-full md:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 mb-2">Brand</label>
+                <input type="text" name="brand" value={productData.brand} onChange={handleChange} className="w-full border-b border-gray-300 py-2 bg-transparent focus:outline-none focus:border-[#C8742A] text-sm" placeholder="e.g., CLOTHSY" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 mb-2">Title</label>
+                <input type="text" name="title" value={productData.title} onChange={handleChange} className="w-full border-b border-gray-300 py-2 bg-transparent focus:outline-none focus:border-[#C8742A] text-sm" placeholder="e.g., Structured Wool Overcoat" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 mb-2">Color</label>
+                <input type="text" name="color" value={productData.color} onChange={handleChange} className="w-full border-b border-gray-300 py-2 bg-transparent focus:outline-none focus:border-[#C8742A] text-sm" placeholder="e.g., Onyx Black" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 mb-2">Total Quantity</label>
+                <input type="number" name="quantity" value={productData.quantity} onChange={handleChange} className="w-full border-b border-gray-300 py-2 bg-transparent focus:outline-none focus:border-[#C8742A] text-sm" placeholder="e.g., 50" />
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-100 pt-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 mb-2">Price (₹)</label>
+              <input type="number" name="price" value={productData.price} onChange={handleChange} className="w-full border-b border-gray-300 py-2 bg-transparent focus:outline-none focus:border-[#C8742A] text-sm" placeholder="e.g., 10000" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 mb-2">Discounted Price (₹)</label>
+              <input type="number" name="discountedPrice" value={productData.discountedPrice} onChange={handleChange} className="w-full border-b border-gray-300 py-2 bg-transparent focus:outline-none focus:border-[#C8742A] text-sm" placeholder="e.g., 8000" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 mb-2">Discount Percent (%)</label>
+              <input type="number" name="discountPersent" value={productData.discountPersent} onChange={handleChange} className="w-full border-b border-gray-300 py-2 bg-transparent focus:outline-none focus:border-[#C8742A] text-sm" placeholder="e.g., 20" />
+            </div>
+          </div>
+
+          <div className="border-t border-gray-100 pt-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 mb-2">Top Level Category</label>
+              <select name="topLavelCategory" value={productData.topLavelCategory} onChange={handleChange} className="w-full border border-gray-300 rounded p-2 bg-white text-sm focus:outline-none focus:border-[#C8742A]">
+                <option value="">Select Gender</option>
+                <option value="men">Men</option>
+                <option value="women">Women</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 mb-2">Second Level</label>
+              <select name="secondLavelCategory" value={productData.secondLavelCategory} onChange={handleChange} className="w-full border border-gray-300 rounded p-2 bg-white text-sm focus:outline-none focus:border-[#C8742A]">
+                <option value="">Select Group</option>
+                <option value="clothing">Clothing</option>
+                <option value="accessories">Accessories</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 mb-2">Third Level</label>
+              <input type="text" name="thirdLavelCategory" value={productData.thirdLavelCategory} onChange={handleChange} className="w-full border-b border-gray-300 py-2 bg-transparent focus:outline-none focus:border-[#C8742A] text-sm" placeholder="e.g., overcoats, silk-dresses" />
+            </div>
+          </div>
+
+          <div className="border-t border-gray-100 pt-8">
+            <label className="block text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 mb-4">Size Distribution</label>
+            <div className="flex gap-6">
+              {productData.size.map((size, index) => (
+                <div key={index} className="flex flex-col gap-2">
+                  <span className="font-label text-sm font-black border border-gray-300 w-10 h-10 flex items-center justify-center text-gray-600">{size.name}</span>
+                  <input type="number" name="size_quantity" placeholder="Qty" onChange={(e) => handleSizeChange(e, index)} className="w-16 border border-gray-300 rounded p-1 text-xs text-center" />
                 </div>
               ))}
-              <button type="button" onClick={addImageField} className="flex items-center gap-2 font-label font-bold text-[0.65rem] tracking-[0.15em] uppercase text-[#C8742A] hover:text-[#924C00] transition-colors mt-2">
-                <span className="material-symbols-outlined text-sm">add</span> Add Another Asset
-              </button>
             </div>
           </div>
 
-          {/* Categories (Strict Dropdowns) */}
-          <div>
-            <h3 className="font-label font-bold text-[0.7rem] tracking-[0.2em] uppercase text-[#1A1109] border-b border-[#1A1109] pb-2 mb-6">Classification</h3>
-            <div className="space-y-6">
-              
-              <div>
-                <label className={labelClass}>Top Level (Department)</label>
-                <select required name="topLevelCategory" value={productData.topLevelCategory} onChange={handleChange} className={`${inputClass} appearance-none cursor-pointer`}>
-                  <option value="" disabled>Select Department...</option>
-                  <option value="collections">Womenswear (Collections)</option>
-                  <option value="atelier">Menswear (Atelier)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className={labelClass}>Second Level (Structure)</label>
-                <select required name="secondLevelCategory" value={productData.secondLevelCategory} onChange={handleChange} className={`${inputClass} appearance-none cursor-pointer`}>
-                  <option value="" disabled>Select Structure...</option>
-                  <option value="silhouettes">Silhouettes (Clothing)</option>
-                  <option value="accents">Accents (Accessories)</option>
-                  <option value="curations">Curations (Featured)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className={labelClass}>Third Level (Specific Identity)</label>
-                <select required name="thirdLevelCategory" value={productData.thirdLevelCategory} onChange={handleChange} className={`${inputClass} appearance-none cursor-pointer`}>
-                  <option value="" disabled>Select Exact Category...</option>
-                  
-                  <optgroup label="--- Womenswear Silhouettes ---">
-                    <option value="outerwear">Architectural Outerwear</option>
-                    <option value="silk-dresses">Heavy Silk Drapes</option>
-                    <option value="trousers">Tailored Trousers</option>
-                    <option value="knits">Essential Knits</option>
-                    <option value="gowns">Evening Gowns</option>
-                    <option value="cashmere">Cashmere Sweaters</option>
-                    <option value="blouses">Sculpted Blouses</option>
-                  </optgroup>
-
-                  <optgroup label="--- Menswear Silhouettes ---">
-                    <option value="overcoats">Wool Overcoats</option>
-                    <option value="poplin-shirts">Crisp Poplin Shirts</option>
-                    <option value="fine-knits">Fine Gauge Knits</option>
-                    <option value="raw-denim">Raw Denim</option>
-                    <option value="suits">Structural Suits</option>
-                  </optgroup>
-
-                  <optgroup label="--- Shared Accents ---">
-                    <option value="bags">Structured Bags</option>
-                    <option value="footwear">Monolith Footwear</option>
-                    <option value="jewelry">Artisan Jewelry</option>
-                    <option value="scarves">Silk Foulards</option>
-                    <option value="eyewear">Oversized Eyewear</option>
-                    <option value="watches">Chronograph Watches</option>
-                  </optgroup>
-                </select>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* RIGHT PANE: DRAFTING AREA */}
-      <section className="flex-1 p-12 md:p-20 overflow-y-auto">
-        {success && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-10 p-6 bg-[#1A1109] text-[#FFF8F5] border-l-4 border-[#C8742A] font-label font-bold text-[0.7rem] tracking-widest uppercase">
-            Manifest securely logged to archive.
-          </motion.div>
-        )}
-        {error && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-10 p-6 bg-[#FFDAD6] text-[#BA1A1A] border-l-4 border-[#BA1A1A] font-label font-bold text-[0.7rem] tracking-widest uppercase">
-            {error}
-          </motion.div>
-        )}
-
-        <form onSubmit={handleSubmit} className="max-w-4xl space-y-16">
-          
-          {/* Identity */}
-          <div>
-            <label className="font-label font-bold text-[0.75rem] tracking-[0.2em] uppercase text-[#7F756E] block mb-4">Product Identity</label>
-            <input required type="text" name="title" value={productData.title} onChange={handleChange} className="w-full border-0 border-b-2 border-[#1A1109] bg-transparent font-headline italic text-5xl md:text-6xl py-4 focus:ring-0 focus:border-[#C8742A] mb-8 placeholder:opacity-20 text-[#1A1109]" placeholder="E.g. Structural Column Coat" />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <div>
-                <label className={labelClass}>Brand / Atelier</label>
-                <input required type="text" name="brand" value={productData.brand} onChange={handleChange} className={inputClass} placeholder="CLOTHSY" />
-              </div>
-              <div>
-                <label className={labelClass}>Dominant Color</label>
-                <input required type="text" name="color" value={productData.color} onChange={handleChange} className={inputClass} placeholder="Obsidian" />
-              </div>
-            </div>
+          <div className="border-t border-gray-100 pt-8">
+            <label className="block text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 mb-2">Product Description & Fit</label>
+            <textarea name="description" value={productData.description} onChange={handleChange} rows="4" className="w-full border border-gray-300 rounded p-3 bg-transparent focus:outline-none focus:border-[#C8742A] text-sm" placeholder="Describe the architectural silhouette, materials, and fit..." />
           </div>
 
-          {/* Description & Materials */}
-          <div>
-            <label className="font-label font-bold text-[0.75rem] tracking-[0.2em] uppercase text-[#7F756E] block mb-4 border-b border-[#D1C4BC] pb-2">Editorial Copy & Specifications</label>
-            <div className="space-y-8 mt-6">
-              
-              <div>
-                <label className={labelClass}>Narrative Description</label>
-                <textarea required rows="3" name="description" value={productData.description} onChange={handleChange} className="w-full border-0 border-b border-[#D1C4BC] bg-transparent font-headline text-2xl leading-relaxed focus:ring-0 focus:border-[#C8742A] resize-none p-0 placeholder:opacity-20 text-[#1A1109]" placeholder="Begin narrative composition..." />
-              </div>
-              
-              <div>
-                <label className={labelClass}>Materials & Construction</label>
-                <textarea rows="2" name="materials" value={productData.materials} onChange={handleChange} className="w-full border-0 border-b border-[#D1C4BC] bg-transparent font-body text-lg leading-relaxed focus:ring-0 focus:border-[#C8742A] resize-none p-0 placeholder:opacity-20 text-[#1A1109]" placeholder="E.g. 100% Virgin Wool. Matte horn buttons." />
-              </div>
-              
-              <div>
-                <label className={labelClass}>Fit & Silhouette</label>
-                <textarea rows="2" name="fit" value={productData.fit} onChange={handleChange} className="w-full border-0 border-b border-[#D1C4BC] bg-transparent font-body text-lg leading-relaxed focus:ring-0 focus:border-[#C8742A] resize-none p-0 placeholder:opacity-20 text-[#1A1109]" placeholder="E.g. Oversized drop-shoulder profile." />
-              </div>
-
-            </div>
-          </div>
-
-          {/* Measurements & Value */}
-          <div>
-            <label className="font-label font-bold text-[0.75rem] tracking-[0.2em] uppercase text-[#7F756E] block mb-8 border-b border-[#D1C4BC] pb-2">Technical Values & Inventory</label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-              <div>
-                <label className={labelClass}>Retail Value (₹)</label>
-                <input required type="number" name="price" value={productData.price} onChange={handleChange} className={inputClass} placeholder="0" />
-              </div>
-              <div>
-                <label className={labelClass}>Archive Value (₹)</label>
-                <input required type="number" name="discountedPrice" value={productData.discountedPrice} onChange={handleChange} className={inputClass} placeholder="0" />
-              </div>
-              <div>
-                <label className={labelClass}>Reduction %</label>
-                <input required type="number" name="discountPercent" value={productData.discountPercent} onChange={handleChange} className={inputClass} placeholder="0" />
-              </div>
-              <div>
-                <label className={labelClass}>Total Units</label>
-                <input required type="number" name="quantity" value={productData.quantity} onChange={handleChange} className={inputClass} placeholder="0" />
-              </div>
-            </div>
-
-            {/* Size Proportions */}
-            <div>
-              <label className={labelClass}>Proportional Inventory (Sizes)</label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-4">
-                {productData.sizes.map((size, index) => (
-                  <div key={size.name} className="flex flex-col border-b border-[#D1C4BC] py-2">
-                    <div className="flex justify-between items-end">
-                      <span className="font-headline italic text-3xl text-[#1A1109]">{size.name}</span>
-                      <input type="number" placeholder="QTY" value={size.quantity} onChange={(e) => handleSizeChange(e, index)} className="w-20 bg-transparent border-none font-label font-bold text-lg text-right p-0 focus:ring-0 text-[#1A1109]" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Action */}
-          <div className="pt-12">
-            <button type="submit" disabled={loading} className="w-full py-6 bg-[#1A1109] text-[#FFF8F5] font-label text-[0.8rem] font-black tracking-[0.3em] uppercase hover:bg-[#C8742A] transition-colors disabled:opacity-50">
-              {loading ? "Compiling Blueprint..." : "Publish to Ledger"}
-            </button>
-          </div>
+          <button type="submit" className="w-full bg-[#1A1109] text-[#FFF8F5] font-label text-[0.8rem] font-black uppercase tracking-[0.2em] py-5 hover:bg-[#C8742A] transition-colors mt-8">
+            Add Product to Inventory
+          </button>
         </form>
-      </section>
-
+      </div>
     </div>
   );
 }
