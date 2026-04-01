@@ -61,9 +61,9 @@ const CustomerRoutes = () => {
           <Route path="/product/:productId" element={<PageTransition><ProductDetails /></PageTransition>} />
           <Route path="/products" element={<PageTransition><Product /></PageTransition>} />
 
-          {/* Editorial Curation Routes */}
-          <Route path="/collections/curations/:editName" element={<PageTransition><CurationPage /></PageTransition>} />
-          <Route path="/atelier/curations/:editName" element={<PageTransition><CurationPage /></PageTransition>} />
+          {/* Editorial Curation Routes - UPDATED to practical names */}
+          <Route path="/women/featured/:editName" element={<PageTransition><CurationPage /></PageTransition>} />
+          <Route path="/men/featured/:editName" element={<PageTransition><CurationPage /></PageTransition>} />
 
           {/* Dynamic Category Routes */}
           <Route path="/:levelOne/:levelTwo/:levelThree" element={<PageTransition><Product /></PageTransition>} />

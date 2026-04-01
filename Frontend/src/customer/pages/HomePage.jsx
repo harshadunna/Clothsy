@@ -8,14 +8,14 @@ import HomeSectionCarousel from "../components/HomeSectionCarousel/HomeSectionCa
 
 gsap.registerPlugin(ScrollTrigger);
 
-// CATEGORY HELPERS
+// CATEGORY HELPERS - Updated to the new practical names
 const getRootCategory = (product) => {
   let cur = product?.category;
   while (cur?.parentCategory) cur = cur.parentCategory;
   return cur?.name?.toLowerCase() || "";
 };
-const isMens   = (p) => getRootCategory(p) === "atelier";
-const isWomens = (p) => getRootCategory(p) === "collections";
+const isMens   = (p) => getRootCategory(p) === "men";
+const isWomens = (p) => getRootCategory(p) === "women";
 
 // All L3 category slugs in your DB
 const ALL_MENS_CATS = [

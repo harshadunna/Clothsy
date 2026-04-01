@@ -1,26 +1,26 @@
 export const navigation = {
   categories: [
     {
-      id: 'collections',
-      name: 'Womenswear',
+      id: 'women',
+      name: 'Women',
       featured: [
         {
           name: 'Autumn Rituals',
-          href: '/collections/curations/autumn-rituals',
+          href: '/women/featured/autumn-rituals',
           imageSrc: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80',
           imageAlt: 'High fashion editorial shot of a woman in an oversized structured coat.',
         },
         {
           name: 'The Archive Sale',
-          href: '/collections/curations/archive-sale',
+          href: '/women/featured/archive-sale',
           imageSrc: 'https://images.unsplash.com/photo-1600165328224-8175b5b00c82?auto=format&fit=crop&w=800&q=80',
           imageAlt: 'Close up of luxurious textured silk and linen draping.',
         },
       ],
       sections: [
         {
-          id: 'silhouettes',
-          name: 'Silhouettes',
+          id: 'clothing',
+          name: 'Clothing',
           items: [
             { name: 'Architectural Outerwear', id: 'outerwear' },
             { name: 'Heavy Silk Drapes',       id: 'silk-dresses' },
@@ -32,8 +32,8 @@ export const navigation = {
           ],
         },
         {
-          id: 'accents',
-          name: 'Accents',
+          id: 'accessories',
+          name: 'Accessories',
           items: [
             { name: 'Structured Leather Bags', id: 'bags' },
             { name: 'Monolith Footwear',        id: 'footwear' },
@@ -43,8 +43,8 @@ export const navigation = {
           ],
         },
         {
-          id: 'curations',
-          name: 'Curations',
+          id: 'featured',
+          name: 'Featured',
           items: [
             { name: 'The Monolith Edit',       id: 'monolith-edit' },       
             { name: 'Core Foundations',        id: 'core-foundations' },
@@ -55,26 +55,26 @@ export const navigation = {
       ],
     },
     {
-      id: 'atelier',
-      name: 'Menswear',
+      id: 'men',
+      name: 'Men',
       featured: [
         {
           name: 'Structural Tailoring',
-          href: '/atelier/curations/mens-heritage-tailoring',
+          href: '/men/featured/mens-heritage-tailoring',
           imageSrc: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=800&q=80',
           imageAlt: 'Minimalist menswear flatlay featuring a sharp charcoal suit jacket.',
         },
         {
           name: 'Monolith Boots',
-          href: '/atelier/accents/boots',
+          href: '/men/accessories/boots',
           imageSrc: 'https://images.unsplash.com/photo-1520639888713-7851133b1ed0?auto=format&fit=crop&w=800&q=80',
           imageAlt: 'Brutalist leather boots on a concrete surface.',
         },
       ],
       sections: [
         {
-          id: 'silhouettes',
-          name: 'Silhouettes',
+          id: 'clothing',
+          name: 'Clothing',
           items: [
             { name: 'Wool Overcoats',      id: 'overcoats' },
             { name: 'Crisp Poplin Shirts', id: 'poplin-shirts' },
@@ -85,8 +85,8 @@ export const navigation = {
           ],
         },
         {
-          id: 'accents',
-          name: 'Accents',
+          id: 'accessories',
+          name: 'Accessories',
           items: [
             { name: 'Leather Briefcases',    id: 'briefcases' },
             { name: 'Derby Boots',           id: 'boots' },
@@ -95,8 +95,8 @@ export const navigation = {
           ],
         },
         {
-          id: 'curations',
-          name: 'Curations',
+          id: 'featured',
+          name: 'Featured',
           items: [
             { name: 'The Monolith Edit',  id: 'mens-monolith-edit' },      
             { name: 'Urban Brutalism',    id: 'mens-urban-brutalism' },   
@@ -109,6 +109,6 @@ export const navigation = {
   pages: [
     { name: 'Craftsmanship',    id: 'craftsmanship' },
     { name: 'Editorial Journal', id: 'journal' },
-    { name: 'Contact Atelier',  id: 'contact' },
+    { name: 'Contact Us',  id: 'contact' },
   ],
 };

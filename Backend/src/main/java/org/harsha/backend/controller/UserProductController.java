@@ -73,29 +73,29 @@ public class UserProductController {
             if (normalizedTag.startsWith("mens-monolith")) {
                 products = productRepository.findByCategoryFallback(
                         Arrays.asList("overcoats", "suits", "poplin-shirts", "trousers", "fine-knits"),
-                        "atelier"
+                        "men"
                 );
             } else if (normalizedTag.startsWith("mens-urban")) {
                 products = productRepository.findByCategoryFallback(
                         Arrays.asList("raw-denim", "boots", "overcoats"),
-                        "atelier"
+                        "men"
                 );
             } else if (normalizedTag.startsWith("mens-heritage")) {
                 products = productRepository.findByCategoryFallback(
                         Arrays.asList("suits", "briefcases", "watches"),
-                        "atelier"
+                        "men"
                 );
             } else if (normalizedTag.contains("monolith")) {
                 products = productRepository.findMonolithEditFallback();
             } else if (normalizedTag.contains("core")) {
                 products = productRepository.findByCategoryFallback(
                         Arrays.asList("blouses", "womens-trousers", "knits", "jumpers"),
-                        "collections"
+                        "women"
                 );
             } else if (normalizedTag.contains("nocturnal")) {
                 products = productRepository.findByCategoryFallback(
                         Arrays.asList("evening-dresses", "jewelry", "bags", "scarves"),
-                        "collections"
+                        "women"
                 );
             } else if (normalizedTag.contains("archive")) {
                 products = productRepository.findArchiveSaleFallback();

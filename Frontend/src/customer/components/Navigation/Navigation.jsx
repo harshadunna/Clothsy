@@ -15,11 +15,11 @@ import AuthModel from '../Auth/AuthModel'
 const NAV = [
   {
     label: 'WOMEN',
-    id: 'collections',
+    id: 'women', // <-- Fixed here
     sections: [
       {
         heading: 'Clothing',
-        id: 'silhouettes',
+        id: 'clothing', // <-- Fixed here
         items: [
           { label: 'Silk Dresses',    id: 'silk-dresses',    img: 'https://static.zara.net/assets/public/4372/a485/f72645259e91/921f424a71fb/04192001691-e1/04192001691-e1.jpg?ts=1773398613979&w=813' },
           { label: 'Evening Dresses', id: 'evening-dresses', img: 'https://static.zara.net/assets/public/51c9/0d67/36c34a98b5d6/22c8833fa478/02581532620-p/02581532620-p.jpg?ts=1774344742980&w=813' },
@@ -32,7 +32,7 @@ const NAV = [
       },
       {
         heading: 'Accessories',
-        id: 'accents',
+        id: 'accessories', // <-- Fixed here
         items: [
           { label: 'Bags',       id: 'bags',       img: 'https://static.zara.net/assets/public/b1f7/fb0d/426348278ca8/7160c528be19/16213711500-p/16213711500-p.jpg?ts=1773933821556&w=813' },
           { label: 'Footwear',   id: 'footwear',   img: 'https://static.zara.net/assets/public/9f49/dd43/5a33480382c5/eda55ac08359/12254719700-e1/12254719700-e1.jpg?ts=1772196501567&w=813' },
@@ -43,17 +43,17 @@ const NAV = [
       },
     ],
     featured: [
-      { label: 'The Silk Edit',    sublabel: 'NEW IN',   img: 'https://static.zara.net/assets/public/5c5a/70db/51704f0c9a69/3343e94f9e26/02644419539-p/02644419539-p.jpg?ts=1773835684796&w=813',  link: '/collections/silhouettes/silk-dresses' },
-      { label: 'Evening Dressing', sublabel: 'EDIT',     img: 'https://static.zara.net/assets/public/acec/dea1/51ed4bbbb4ca/0b685f2a1bc2/04387044715-p/04387044715-p.jpg?ts=1774009912501&w=813',  link: '/collections/silhouettes/evening-dresses' },
+      { label: 'The Silk Edit',    sublabel: 'NEW IN',   img: 'https://static.zara.net/assets/public/5c5a/70db/51704f0c9a69/3343e94f9e26/02644419539-p/02644419539-p.jpg?ts=1773835684796&w=813',  link: '/women/clothing/silk-dresses' },
+      { label: 'Evening Dressing', sublabel: 'EDIT',     img: 'https://static.zara.net/assets/public/acec/dea1/51ed4bbbb4ca/0b685f2a1bc2/04387044715-p/04387044715-p.jpg?ts=1774009912501&w=813',  link: '/women/clothing/evening-dresses' },
     ],
   },
   {
     label: 'MEN',
-    id: 'atelier',
+    id: 'men', // <-- Fixed here
     sections: [
       {
         heading: 'Clothing',
-        id: 'silhouettes',
+        id: 'clothing', // <-- Fixed here
         items: [
           { label: 'Overcoats',     id: 'overcoats',     img: 'https://static.zara.net/assets/public/599e/c48f/016a474398ac/012b767d2fd5/02949310800-p/02949310800-p.jpg?ts=1762520435301&w=1024' },
           { label: 'Suits',         id: 'suits',         img: 'https://image.hm.com/assets/hm/dd/64/dd64de2cfe48fdb6c31636d39a28e49b6234e8d2.jpg?imwidth=2160' },
@@ -64,7 +64,7 @@ const NAV = [
       },
       {
         heading: 'Accessories',
-        id: 'accents',
+        id: 'accessories', // <-- Fixed here
         items: [
           { label: 'Belts',       id: 'belts',   img: 'https://static.zara.net/assets/public/bf24/afad/328347e3b1e1/daa242317489/05919421700-a1/05919421700-a1.jpg?ts=1773659508605&w=813' },
           { label: 'Boots',       id: 'boots',   img: 'https://static.zara.net/assets/public/7e3d/ab4d/49b44d1bbcaf/878671c33bc1/12201620001-000-a1/12201620001-000-a1.jpg?ts=1755618495127&w=813' },
@@ -73,8 +73,8 @@ const NAV = [
       },
     ],
     featured: [
-      { label: 'The Overcoat',  sublabel: 'NEW IN',   img: 'https://static.zara.net/assets/public/700b/c89d/90ed4e81abb6/b9a56b3a6dc1/02949150700-p/02949150700-p.jpg?ts=1759306100987&w=1024', link: '/atelier/silhouettes/overcoats' },
-      { label: 'Suiting Season', sublabel: 'ATELIER', img: 'https://image.hm.com/assets/hm/54/e9/54e9bd506e4f7f2f267ce0da9fa92a52edd9a68b.jpg?imwidth=2160',                                    link: '/atelier/silhouettes/suits' },
+      { label: 'The Overcoat',  sublabel: 'NEW IN',   img: 'https://static.zara.net/assets/public/700b/c89d/90ed4e81abb6/b9a56b3a6dc1/02949150700-p/02949150700-p.jpg?ts=1759306100987&w=1024', link: '/men/clothing/overcoats' },
+      { label: 'Suiting Season', sublabel: 'ATELIER', img: 'https://image.hm.com/assets/hm/54/e9/54e9bd506e4f7f2f267ce0da9fa92a52edd9a68b.jpg?imwidth=2160',                                    link: '/men/clothing/suits' },
     ],
   },
   { label: 'JOURNAL',     id: null, path: '/journal', sections: [], featured: [] },

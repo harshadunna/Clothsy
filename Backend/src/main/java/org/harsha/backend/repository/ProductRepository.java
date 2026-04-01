@@ -41,7 +41,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByCurationTag(@Param("tag") String tag);
 
     @Query("SELECT p FROM Product p WHERE LOWER(p.color) LIKE '%black%' " +
-            "AND LOWER(p.category.parentCategory.parentCategory.name) = 'collections'")
+            "AND LOWER(p.category.parentCategory.parentCategory.name) = 'women'")
     List<Product> findMonolithEditFallback();
 
     @Query("SELECT p FROM Product p WHERE LOWER(p.category.name) IN (:categories) " +
@@ -55,7 +55,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             "JOIN categories c3 ON p.category_id = c3.id " +
             "JOIN categories c2 ON c3.parent_category_id = c2.id " +
             "JOIN categories c1 ON c2.parent_category_id = c1.id " +
-            "WHERE LOWER(c1.name) = 'collections' " +
+            "WHERE LOWER(c1.name) = 'women' " +
             "ORDER BY RAND() LIMIT 16", nativeQuery = true)
     List<Product> findArchiveSaleFallback();
 
@@ -63,27 +63,27 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findSafetyNetFallback();
 
     // CLOTHSY AI PAIRING QUERIES 
-    
+
     // 1. Strict match ensuring the Top-Level Category (Gender) is respected
     @Query("SELECT p FROM Product p " +
-           "JOIN p.category c " +
-           "JOIN c.parentCategory mid " +
-           "JOIN mid.parentCategory root " +
-           "WHERE LOWER(root.name) = LOWER(:genderRoot) " +
-           "AND LOWER(c.name) = LOWER(:categorySlug) " +
-           "ORDER BY p.createdAt DESC")
+            "JOIN p.category c " +
+            "JOIN c.parentCategory mid " +
+            "JOIN mid.parentCategory root " +
+            "WHERE LOWER(root.name) = LOWER(:genderRoot) " +
+            "AND LOWER(c.name) = LOWER(:categorySlug) " +
+            "ORDER BY p.createdAt DESC")
     List<Product> findTopByGenderAndCategory(
-        @Param("genderRoot") String genderRoot,
-        @Param("categorySlug") String categorySlug,
-        Pageable pageable
-    );  
+            @Param("genderRoot") String genderRoot,
+            @Param("categorySlug") String categorySlug,
+            Pageable pageable
+    );
 
     // 2. Fallback fill-in ensuring the SAME GENDER is respected
     @Query("SELECT p FROM Product p JOIN p.category c JOIN c.parentCategory mid JOIN mid.parentCategory root " +
-           "WHERE LOWER(root.name) = LOWER(:genderRoot) AND LOWER(c.name) != LOWER(:excludedSlug) ORDER BY p.createdAt DESC")
+            "WHERE LOWER(root.name) = LOWER(:genderRoot) AND LOWER(c.name) != LOWER(:excludedSlug) ORDER BY p.createdAt DESC")
     List<Product> findRecentByGenderExcludingCategory(
-        @Param("genderRoot") String genderRoot, 
-        @Param("excludedSlug") String excludedSlug, 
-        Pageable pageable
+            @Param("genderRoot") String genderRoot,
+            @Param("excludedSlug") String excludedSlug,
+            Pageable pageable
     );
 }

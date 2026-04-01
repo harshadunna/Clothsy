@@ -4,10 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.harsha.backend.exception.ProductException;
 import org.harsha.backend.model.Category;
 import org.harsha.backend.model.Product;
+import org.harsha.backend.model.Promotion;
 import org.harsha.backend.model.Size;
 import org.harsha.backend.repository.CategoryRepository;
 import org.harsha.backend.repository.OrderItemRepository;
 import org.harsha.backend.repository.ProductRepository;
+import org.harsha.backend.repository.PromotionRepository;
 import org.harsha.backend.request.CreateProductRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -26,6 +28,7 @@ public class ProductServiceImplementation implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final OrderItemRepository orderItemRepository;
+    private final PromotionRepository promotionRepository;
 
     @Override
     public Product createProduct(CreateProductRequest req) throws ProductException {
@@ -41,7 +44,7 @@ public class ProductServiceImplementation implements ProductService {
         try {
             secondLevel = categoryRepository.findByNameAndParent(req.getSecondLevelCategory(), topLevel.getName());
         } catch (Exception e) { secondLevel = null; }
-        
+
         if (secondLevel == null) {
             Category newSecondLevel = new Category();
             newSecondLevel.setName(req.getSecondLevelCategory());
@@ -54,7 +57,7 @@ public class ProductServiceImplementation implements ProductService {
         try {
             thirdLevel = categoryRepository.findByNameAndParent(req.getThirdLevelCategory(), secondLevel.getName());
         } catch (Exception e) { thirdLevel = null; }
-        
+
         if (thirdLevel == null) {
             Category newThirdLevel = new Category();
             newThirdLevel.setName(req.getThirdLevelCategory());
@@ -128,24 +131,36 @@ public class ProductServiceImplementation implements ProductService {
 
     @Override
     public List<Product> getAllProducts() {
-        return productRepository.findAll();
+        List<Product> products = productRepository.findAll();
+        List<Promotion> activePromos = promotionRepository.findActivePromotions(LocalDateTime.now());
+        products.forEach(p -> applyActivePromotions(p, activePromos));
+        return products;
     }
 
     @Override
     public Product findProductById(Long id) throws ProductException {
-        return productRepository.findById(id)
+        Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductException("Product not found with id: " + id));
+
+        List<Promotion> activePromos = promotionRepository.findActivePromotions(LocalDateTime.now());
+        applyActivePromotions(product, activePromos);
+        return product;
     }
 
     @Override
     public List<Product> findProductByCategory(String category) {
-        return productRepository.findByCategory(category);
+        List<Product> products = productRepository.findByCategory(category);
+        List<Promotion> activePromos = promotionRepository.findActivePromotions(LocalDateTime.now());
+        products.forEach(p -> applyActivePromotions(p, activePromos));
+        return products;
     }
 
     @Override
     public List<Product> searchProduct(String query) {
         List<Product> allProducts = productRepository.findAll();
         if (query == null || query.trim().isEmpty()) {
+            List<Promotion> activePromos = promotionRepository.findActivePromotions(LocalDateTime.now());
+            allProducts.forEach(p -> applyActivePromotions(p, activePromos));
             return allProducts;
         }
 
@@ -154,7 +169,7 @@ public class ProductServiceImplementation implements ProductService {
                 .filter(word -> !stopWords.contains(word))
                 .collect(Collectors.toList());
 
-        return allProducts.stream()
+        List<Product> results = allProducts.stream()
                 .filter(p -> {
                     String searchableText = buildSearchableText(p);
                     for (String keyword : keywords) {
@@ -165,6 +180,10 @@ public class ProductServiceImplementation implements ProductService {
                     return true;
                 })
                 .collect(Collectors.toList());
+
+        List<Promotion> activePromos = promotionRepository.findActivePromotions(LocalDateTime.now());
+        results.forEach(p -> applyActivePromotions(p, activePromos));
+        return results;
     }
 
     @Override
@@ -224,21 +243,30 @@ public class ProductServiceImplementation implements ProductService {
         int endIndex = Math.min(startIndex + pageable.getPageSize(), products.size());
         List<Product> pageContent = products.subList(startIndex, endIndex);
 
+        // Apply Dynamic Pricing to the page before returning
+        List<Promotion> activePromos = promotionRepository.findActivePromotions(LocalDateTime.now());
+        pageContent.forEach(p -> applyActivePromotions(p, activePromos));
+
         return new PageImpl<>(pageContent, pageable, products.size());
     }
 
     @Override
     public List<Product> recentlyAddedProduct() {
-        return productRepository.findTop10ByOrderByCreatedAtDesc();
+        List<Product> products = productRepository.findTop10ByOrderByCreatedAtDesc();
+        List<Promotion> activePromos = promotionRepository.findActivePromotions(LocalDateTime.now());
+        products.forEach(p -> applyActivePromotions(p, activePromos));
+        return products;
     }
 
     @Override
     public List<Product> getRecommendedProducts(Long productId) {
-        return orderItemRepository.findFrequentlyBoughtTogether(productId, PageRequest.of(0, 4));
+        List<Product> products = orderItemRepository.findFrequentlyBoughtTogether(productId, PageRequest.of(0, 4));
+        List<Promotion> activePromos = promotionRepository.findActivePromotions(LocalDateTime.now());
+        products.forEach(p -> applyActivePromotions(p, activePromos));
+        return products;
     }
 
-
-    // GENDER-SEPARATED CLOTHSY AI PAIRING LOGIC 
+    // GENDER-SEPARATED CLOTHSY AI PAIRING LOGIC
     @Override
     public List<Product> getRecommendations(Long productId) throws ProductException {
         Product product = findProductById(productId);
@@ -249,11 +277,9 @@ public class ProductServiceImplementation implements ProductService {
 
         List<String> targetCategories;
 
-        // SEPARATE MAPS BASED ON GENDER ROOT
         if ("atelier".equalsIgnoreCase(genderRoot)) {
-            // MENSWEAR MAPPING (Atelier)
             Map<String, List<String>> mensPairings = new HashMap<>();
-            
+
             List<String> mensTops = Arrays.asList("trousers", "raw-denim", "suits", "briefcases", "watches", "boots");
             mensPairings.put("poplin-shirts", mensTops);
             mensPairings.put("fine-knits", mensTops);
@@ -272,10 +298,9 @@ public class ProductServiceImplementation implements ProductService {
             mensPairings.put("watches", mensAcc);
             mensPairings.put("belts", mensAcc);
 
-            targetCategories = new ArrayList<>(mensPairings.getOrDefault(leafSlug, 
-                               Arrays.asList("trousers", "poplin-shirts", "boots", "watches", "suits")));
+            targetCategories = new ArrayList<>(mensPairings.getOrDefault(leafSlug,
+                    Arrays.asList("trousers", "poplin-shirts", "boots", "watches", "suits")));
         } else {
-            // WOMENSWEAR MAPPING (Collections)
             Map<String, List<String>> womensPairings = new HashMap<>();
 
             List<String> womensTops = Arrays.asList("womens-trousers", "outerwear", "bags", "jewelry", "footwear");
@@ -299,25 +324,22 @@ public class ProductServiceImplementation implements ProductService {
             womensPairings.put("scarves", womensAcc);
             womensPairings.put("eyewear", womensAcc);
 
-            targetCategories = new ArrayList<>(womensPairings.getOrDefault(leafSlug, 
-                               Arrays.asList("womens-trousers", "blouses", "footwear", "bags", "silk-dresses")));
+            targetCategories = new ArrayList<>(womensPairings.getOrDefault(leafSlug,
+                    Arrays.asList("womens-trousers", "blouses", "footwear", "bags", "silk-dresses")));
         }
 
-        // SHUFFLE CATEGORIES to keep it fresh
         Collections.shuffle(targetCategories);
 
         List<Product> results = new ArrayList<>();
         Set<Long> seenIds = new HashSet<>();
-        seenIds.add(product.getId()); 
+        seenIds.add(product.getId());
 
         for (String targetSlug : targetCategories) {
             if (results.size() >= 4) break;
 
-            // Fetch a pool of items that strictly match BOTH gender and category
             List<Product> found = productRepository.findTopByGenderAndCategory(genderRoot, targetSlug, PageRequest.of(0, 15));
 
             if (!found.isEmpty()) {
-                // Shuffle pool to pick a random one
                 List<Product> modifiableFound = new ArrayList<>(found);
                 Collections.shuffle(modifiableFound);
 
@@ -325,16 +347,15 @@ public class ProductServiceImplementation implements ProductService {
                     if (!seenIds.contains(p.getId())) {
                         results.add(p);
                         seenIds.add(p.getId());
-                        break; 
+                        break;
                     }
                 }
             }
         }
 
-        // Guaranteed Grid Fill (Strictly within the same gender root)
         if (results.size() < 4) {
             List<Product> fillIns = productRepository.findRecentByGenderExcludingCategory(genderRoot, leafSlug, PageRequest.of(0, 20));
-            
+
             List<Product> modifiableFillIns = new ArrayList<>(fillIns);
             Collections.shuffle(modifiableFillIns);
 
@@ -347,8 +368,14 @@ public class ProductServiceImplementation implements ProductService {
             }
         }
 
+        // Apply Dynamic Pricing to AI Recommendations
+        List<Promotion> activePromos = promotionRepository.findActivePromotions(LocalDateTime.now());
+        results.forEach(p -> applyActivePromotions(p, activePromos));
+
         return results;
     }
+
+    // HELPER METHODS
 
     private String resolveGenderRoot(Category category) {
         if (category == null) return "collections";
@@ -356,6 +383,37 @@ public class ProductServiceImplementation implements ProductService {
             return category.getName().toLowerCase();
         }
         return resolveGenderRoot(category.getParentCategory());
+    }
+
+    // DYNAMIC PRICING ENGINE
+    private void applyActivePromotions(Product product, List<Promotion> activePromotions) {
+        if (product == null || product.getCategory() == null || activePromotions == null || activePromotions.isEmpty()) return;
+
+        // Find the best promotion for this product's category tree
+        int maxDiscount = product.getDiscountPercent() != null ? product.getDiscountPercent() : 0;
+
+        for (Promotion promo : activePromotions) {
+            if (promo.getTargetCategory() != null && isCategoryInTree(product.getCategory(), promo.getTargetCategory())) {
+                if (promo.getDiscountPercent() != null && promo.getDiscountPercent() > maxDiscount) {
+                    maxDiscount = promo.getDiscountPercent();
+                }
+            }
+        }
+
+        // Override the price IN MEMORY if a flash sale offers a better discount
+        if (maxDiscount > (product.getDiscountPercent() != null ? product.getDiscountPercent() : 0)) {
+            product.setDiscountPercent(maxDiscount);
+            if (product.getPrice() != null) {
+                int newPrice = product.getPrice() - (product.getPrice() * maxDiscount / 100);
+                product.setDiscountedPrice(newPrice);
+            }
+        }
+    }
+
+    private boolean isCategoryInTree(Category productCategory, Category promoCategory) {
+        if (productCategory == null || promoCategory == null) return false;
+        if (productCategory.getId().equals(promoCategory.getId())) return true;
+        return isCategoryInTree(productCategory.getParentCategory(), promoCategory);
     }
 
     private String buildSearchableText(Product p) {

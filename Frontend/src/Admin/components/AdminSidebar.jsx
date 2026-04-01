@@ -9,6 +9,7 @@ const menuItems = [
   { name: "Orders", path: "/admin/orders", icon: "local_shipping" },
   { name: "Customers", path: "/admin/customers", icon: "people" },
   { name: "Analytics", path: "/admin/analytics", icon: "monitoring" },
+  { name: "Flash Sales", path: "/admin/promotions", icon: "local_offer" }, 
 ];
 
 export default function AdminSidebar() {
