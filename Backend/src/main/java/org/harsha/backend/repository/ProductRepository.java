@@ -1,6 +1,7 @@
 package org.harsha.backend.repository;
 
 import org.harsha.backend.model.Product;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -43,7 +44,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             "AND LOWER(p.category.parentCategory.parentCategory.name) = 'collections'")
     List<Product> findMonolithEditFallback();
 
-    @Query("SELECT p FROM Product p WHERE LOWER(p.category.name) IN :categories " +
+    @Query("SELECT p FROM Product p WHERE LOWER(p.category.name) IN (:categories) " +
             "AND LOWER(p.category.parentCategory.parentCategory.name) = LOWER(:gender)")
     List<Product> findByCategoryFallback(
             @Param("categories") List<String> categories,
@@ -60,4 +61,29 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @Query(value = "SELECT * FROM products LIMIT 12", nativeQuery = true)
     List<Product> findSafetyNetFallback();
+
+    // CLOTHSY AI PAIRING QUERIES 
+    
+    // 1. Strict match ensuring the Top-Level Category (Gender) is respected
+    @Query("SELECT p FROM Product p " +
+           "JOIN p.category c " +
+           "JOIN c.parentCategory mid " +
+           "JOIN mid.parentCategory root " +
+           "WHERE LOWER(root.name) = LOWER(:genderRoot) " +
+           "AND LOWER(c.name) = LOWER(:categorySlug) " +
+           "ORDER BY p.createdAt DESC")
+    List<Product> findTopByGenderAndCategory(
+        @Param("genderRoot") String genderRoot,
+        @Param("categorySlug") String categorySlug,
+        Pageable pageable
+    );  
+
+    // 2. Fallback fill-in ensuring the SAME GENDER is respected
+    @Query("SELECT p FROM Product p JOIN p.category c JOIN c.parentCategory mid JOIN mid.parentCategory root " +
+           "WHERE LOWER(root.name) = LOWER(:genderRoot) AND LOWER(c.name) != LOWER(:excludedSlug) ORDER BY p.createdAt DESC")
+    List<Product> findRecentByGenderExcludingCategory(
+        @Param("genderRoot") String genderRoot, 
+        @Param("excludedSlug") String excludedSlug, 
+        Pageable pageable
+    );
 }

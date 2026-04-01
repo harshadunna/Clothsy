@@ -36,10 +36,11 @@ public class Product {
     @Column(length = 1000)
     private String fit;
 
-    private int price;
-    private int discountedPrice;
-    private int discountPercent;
-    private int quantity;
+    private Integer price;
+    private Integer discountedPrice;
+    private Integer discountPercent;
+    private Integer quantity;
+    
     private String brand;
     private String color;
 
@@ -77,8 +78,8 @@ public class Product {
     private LocalDateTime createdAt;
 
     @Column(name = "num_ratings")
-    private int numRatings;
+    private Integer numRatings;
 
     @Column(name = "average_rating")
-    private double averageRating;
+    private Double averageRating;
 }

@@ -25,7 +25,6 @@ public interface ProductService {
 
     List<Product> recentlyAddedProduct();
 
-    // This is the method that needed the 'String search' added to the end!
     Page<Product> getAllProduct(
             String category,
             List<String> colors,
@@ -41,4 +40,6 @@ public interface ProductService {
     );
 
     List<Product> getRecommendedProducts(Long productId);
+
+    List<Product> getRecommendations(Long productId) throws ProductException;
 }

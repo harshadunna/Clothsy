@@ -40,6 +40,17 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    // For OAuth2 Login Success Handling
+    public String generateTokenFromEmail(String email) {
+        return Jwts.builder()
+                .issuedAt(new Date())
+                .expiration(new Date(new Date().getTime() + 86400000))
+                .claim("email", email)
+                .claim("authorities", "ROLE_CUSTOMER")
+                .signWith(key)
+                .compact();
+    }
+
     public String getEmailFromToken(String jwt) {
         if (jwt != null && jwt.startsWith("Bearer ")) {
             jwt = jwt.substring(7);

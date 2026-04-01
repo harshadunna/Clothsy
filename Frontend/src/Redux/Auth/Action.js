@@ -1,22 +1,16 @@
 import {
-  REGISTER_REQUEST,
-  REGISTER_SUCCESS,
-  REGISTER_FAILURE,
-  LOGIN_REQUEST,
-  LOGIN_SUCCESS,
-  LOGIN_FAILURE,
-  GET_USER_REQUEST,
-  GET_USER_SUCCESS,
-  GET_USER_FAILURE,
-  LOGOUT,
-  GET_ALL_CUSTOMERS_REQUEST,
-  GET_ALL_CUSTOMERS_SUCCESS,
-  GET_ALL_CUSTOMERS_FAILURE,
-  DELETE_ADDRESS_REQUEST,
-  DELETE_ADDRESS_SUCCESS,
-  DELETE_ADDRESS_FAILURE,
+  REGISTER_REQUEST, REGISTER_SUCCESS, REGISTER_FAILURE,
+  LOGIN_REQUEST, LOGIN_SUCCESS, LOGIN_FAILURE,
+  GET_USER_REQUEST, GET_USER_SUCCESS, GET_USER_FAILURE,
+  LOGOUT, GET_ALL_CUSTOMERS_REQUEST, GET_ALL_CUSTOMERS_SUCCESS, GET_ALL_CUSTOMERS_FAILURE,
 } from "./ActionTypes";
 import api from "../../config/api";
+
+export const socialLoginSuccess = (jwt) => async (dispatch) => {
+  localStorage.setItem("jwt", jwt);
+  dispatch({ type: LOGIN_SUCCESS, payload: jwt });
+  dispatch(getUser(jwt));
+};
 
 export const register = (userData) => async (dispatch) => {
   dispatch({ type: REGISTER_REQUEST });
@@ -90,17 +84,9 @@ export const deleteAddress = (addressId) => async (dispatch) => {
   dispatch({ type: "DELETE_ADDRESS_REQUEST" });
   try {
     await api.delete(`/api/addresses/${addressId}`);
-
-    dispatch({
-      type: "DELETE_ADDRESS_SUCCESS",
-      payload: addressId
-    });
+    dispatch({ type: "DELETE_ADDRESS_SUCCESS", payload: addressId });
   } catch (error) {
-    dispatch({
-      type: "DELETE_ADDRESS_FAILURE",
-      payload: error.response?.data?.message || error.message
-    });
-    console.error("Error deleting address:", error);
+    dispatch({ type: "DELETE_ADDRESS_FAILURE", payload: error.response?.data?.message || error.message });
   }
 };
 
@@ -120,7 +106,6 @@ export const saveAddress = (addressData) => async (dispatch) => {
     dispatch({ type: "ADD_NEW_ADDRESS_SUCCESS", payload: data });
     return data; 
   } catch (error) {
-    console.error("Failed to save address:", error);
     throw error;
   }
 };

@@ -57,8 +57,9 @@ public class UserProductController {
     }
 
     @GetMapping("/products/{productId}/recommendations")
-    public ResponseEntity<List<Product>> getProductRecommendations(@PathVariable Long productId) {
-        List<Product> recommendations = productService.getRecommendedProducts(productId);
+    public ResponseEntity<List<Product>> getRecommendations(
+            @PathVariable Long productId) throws ProductException {
+        List<Product> recommendations = productService.getRecommendations(productId);
         return ResponseEntity.ok(recommendations);
     }
 
@@ -69,7 +70,6 @@ public class UserProductController {
         List<Product> products = productRepository.findByCurationTag(normalizedTag);
 
         if (products.isEmpty()) {
-
             if (normalizedTag.startsWith("mens-monolith")) {
                 products = productRepository.findByCategoryFallback(
                         Arrays.asList("overcoats", "suits", "poplin-shirts", "trousers", "fine-knits"),
@@ -85,7 +85,6 @@ public class UserProductController {
                         Arrays.asList("suits", "briefcases", "watches"),
                         "atelier"
                 );
-
             } else if (normalizedTag.contains("monolith")) {
                 products = productRepository.findMonolithEditFallback();
             } else if (normalizedTag.contains("core")) {
