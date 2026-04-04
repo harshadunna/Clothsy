@@ -60,7 +60,7 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      {/* METRICS GRID (No rounded corners, 1px borders) */}
+      {/* METRICS GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 border-t border-l border-[#D1C4BC] mb-16">
 
         <div className="border-r border-b border-[#D1C4BC] p-8 bg-white transition-colors hover:bg-[#F9F2EF]">

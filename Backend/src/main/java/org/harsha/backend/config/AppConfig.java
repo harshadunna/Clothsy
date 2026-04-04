@@ -49,7 +49,7 @@ public class AppConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/oauth2/**").permitAll()
                         .requestMatchers("/api/payments/webhook").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/reviews/product/**", "/api/ratings/product/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
 
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 

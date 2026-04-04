@@ -232,7 +232,7 @@ export default function ProductDetails() {
   const [loadingRecs, setLoadingRecs] = useState(true);
 
   const navigate = useNavigate();
-  const location = useLocation(); // NEW: Intercepts the success state from RateProduct
+  const location = useLocation(); 
   const dispatch = useDispatch();
   const { productId } = useParams();
 
