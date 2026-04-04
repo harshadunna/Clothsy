@@ -9,12 +9,14 @@ export default function CartItem({ item, showButton = true }) {
   const dispatch = useDispatch();
   const [isRemoving, setIsRemoving] = useState(false);
 
-  const imageUrl        = item?.product?.imageUrl        || "";
-  const title           = item?.product?.title           || "Product Title";
-  const brand           = item?.product?.brand           || "Brand";
-  const size            = item?.size                     || "M";
-  const discountedPrice = item?.product?.discountedPrice || 0;
-  const quantity        = item?.quantity                 || 1;
+  // ROCK SOLID FALLBACKS: Uses images array if main URL is missing
+  const product = item?.product || {};
+  const imageUrl        = product.imageUrl || (product.images && product.images.length > 0 ? product.images[0] : "");
+  const title           = product.title || "Product Title";
+  const brand           = product.brand || "Brand";
+  const size            = item?.size || "M";
+  const discountedPrice = item?.discountedPrice || product.discountedPrice || 0;
+  const quantity        = item?.quantity || 1;
 
   const handleRemove = () => {
     setIsRemoving(true);
@@ -39,18 +41,22 @@ export default function CartItem({ item, showButton = true }) {
       <div className="col-span-3 flex items-center space-x-6">
         <div
           className="w-32 h-40 bg-[#E8E1DE] overflow-hidden flex-shrink-0 cursor-pointer"
-          onClick={() => navigate(`/product/${item.product.id}`)}
+          onClick={() => navigate(`/product/${product.id}`)}
         >
-          <img
-            src={imageUrl}
-            alt={title}
-            className="w-full h-full object-cover grayscale-[10%] hover:grayscale-0 transition-all duration-700 ease-out hover:scale-105"
-          />
+          {imageUrl ? (
+             <img
+               src={imageUrl}
+               alt={title}
+               className="w-full h-full object-cover grayscale-[10%] hover:grayscale-0 transition-all duration-700 ease-out hover:scale-105"
+             />
+          ) : (
+             <div className="w-full h-full flex items-center justify-center text-[#7F756E] text-[10px] uppercase">No Image</div>
+          )}
         </div>
         <div className="space-y-1">
           <h3
             className="font-headline text-2xl text-[#1A1109] italic capitalize tracking-tight cursor-pointer hover:text-[#C8742A] transition-colors"
-            onClick={() => navigate(`/product/${item.product.id}`)}
+            onClick={() => navigate(`/product/${product.id}`)}
           >
             {title}
           </h3>

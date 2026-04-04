@@ -60,8 +60,8 @@ const CustomerRoutes = () => {
           <Route path="/product/:productId/rate" element={<PageTransition><RateProduct /></PageTransition>} />
           <Route path="/product/:productId" element={<PageTransition><ProductDetails /></PageTransition>} />
           <Route path="/products" element={<PageTransition><Product /></PageTransition>} />
+          <Route path="/product" element={<PageTransition><Product /></PageTransition>} />
 
-          {/* Editorial Curation Routes - UPDATED to practical names */}
           <Route path="/women/featured/:editName" element={<PageTransition><CurationPage /></PageTransition>} />
           <Route path="/men/featured/:editName" element={<PageTransition><CurationPage /></PageTransition>} />
 

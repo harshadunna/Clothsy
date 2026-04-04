@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -14,7 +14,6 @@ import { addItemToCart, getCart } from "../../../Redux/Customers/Cart/Action";
 import { getWishlist, toggleWishlistItem } from "../../../Redux/Customers/Wishlist/Action";
 import api from "../../../config/api";
 
-// Accordion 
 const Accordion = ({ title, content, isOpen, onClick }) => (
   <div className="border-b border-[#D1C4BC] first:border-t">
     <button
@@ -46,7 +45,6 @@ const Accordion = ({ title, content, isOpen, onClick }) => (
   </div>
 );
 
-// Complete the Look Card 
 const LookCard = ({ item, index }) => {
   const navigate = useNavigate();
   const image = item.images?.[0] || item.imageUrl;
@@ -71,19 +69,16 @@ const LookCard = ({ item, index }) => {
           alt={item.title}
           className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-[1.04] transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
         />
-
         {categoryLabel && (
           <span className="absolute top-3 left-3 bg-[#FFF8F5]/90 backdrop-blur-sm text-[#1A1109] font-label text-[0.55rem] font-black tracking-[0.25em] uppercase px-2.5 py-1.5">
             {categoryLabel}
           </span>
         )}
-
         {item.discountPercent > 0 && (
           <span className="absolute top-3 right-3 bg-[#C8742A] text-[#FFF8F5] font-label text-[0.55rem] font-black tracking-widest px-2 py-1 uppercase">
             −{item.discountPercent}%
           </span>
         )}
-
         <div className="absolute inset-0 bg-[#1A1109]/0 group-hover:bg-[#1A1109]/10 transition-colors duration-500 flex items-end justify-center pb-6 opacity-0 group-hover:opacity-100">
           <span className="font-label text-[0.6rem] font-black uppercase tracking-[0.25em] text-[#FFF8F5] bg-[#1A1109] px-4 py-2">
             View Piece →
@@ -237,10 +232,12 @@ export default function ProductDetails() {
   const [loadingRecs, setLoadingRecs] = useState(true);
 
   const navigate = useNavigate();
+  const location = useLocation(); // NEW: Intercepts the success state from RateProduct
   const dispatch = useDispatch();
   const { productId } = useParams();
 
-  const { customersProduct, auth } = useSelector((store) => store);
+  const customersProduct = useSelector((store) => store.customersProduct);
+  const auth = useSelector((store) => store.auth);
   const product = customersProduct?.product;
   const wishlistState = useSelector((store) => store.wishlist);
   const isWishlisted =
@@ -251,6 +248,15 @@ export default function ProductDetails() {
   useEffect(() => {
     if (productId) dispatch(findProductById(productId));
   }, [productId, dispatch]);
+
+  useEffect(() => {
+    if (location.state?.reviewSuccess) {
+      triggerToast("Perspective published successfully.", "wishlist", "added");
+      dispatch(findProductById(productId));
+      // Clear the router state so it doesn't loop on manual refresh
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, dispatch, productId, navigate]);
 
   useEffect(() => {
     dispatch(getCart());
@@ -293,24 +299,6 @@ export default function ProductDetails() {
     toastTimerRef.current = setTimeout(() => setToast(null), 3500);
   };
 
-  const handleAddToCart = async () => {
-    if (!selectedSize || product?.quantity <= 0) return;
-    setAddingToCart(true);
-    try {
-      // WE NOW PASS THE ENTIRE PRODUCT SO LOCAL STORAGE HAS THE IMAGE, TITLE, AND PRICES
-      await dispatch(addItemToCart({ 
-          data: { productId: product.id, size: selectedSize.name, quantity: 1 },
-          product: product 
-      }));
-      await dispatch(getCart());
-      triggerToast("Piece secured in bag.", "cart");
-    } catch (err) {
-      console.error("Add to cart failed:", err);
-    } finally {
-      setAddingToCart(false);
-    }
-  };
-
   const handleToggleWishlist = () => {
     if (!auth?.user) { navigate("/login"); return; }
     if (product?.id) {
@@ -333,15 +321,38 @@ export default function ProductDetails() {
     );
   }
 
-  if (!product || product.quantity <= 0) {
+  if (!product || !product.id) {
     return <NotFound productImage={product?.imageUrl || product?.images?.[0]} />;
   }
 
+  const trueStock = product.quantity > 0
+    ? product.quantity
+    : (product.sizes?.reduce((total, size) => total + (size.quantity || 0), 0) || 0);
+
+  const isOutOfStock = trueStock <= 0;
+
+  const handleAddToCart = async () => {
+    if (!selectedSize || isOutOfStock) return;
+    setAddingToCart(true);
+    try {
+      await dispatch(addItemToCart({
+        data: { productId: product.id, size: selectedSize.name, quantity: 1 },
+        product: product
+      }));
+      await dispatch(getCart());
+      triggerToast("Piece secured in bag.", "cart");
+    } catch (err) {
+      console.error("Add to cart failed:", err);
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+
+  // Safely extract the native reviews payload from the backend
   const reviews = product?.reviews || [];
   const images = product.images?.length > 0
     ? product.images
     : product.imageUrl ? [product.imageUrl] : [];
-  const isOutOfStock = product.quantity <= 0;
 
   const categoryName =
     typeof product.category === "string"
@@ -462,11 +473,10 @@ export default function ProductDetails() {
                   key={size.name}
                   onClick={() => setSelectedSize(size)}
                   disabled={size.quantity <= 0}
-                  className={`py-4 font-label text-[0.7rem] font-black transition-all border ${
-                    selectedSize?.name === size.name
+                  className={`py-4 font-label text-[0.7rem] font-black transition-all border ${selectedSize?.name === size.name
                       ? "bg-[#1A1109] text-[#FFF8F5] border-[#1A1109]"
                       : "bg-transparent border-[#D1C4BC] text-[#7F756E] hover:border-[#1A1109] hover:text-[#1A1109]"
-                  } ${size.quantity <= 0 ? "opacity-20 cursor-not-allowed line-through" : ""}`}
+                    } ${size.quantity <= 0 ? "opacity-20 cursor-not-allowed line-through" : ""}`}
                 >
                   {size.name}
                 </button>

@@ -23,8 +23,10 @@ export default function Product() {
 
   const searchParams = new URLSearchParams(location.search);
   const pageNumber = parseInt(searchParams.get("page") || "1");
-  const totalPages = customersProduct?.products?.totalPages || 1;
-  const totalProducts = customersProduct?.products?.totalElements || 0;
+  
+  // FIX: Safely read the new Spring Boot 3.3 VIA_DTO pagination structure
+  const totalPages = customersProduct?.products?.page?.totalPages || customersProduct?.products?.totalPages || 1;
+  const totalProducts = customersProduct?.products?.page?.totalElements || customersProduct?.products?.totalElements || 0;
   const products = customersProduct?.products?.content || [];
 
   useEffect(() => {
@@ -40,8 +42,8 @@ export default function Product() {
       stock: searchParams.get("stock") || "",
       sort: activeSort,
       pageNumber: pageNumber - 1,
-      pageSize: 12, 
-      search: searchParams.get("search") || "", 
+      pageSize: 12,
+      search: searchParams.get("search") || "",
     };
     dispatch(findProducts(reqData));
   }, [location.search, activeSort, levelThree, dispatch]);
@@ -80,8 +82,9 @@ export default function Product() {
   const clearFilters = () => navigate({ search: "" });
   const hasActiveFilters = Array.from(searchParams.keys()).some((key) => key !== "sort" && key !== "page" && key !== "search");
 
-  const pageTitle = searchParams.get("search") 
-    ? `Results for "${searchParams.get("search")}"` 
+  // Keep the title clean without hyphens for the UI
+  const pageTitle = searchParams.get("search")
+    ? `Results for "${searchParams.get("search")}"`
     : (levelThree ? levelThree.replace(/-/g, " ") : "The Archive");
 
   // Brutalist Architectural Filters
@@ -134,17 +137,17 @@ export default function Product() {
 
   return (
     <div className="bg-[#FFF8F5] text-[#1A1109] min-h-screen pt-32 px-8 md:px-12 pb-24 font-body selection:bg-[#C8742A] selection:text-[#FFF8F5]">
-      
+
       {/* Header Area */}
       <header className="mb-24 flex flex-col md:flex-row justify-between items-end gap-8 border-b border-[#D1C4BC] pb-12">
         <div className="max-w-2xl">
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}
             className="font-headline italic text-6xl md:text-8xl lg:text-9xl tracking-tighter leading-none capitalize"
           >
             {pageTitle}
           </motion.h1>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }}
             className="mt-8 font-label text-xs uppercase tracking-widest text-[#7F756E] max-w-md"
           >
@@ -152,28 +155,28 @@ export default function Product() {
           </motion.p>
         </div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }}
           className="flex flex-col items-start md:items-end gap-4 w-full md:w-auto"
         >
           <span className="font-label uppercase tracking-[0.2em] text-[0.65rem] font-black text-[#C8742A]">
             Catalog: {totalProducts} Pieces
           </span>
-          
+
           <div className="flex gap-4 w-full md:w-auto">
             {/* Sort Dropdown */}
             <div className="relative w-1/2 md:w-auto">
-              <button 
+              <button
                 onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
                 className="w-full px-8 py-4 border border-[#1A1109] bg-transparent text-[0.65rem] uppercase tracking-[0.2em] font-black hover:bg-[#F9F2EF] transition-colors flex justify-between items-center gap-4"
               >
                 Sort: {sortOptions.find((o) => o.query === activeSort)?.name.split(':')[0] || "Newest"}
                 <span className="material-symbols-outlined text-[14px]">{sortDropdownOpen ? 'expand_less' : 'expand_more'}</span>
               </button>
-              
+
               <AnimatePresence>
                 {sortDropdownOpen && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
                     className="absolute top-full left-0 w-full mt-0 bg-[#FFF8F5] border border-[#1A1109] border-t-0 z-20 shadow-2xl"
                   >
@@ -181,9 +184,8 @@ export default function Product() {
                       <button
                         key={option.query}
                         onClick={() => { setActiveSort(option.query); setSortDropdownOpen(false); }}
-                        className={`w-full text-left px-6 py-4 text-[0.65rem] font-label font-black uppercase tracking-[0.2em] transition-colors ${
-                          activeSort === option.query ? "bg-[#1A1109] text-[#FFF8F5]" : "text-[#1A1109] hover:bg-[#F9F2EF]"
-                        }`}
+                        className={`w-full text-left px-6 py-4 text-[0.65rem] font-label font-black uppercase tracking-[0.2em] transition-colors ${activeSort === option.query ? "bg-[#1A1109] text-[#FFF8F5]" : "text-[#1A1109] hover:bg-[#F9F2EF]"
+                          }`}
                       >
                         {option.name}
                       </button>
@@ -194,7 +196,7 @@ export default function Product() {
             </div>
 
             {/* Mobile Filter Toggle */}
-            <button 
+            <button
               onClick={() => setMobileFiltersOpen(true)}
               className="lg:hidden w-1/2 px-6 py-4 bg-[#1A1109] text-[#FFF8F5] text-[0.65rem] uppercase tracking-[0.2em] font-black flex items-center justify-center gap-2"
             >
@@ -206,7 +208,7 @@ export default function Product() {
 
       {/* Main Layout */}
       <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
-        
+
         {/* Desktop Sidebar */}
         <aside className="hidden lg:block w-64 flex-shrink-0 border-r border-[#D1C4BC]">
           <div className="sticky top-32">
@@ -278,11 +280,10 @@ export default function Product() {
                       <button
                         key={page}
                         onClick={() => handlePageChange(page)}
-                        className={`font-label text-sm transition-colors ${
-                          isActive 
-                            ? "font-black border-b-2 border-[#1A1109] pb-1 text-[#1A1109]" 
+                        className={`font-label text-sm transition-colors ${isActive
+                            ? "font-black border-b-2 border-[#1A1109] pb-1 text-[#1A1109]"
                             : "text-[#7F756E] hover:text-[#1A1109]"
-                        }`}
+                          }`}
                       >
                         {page.toString().padStart(2, '0')}
                       </button>

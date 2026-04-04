@@ -13,16 +13,16 @@ export default function CreateProduct() {
     color: "",
     discountedPrice: "",
     price: "",
-    discountPersent: "",
+    discountPercent: "",
     size: [
       { name: "S", quantity: 0 },
       { name: "M", quantity: 0 },
       { name: "L", quantity: 0 },
     ],
     quantity: "",
-    topLavelCategory: "",
-    secondLavelCategory: "",
-    thirdLavelCategory: "",
+    topLevelCategory: "", 
+    secondLevelCategory: "", 
+    thirdLevelCategory: "", 
     description: "",
   });
 
@@ -60,6 +60,24 @@ export default function CreateProduct() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    const reqPayload = {
+      title: productData.title,
+      description: productData.description,
+      brand: productData.brand,
+      color: productData.color,
+      price: Number(productData.price),
+      discountedPrice: Number(productData.discountedPrice),
+      discountPercent: Number(productData.discountPercent),
+      quantity: Number(productData.quantity),
+      topLevelCategory: productData.topLevelCategory,
+      secondLevelCategory: productData.secondLevelCategory,
+      thirdLevelCategory: productData.thirdLevelCategory,
+      sizes: productData.size.map(s => ({
+        name: s.name,
+        quantity: Number(s.quantity)
+      }))
+    };
+
     // 1. Create a Multipart FormData object
     const formData = new FormData();
 
@@ -68,13 +86,8 @@ export default function CreateProduct() {
       formData.append("image", productData.imageFile);
     }
 
-    // 3. Clean up the JSON payload (remove file data from it)
-    const reqData = { ...productData };
-    delete reqData.imageFile;
-    delete reqData.imagePreview;
-
-    // 4. Append the JSON payload as a Blob
-    formData.append("req", new Blob([JSON.stringify(reqData)], { type: "application/json" }));
+    // 3. Append the strictly formatted JSON payload as a Blob
+    formData.append("req", new Blob([JSON.stringify(reqPayload)], { type: "application/json" }));
 
     // Dispatch the action with FormData!
     dispatch(createProduct(formData));
@@ -88,16 +101,16 @@ export default function CreateProduct() {
       color: "",
       discountedPrice: "",
       price: "",
-      discountPersent: "",
+      discountPercent: "",
       size: [
         { name: "S", quantity: 0 },
         { name: "M", quantity: 0 },
         { name: "L", quantity: 0 },
       ],
       quantity: "",
-      topLavelCategory: "",
-      secondLavelCategory: "",
-      thirdLavelCategory: "",
+      topLevelCategory: "",
+      secondLevelCategory: "",
+      thirdLevelCategory: "",
       description: "",
     });
   };
@@ -172,14 +185,14 @@ export default function CreateProduct() {
             </div>
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 mb-2">Discount Percent (%)</label>
-              <input type="number" name="discountPersent" value={productData.discountPersent} onChange={handleChange} className="w-full border-b border-gray-300 py-2 bg-transparent focus:outline-none focus:border-[#C8742A] text-sm" placeholder="e.g., 20" />
+              <input type="number" name="discountPercent" value={productData.discountPercent} onChange={handleChange} className="w-full border-b border-gray-300 py-2 bg-transparent focus:outline-none focus:border-[#C8742A] text-sm" placeholder="e.g., 20" />
             </div>
           </div>
 
           <div className="border-t border-gray-100 pt-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 mb-2">Top Level Category</label>
-              <select name="topLavelCategory" value={productData.topLavelCategory} onChange={handleChange} className="w-full border border-gray-300 rounded p-2 bg-white text-sm focus:outline-none focus:border-[#C8742A]">
+              <select name="topLevelCategory" value={productData.topLevelCategory} onChange={handleChange} className="w-full border border-gray-300 rounded p-2 bg-white text-sm focus:outline-none focus:border-[#C8742A]">
                 <option value="">Select Gender</option>
                 <option value="men">Men</option>
                 <option value="women">Women</option>
@@ -187,7 +200,7 @@ export default function CreateProduct() {
             </div>
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 mb-2">Second Level</label>
-              <select name="secondLavelCategory" value={productData.secondLavelCategory} onChange={handleChange} className="w-full border border-gray-300 rounded p-2 bg-white text-sm focus:outline-none focus:border-[#C8742A]">
+              <select name="secondLevelCategory" value={productData.secondLevelCategory} onChange={handleChange} className="w-full border border-gray-300 rounded p-2 bg-white text-sm focus:outline-none focus:border-[#C8742A]">
                 <option value="">Select Group</option>
                 <option value="clothing">Clothing</option>
                 <option value="accessories">Accessories</option>
@@ -195,7 +208,7 @@ export default function CreateProduct() {
             </div>
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 mb-2">Third Level</label>
-              <input type="text" name="thirdLavelCategory" value={productData.thirdLavelCategory} onChange={handleChange} className="w-full border-b border-gray-300 py-2 bg-transparent focus:outline-none focus:border-[#C8742A] text-sm" placeholder="e.g., overcoats, silk-dresses" />
+              <input type="text" name="thirdLevelCategory" value={productData.thirdLevelCategory} onChange={handleChange} className="w-full border-b border-gray-300 py-2 bg-transparent focus:outline-none focus:border-[#C8742A] text-sm" placeholder="e.g., overcoats, silk-dresses" />
             </div>
           </div>
 
