@@ -34,6 +34,8 @@ public class UserProductController {
             @RequestParam(defaultValue = "12") Integer pageSize,
             @RequestParam(required = false) String search) {
 
+        System.out.println("Received category: " + category);
+        
         Page<Product> products = productService.getAllProduct(
                 category, color, size, minPrice, maxPrice,
                 minDiscount, sort, stock, pageNumber, pageSize, search
