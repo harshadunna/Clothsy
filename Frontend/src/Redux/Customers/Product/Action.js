@@ -19,13 +19,27 @@ import api from "../../../config/api";
 
 export const findProducts = (reqData) => async (dispatch) => {
   dispatch({ type: FIND_PRODUCTS_REQUEST });
-  const {
-    colors, sizes, minPrice, maxPrice, minDiscount, category, stock, sort, pageNumber, pageSize, search,
-  } = reqData;
+  
   try {
-    const { data } = await api.get(
-      `/api/products?color=${colors}&size=${sizes}&minPrice=${minPrice}&maxPrice=${maxPrice}&minDiscount=${minDiscount}&category=${category}&stock=${stock}&sort=${sort}&pageNumber=${pageNumber}&pageSize=${pageSize}${search ? `&search=${search}` : ""}`
-    );
+    const params = new URLSearchParams();
+
+    if (reqData.colors && reqData.colors !== "undefined" && reqData.colors !== "") params.append("color", reqData.colors);
+    if (reqData.sizes && reqData.sizes !== "undefined" && reqData.sizes !== "") params.append("size", reqData.sizes);
+    if (reqData.minPrice != null) params.append("minPrice", reqData.minPrice);
+    if (reqData.maxPrice != null) params.append("maxPrice", reqData.maxPrice);
+    if (reqData.minDiscount != null) params.append("minDiscount", reqData.minDiscount);
+    
+    if (reqData.category && reqData.category !== "undefined" && reqData.category !== "null" && reqData.category !== "") {
+      params.append("category", reqData.category);
+    }
+    
+    if (reqData.stock && reqData.stock !== "undefined" && reqData.stock !== "") params.append("stock", reqData.stock);
+    if (reqData.sort && reqData.sort !== "undefined" && reqData.sort !== "") params.append("sort", reqData.sort);
+    if (reqData.pageNumber != null) params.append("pageNumber", reqData.pageNumber);
+    if (reqData.pageSize != null) params.append("pageSize", reqData.pageSize);
+    if (reqData.search && reqData.search !== "undefined" && reqData.search !== "") params.append("search", reqData.search);
+
+    const { data } = await api.get(`/api/products?${params.toString()}`);
     dispatch({ type: FIND_PRODUCTS_SUCCESS, payload: data });
   } catch (error) {
     dispatch({ type: FIND_PRODUCTS_FAILURE, payload: error.message });
@@ -73,9 +87,7 @@ export const updateProduct = (product) => async (dispatch) => {
 export const deleteProduct = (productId) => async (dispatch) => {
   dispatch({ type: DELETE_PRODUCT_REQUEST });
   try {
-    const { data } = await api.delete(
-      `/api/admin/products/${productId}/delete`
-    );
+    await api.delete(`/api/admin/products/${productId}/delete`);
     dispatch({ type: DELETE_PRODUCT_SUCCESS, payload: productId });
   } catch (error) {
     dispatch({ type: DELETE_PRODUCT_FAILURE, payload: error.message });

@@ -2,6 +2,9 @@ import {
   FIND_PRODUCTS_BY_CATEGORY_REQUEST,
   FIND_PRODUCTS_BY_CATEGORY_SUCCESS,
   FIND_PRODUCTS_BY_CATEGORY_FAILURE,
+  FIND_PRODUCTS_REQUEST,
+  FIND_PRODUCTS_SUCCESS,
+  FIND_PRODUCTS_FAILURE,
   FIND_PRODUCT_BY_ID_REQUEST,
   FIND_PRODUCT_BY_ID_SUCCESS,
   FIND_PRODUCT_BY_ID_FAILURE,
@@ -30,6 +33,7 @@ const initialState = {
 const customerProductReducer = (state = initialState, action) => {
   switch (action.type) {
     case FIND_PRODUCTS_BY_CATEGORY_REQUEST:
+    case FIND_PRODUCTS_REQUEST:
     case FIND_PRODUCT_BY_ID_REQUEST:
     case CREATE_PRODUCT_REQUEST:
     case UPDATE_PRODUCT_REQUEST:
@@ -38,6 +42,7 @@ const customerProductReducer = (state = initialState, action) => {
       return { ...state, loading: true, error: null };
 
     case FIND_PRODUCTS_BY_CATEGORY_SUCCESS:
+    case FIND_PRODUCTS_SUCCESS:
       return { ...state, loading: false, products: action.payload };
 
     case FIND_PRODUCT_BY_ID_SUCCESS:
@@ -72,6 +77,7 @@ const customerProductReducer = (state = initialState, action) => {
       return { ...state, loading: false, searchProducts: action.payload };
 
     case FIND_PRODUCTS_BY_CATEGORY_FAILURE:
+    case FIND_PRODUCTS_FAILURE:
     case FIND_PRODUCT_BY_ID_FAILURE:
     case CREATE_PRODUCT_FAILURE:
     case UPDATE_PRODUCT_FAILURE:
