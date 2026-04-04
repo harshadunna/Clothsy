@@ -19,4 +19,10 @@ public class CloudinaryService {
         Map<?, ?> uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
         return uploadResult.get("secure_url").toString();
     }
+
+    // Allows Cloudinary to fetch an image directly from an old URL
+    public String uploadFromUrl(String imageUrl) throws IOException {
+        Map<?, ?> uploadResult = cloudinary.uploader().upload(imageUrl, ObjectUtils.emptyMap());
+        return uploadResult.get("secure_url").toString();
+    }
 }

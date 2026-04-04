@@ -65,8 +65,9 @@ public class OrderServiceImplementation implements OrderService {
 
         orderItemRepository.saveAll(orderItems);
 
-        Order fullyLoaded = orderRepository.findByIdWithItems(savedOrder.getId())
+        Order fullyLoaded = orderRepository.findOrderById(savedOrder.getId())
                 .orElseThrow(() -> new RuntimeException("Order not found after save"));
+
         emailApiService.sendOrderUpdateEmail(fullyLoaded, "PLACED");
         return fullyLoaded;
     }
@@ -140,7 +141,7 @@ public class OrderServiceImplementation implements OrderService {
 
     @Override
     @Transactional
-    public Order cancelOrder(Long orderId) throws OrderException {  
+    public Order cancelOrder(Long orderId) throws OrderException {
         Order order = findOrderById(orderId);
         order.setOrderStatus("CANCELLED");
         for (OrderItem item : order.getOrderItems()) {
@@ -166,7 +167,8 @@ public class OrderServiceImplementation implements OrderService {
 
     @Override
     public Order findOrderById(Long orderId) throws OrderException {
-        return orderRepository.findByIdWithItems(orderId)
+        // FIX: Changed from findByIdWithItems to findOrderById
+        return orderRepository.findOrderById(orderId)
                 .orElseThrow(() -> new OrderException("Order not found with id: " + orderId));
     }
 
@@ -315,15 +317,13 @@ public class OrderServiceImplementation implements OrderService {
         List<Order> allOrders = orderRepository.findAll();
 
         for (Order order : allOrders) {
-
-            // 1. FORWARD LOGISTICS (DELIVERY) 
+            // 1. FORWARD LOGISTICS (DELIVERY)
             if (order.getShippedAt() != null
                     && ("SHIPPED".equals(order.getOrderStatus()) || "OUT_FOR_DELIVERY".equals(order.getOrderStatus()))) {
 
                 long totalDuration = Duration.between(order.getShippedAt(), order.getEstimatedDeliveryAt()).toSeconds();
                 long elapsed = Duration.between(order.getShippedAt(), now).toSeconds();
 
-                // Guard against zero/negative duration to avoid division by zero
                 if (totalDuration <= 0) continue;
 
                 double progress = (double) elapsed / totalDuration;

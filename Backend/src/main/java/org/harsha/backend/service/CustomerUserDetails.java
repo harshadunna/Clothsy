@@ -3,12 +3,15 @@ package org.harsha.backend.service;
 import lombok.RequiredArgsConstructor;
 import org.harsha.backend.model.User;
 import org.harsha.backend.repository.UserRepository;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * CustomUserDetails
@@ -16,9 +19,6 @@ import java.util.ArrayList;
  * Custom implementation of Spring Security's {@link UserDetailsService}.
  * Called automatically by Spring Security during the authentication process
  * to load a user's credentials and authorities from the database.
- *
- * The loaded UserDetails object is then used to verify the provided
- * password and populate the SecurityContext on successful login.
  */
 @Service
 @RequiredArgsConstructor
@@ -26,21 +26,6 @@ public class CustomerUserDetails implements UserDetailsService {
 
     private final UserRepository userRepository;
 
-    /**
-     * Loads a user's details by their email address.
-     *
-     * Called internally by Spring Security during login.
-     * The "username" parameter is the email address in our system.
-     *
-     * Flow:
-     * 1. Query the database for a user matching the given email
-     * 2. Throw UsernameNotFoundException if no match is found
-     * 3. Return a UserDetails object with email, hashed password, and authorities
-     *
-     * @param username the email address provided during login
-     * @return UserDetails containing credentials and granted authorities
-     * @throws UsernameNotFoundException if no user exists with the given email
-     */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
@@ -50,12 +35,24 @@ public class CustomerUserDetails implements UserDetailsService {
             throw new UsernameNotFoundException("No account found with email: " + username);
         }
 
-        // Empty authorities list — roles can be added here in the future
-        // e.g. authorities.add(new SimpleGrantedAuthority("ROLE_USER"))
+        // 1. Create a list to hold the user's roles/authorities
+        List<GrantedAuthority> authorities = new ArrayList<>();
+
+        // 2. Get the role from the MySQL database
+        String role = user.getRole();
+
+        // 3. Failsafe: Default to a standard customer role if it's empty in the DB
+        if (role == null || role.trim().isEmpty()) {
+            role = "ROLE_CUSTOMER"; // Or simply "CUSTOMER" depending on your convention
+        }
+
+        // 4. Add the role to Spring Security's authority list
+        authorities.add(new SimpleGrantedAuthority(role));
+
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
-                new ArrayList<>()
+                authorities // 5. Pass the list here instead of an empty ArrayList!
         );
     }
 }

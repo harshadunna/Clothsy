@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -139,13 +140,13 @@ public class ProductServiceImplementation implements ProductService {
 
     @Override
     public Product findProductById(Long id) throws ProductException {
-        Product product = productRepository.findById(id)
+        Product product = productRepository.findByIdFull(id)
                 .orElseThrow(() -> new ProductException("Product not found with id: " + id));
 
         List<Promotion> activePromos = promotionRepository.findActivePromotions(LocalDateTime.now());
         applyActivePromotions(product, activePromos);
         return product;
-    }
+}
 
     @Override
     public List<Product> findProductByCategory(String category) {
@@ -187,6 +188,7 @@ public class ProductServiceImplementation implements ProductService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Product> getAllProduct(
             String category, List<String> colors, List<String> sizes,
             Integer minPrice, Integer maxPrice, Integer minDiscount,
