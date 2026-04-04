@@ -40,13 +40,16 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    // For OAuth2 Login Success Handling
-    public String generateTokenFromEmail(String email) {
+    // Pass the specific role dynamically during OAuth2 login
+    public String generateTokenFromEmail(String email, String role) {
+        // Fallback just in case a user has no role in the DB
+        String safeRole = (role != null && !role.isEmpty()) ? role : "ROLE_CUSTOMER";
+        
         return Jwts.builder()
                 .issuedAt(new Date())
                 .expiration(new Date(new Date().getTime() + 86400000))
                 .claim("email", email)
-                .claim("authorities", "ROLE_CUSTOMER")
+                .claim("authorities", safeRole)
                 .signWith(key)
                 .compact();
     }

@@ -1,5 +1,7 @@
 package org.harsha.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -11,6 +13,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "orders")
 @Data
@@ -24,18 +28,18 @@ public class Order {
 
     private String orderId;
 
-    @ManyToOne
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL,
-               orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JsonManagedReference
     private List<OrderItem> orderItems = new ArrayList<>();
 
     private LocalDate orderDate;
     private LocalDate deliveryDate;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "shipping_address_id")
     private Address shippingAddress;
 
@@ -45,18 +49,16 @@ public class Order {
     private double totalPrice;
     private Integer totalDiscountedPrice;
     private Integer discount;
-
     private String orderStatus;
     private int totalItem;
-
     private LocalDateTime createdAt;
-
     private String trackingNumber;
     private LocalDateTime shippedAt;
     private LocalDateTime estimatedDeliveryAt;
     private LocalDateTime returnRequestedAt;
 
-    @ElementCollection(fetch = FetchType.LAZY)
+
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "order_tracking_history", joinColumns = @JoinColumn(name = "order_id"))
     @Column(name = "tracking_event")
     private List<String> trackingHistory = new ArrayList<>();

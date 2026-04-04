@@ -18,7 +18,6 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Product {
 
     @Id
@@ -40,7 +39,7 @@ public class Product {
     private Integer discountedPrice;
     private Integer discountPercent;
     private Integer quantity;
-    
+
     private String brand;
     private String color;
 
@@ -58,9 +57,11 @@ public class Product {
     private Set<Size> sizes = new HashSet<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Rating> ratings = new ArrayList<>();
+    @JsonIgnoreProperties("product")
+    private Set<Rating> ratings = new HashSet<>();
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonIgnoreProperties("product")
     private List<Review> reviews = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -82,4 +83,5 @@ public class Product {
 
     @Column(name = "average_rating")
     private Double averageRating;
+
 }

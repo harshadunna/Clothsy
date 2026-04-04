@@ -49,8 +49,10 @@ public class AppConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/oauth2/**").permitAll()
                         .requestMatchers("/api/payments/webhook").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                        .requestMatchers("/api/admin/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/reviews/product/**", "/api/ratings/product/**").permitAll()
+
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
                 )
@@ -82,8 +84,8 @@ public class AppConfig {
                                 cartService.createCart(user);
                             }
 
-                            // Generate our local JWT
-                            String token = jwtProvider.generateTokenFromEmail(user.getEmail());
+                            // Generate our local JWT (Pass the actual role instead of hardcoding)
+                            String token = jwtProvider.generateTokenFromEmail(user.getEmail(), user.getRole());
 
                             // Redirect back to frontend
                             response.sendRedirect("http://localhost:5173/oauth2/redirect?token=" + token);

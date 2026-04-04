@@ -14,10 +14,12 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Wishlist {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore 
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

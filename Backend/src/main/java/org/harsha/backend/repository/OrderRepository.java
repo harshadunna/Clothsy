@@ -9,24 +9,11 @@ import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    @Query("SELECT DISTINCT o FROM Order o " +
-           "LEFT JOIN FETCH o.orderItems oi " +
-           "LEFT JOIN FETCH oi.product " +
-           "WHERE o.user.id = :userId " +
-           "AND o.orderStatus IN (" +
-           "  'PENDING', 'PLACED', 'CONFIRMED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED', " + 
-           "  'RETURN_REQUESTED', 'RETURN_PICKED', 'RETURN_RECEIVED', " +
-           "  'REFUND_INITIATED', 'REFUND_COMPLETED', 'CANCELLED'" +
-           ")")
+    @Query("SELECT o FROM Order o WHERE o.user.id = :userId AND (o.orderStatus = 'PLACED' OR o.orderStatus = 'CONFIRMED' OR o.orderStatus = 'SHIPPED' OR o.orderStatus = 'DELIVERED')")
     List<Order> getUsersOrders(@Param("userId") Long userId);
 
-    @Query("SELECT DISTINCT o FROM Order o " +
-           "LEFT JOIN FETCH o.orderItems oi " +
-           "LEFT JOIN FETCH oi.product " +
-           "WHERE o.id = :orderId")
-    Optional<Order> findByIdWithItems(@Param("orderId") Long orderId);
+    @Query("SELECT o FROM Order o JOIN FETCH o.orderItems oi JOIN FETCH oi.product WHERE o.id = :orderId")
+    Optional<Order> findOrderById(@Param("orderId") Long orderId);
 
     List<Order> findAllByOrderByCreatedAtDesc();
-
-    List<Order> findByOrderStatus(String orderStatus);
 }

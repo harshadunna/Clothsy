@@ -7,8 +7,21 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
+
+    @Query("SELECT DISTINCT p FROM Product p " +
+           "LEFT JOIN FETCH p.reviews r " +
+           "LEFT JOIN FETCH r.user " +
+           "WHERE p.id = :id")
+    Optional<Product> findByIdWithReviews(@Param("id") Long id);
+
+    @Query("SELECT DISTINCT p FROM Product p " +
+           "LEFT JOIN FETCH p.reviews r " +
+           "LEFT JOIN FETCH r.user " +
+           "WHERE p.id = :id")
+    Optional<Product> findByIdFull(@Param("id") Long id);
 
     @Query("SELECT p FROM Product p WHERE LOWER(p.category.name) = :category")
     List<Product> findByCategory(@Param("category") String category);
@@ -20,13 +33,14 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             "LOWER(p.category.name) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<Product> searchProduct(@Param("query") String query);
 
-    @Query("SELECT p FROM Product p WHERE (:category = '' OR LOWER(p.category.name) = LOWER(:category)) " +
-            "AND (:minPrice IS NULL OR p.discountedPrice >= :minPrice) " +
-            "AND (:maxPrice IS NULL OR p.discountedPrice <= :maxPrice) " +
-            "AND (:minDiscount IS NULL OR p.discountPercent >= :minDiscount) " +
-            "ORDER BY " +
-            "CASE WHEN :sort = 'price_low' THEN p.discountedPrice END ASC, " +
-            "CASE WHEN :sort = 'price_high' THEN p.discountedPrice END DESC")
+    @Query("SELECT p FROM Product p LEFT JOIN p.category c WHERE " +
+           "(:category IS NULL OR :category = '' OR LOWER(c.name) = LOWER(:category)) " +
+           "AND (:minPrice IS NULL OR COALESCE(p.discountedPrice, 0) >= :minPrice) " +
+           "AND (:maxPrice IS NULL OR COALESCE(p.discountedPrice, 0) <= :maxPrice) " +
+           "AND (:minDiscount IS NULL OR COALESCE(p.discountPercent, 0) >= :minDiscount) " +
+           "ORDER BY " +
+           "CASE WHEN :sort = 'price_low' THEN COALESCE(p.discountedPrice, 0) END ASC, " +
+           "CASE WHEN :sort = 'price_high' THEN COALESCE(p.discountedPrice, 0) END DESC")
     List<Product> filterProducts(
             @Param("category") String category,
             @Param("minPrice") Integer minPrice,
@@ -64,7 +78,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     // CLOTHSY AI PAIRING QUERIES 
 
-    // 1. Strict match ensuring the Top-Level Category (Gender) is respected
     @Query("SELECT p FROM Product p " +
             "JOIN p.category c " +
             "JOIN c.parentCategory mid " +
@@ -78,7 +91,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             Pageable pageable
     );
 
-    // 2. Fallback fill-in ensuring the SAME GENDER is respected
     @Query("SELECT p FROM Product p JOIN p.category c JOIN c.parentCategory mid JOIN mid.parentCategory root " +
             "WHERE LOWER(root.name) = LOWER(:genderRoot) AND LOWER(c.name) != LOWER(:excludedSlug) ORDER BY p.createdAt DESC")
     List<Product> findRecentByGenderExcludingCategory(

@@ -25,7 +25,7 @@ public class Address {
     private String zipCode;
     private String mobile;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     @JsonIgnore
     private User user;
