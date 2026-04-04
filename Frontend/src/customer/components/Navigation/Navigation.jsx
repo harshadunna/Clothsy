@@ -15,11 +15,11 @@ import AuthModel from '../Auth/AuthModel'
 const NAV = [
   {
     label: 'WOMEN',
-    id: 'women', // <-- Fixed here
+    id: 'women',
     sections: [
       {
         heading: 'Clothing',
-        id: 'clothing', // <-- Fixed here
+        id: 'clothing',
         items: [
           { label: 'Silk Dresses',    id: 'silk-dresses',    img: 'https://static.zara.net/assets/public/4372/a485/f72645259e91/921f424a71fb/04192001691-e1/04192001691-e1.jpg?ts=1773398613979&w=813' },
           { label: 'Evening Dresses', id: 'evening-dresses', img: 'https://static.zara.net/assets/public/51c9/0d67/36c34a98b5d6/22c8833fa478/02581532620-p/02581532620-p.jpg?ts=1774344742980&w=813' },
@@ -32,7 +32,7 @@ const NAV = [
       },
       {
         heading: 'Accessories',
-        id: 'accessories', // <-- Fixed here
+        id: 'accessories',
         items: [
           { label: 'Bags',       id: 'bags',       img: 'https://static.zara.net/assets/public/b1f7/fb0d/426348278ca8/7160c528be19/16213711500-p/16213711500-p.jpg?ts=1773933821556&w=813' },
           { label: 'Footwear',   id: 'footwear',   img: 'https://static.zara.net/assets/public/9f49/dd43/5a33480382c5/eda55ac08359/12254719700-e1/12254719700-e1.jpg?ts=1772196501567&w=813' },
@@ -49,11 +49,11 @@ const NAV = [
   },
   {
     label: 'MEN',
-    id: 'men', // <-- Fixed here
+    id: 'men',
     sections: [
       {
         heading: 'Clothing',
-        id: 'clothing', // <-- Fixed here
+        id: 'clothing',
         items: [
           { label: 'Overcoats',     id: 'overcoats',     img: 'https://static.zara.net/assets/public/599e/c48f/016a474398ac/012b767d2fd5/02949310800-p/02949310800-p.jpg?ts=1762520435301&w=1024' },
           { label: 'Suits',         id: 'suits',         img: 'https://image.hm.com/assets/hm/dd/64/dd64de2cfe48fdb6c31636d39a28e49b6234e8d2.jpg?imwidth=2160' },
@@ -64,7 +64,7 @@ const NAV = [
       },
       {
         heading: 'Accessories',
-        id: 'accessories', // <-- Fixed here
+        id: 'accessories',
         items: [
           { label: 'Belts',       id: 'belts',   img: 'https://static.zara.net/assets/public/bf24/afad/328347e3b1e1/daa242317489/05919421700-a1/05919421700-a1.jpg?ts=1773659508605&w=813' },
           { label: 'Boots',       id: 'boots',   img: 'https://static.zara.net/assets/public/7e3d/ab4d/49b44d1bbcaf/878671c33bc1/12201620001-000-a1/12201620001-000-a1.jpg?ts=1755618495127&w=813' },
@@ -347,8 +347,8 @@ export default function Navigation() {
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.fromTo(logoRef.current,
-        { opacity: 0, y: -10, letterSpacing: '0.65em' },
-        { opacity: 1, y: 0, letterSpacing: '0.35em', duration: 1.2, ease: 'power3.out', delay: 0.05 }
+        { opacity: 0, y: -10 },
+        { opacity: 1, y: 0, duration: 1.2, ease: 'power3.out', delay: 0.05 }
       )
       gsap.fromTo(linksRef.current.filter(Boolean),
         { opacity: 0, y: -8 },
@@ -437,6 +437,7 @@ export default function Navigation() {
         }}
         onMouseLeave={closeMenu}
       >
+        {/* FIXED: Changed justify-content to justifyContent */}
         <div className="px-6 md:px-12" style={{ maxWidth: 1440, margin: '0 auto', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
 
           <div className="flex items-center gap-4 lg:gap-0">
@@ -444,9 +445,14 @@ export default function Navigation() {
               <span className="mat">menu</span>
             </button>
 
+            {/* Desktop Logo with Correct URL */}
             <Link ref={logoRef} to="/"
-              style={{ fontFamily:"'Cormorant Garamond',serif", fontWeight:300, fontSize:26, letterSpacing:'0.35em', color:textHi, textDecoration:'none', textTransform:'uppercase', transition:'color 320ms ease', flexShrink:0, opacity:0 }}>
-              CLOTHSY
+              style={{ display: 'flex', alignItems: 'center', transition: 'opacity 320ms ease', flexShrink: 0, opacity: 0 }}>
+              <img 
+                src="https://res.cloudinary.com/dyxiy2ehj/image/upload/v1775339832/Adobe_Express_-_file_i9281f.png" 
+                alt="Clothsy Logo" 
+                style={{ height: '90px', width: 'auto', objectFit: 'contain' }}
+              />
             </Link>
           </div>
 
@@ -551,9 +557,16 @@ export default function Navigation() {
         <div className="fixed inset-0 flex">
           <DialogPanel transition className="mdrawer transition duration-300 data-closed:-translate-x-full">
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'20px 24px 16px', borderBottom:'1px solid #E8E8E8' }}>
-              <Link to="/" onClick={() => setMobileOpen(false)} style={{ fontFamily:"'Cormorant Garamond',serif", fontWeight:300, fontSize:22, letterSpacing:'0.32em', color:'#0A0A0A', textDecoration:'none' }}>
-                CLOTHSY
+              
+              {/* Mobile Drawer Logo with Correct URL */}
+              <Link to="/" onClick={() => setMobileOpen(false)} style={{ display: 'flex', alignItems: 'center' }}>
+                <img 
+                  src="https://res.cloudinary.com/dyxiy2ehj/image/upload/v1775339832/Adobe_Express_-_file_i9281f.png" 
+                  alt="Clothsy Logo" 
+                  style={{ height: '28px', width: 'auto', objectFit: 'contain' }}
+                />
               </Link>
+
               <button onClick={() => setMobileOpen(false)} style={{ background:'none', border:'none', cursor:'pointer', color:'#0A0A0A', padding:4 }}>
                 <span className="mat">close</span>
               </button>

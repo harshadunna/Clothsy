@@ -48,16 +48,15 @@ const CustomerRoutes = () => {
           {/* Auth & Home */}
           <Route path="/login" element={<PageTransition><HomePage /></PageTransition>} />
           <Route path="/register" element={<PageTransition><HomePage /></PageTransition>} />
+          <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
           
           {/* OAUTH2 Handler */}
           <Route path="/oauth2/redirect" element={<PageTransition><OAuth2RedirectHandler /></PageTransition>} />
           
-          <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
           <Route path="/" element={<PageTransition><HomePage /></PageTransition>} />
           <Route path="/home" element={<PageTransition><HomePage /></PageTransition>} />
 
           {/* Product Handling */}
-          <Route path="/product/:productId/rate" element={<PageTransition><RateProduct /></PageTransition>} />
           <Route path="/product/:productId" element={<PageTransition><ProductDetails /></PageTransition>} />
           <Route path="/products" element={<PageTransition><Product /></PageTransition>} />
           <Route path="/product" element={<PageTransition><Product /></PageTransition>} />
@@ -85,7 +84,6 @@ const CustomerRoutes = () => {
           {/* Editorial / Info */}
           <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
           <Route path="/about" element={<PageTransition><About /></PageTransition>} />
-          <Route path="/craftsmanship" element={<PageTransition><About /></PageTransition>} />
           
           {/* Journal & Returns */}
           <Route path="/journal" element={<PageTransition><Journal /></PageTransition>} />

@@ -25,9 +25,17 @@ export default function AdminSidebar() {
   return (
     <aside className="w-64 h-screen sticky top-0 overflow-y-auto bg-[#1A1109] flex flex-col py-8 border-r border-[#1A1109] z-50 shrink-0 custom-scrollbar">
       
-      <div className="px-8 mb-12 shrink-0">
-        <h1 className="text-2xl font-black text-[#FFF8F5] tracking-widest font-headline uppercase">CLOTHSY</h1>
-        <p className="text-[0.65rem] font-bold text-[#C8742A] tracking-[0.2em] font-label mt-1 uppercase">Admin Suite</p>
+      {/* LOGO */}
+      <div className="px-8 mb-12 shrink-0 flex flex-col items-start">
+        <img 
+          src="https://res.cloudinary.com/dyxiy2ehj/image/upload/v1775339832/Adobe_Express_-_file_i9281f.png" 
+          alt="Clothsy Logo" 
+          style={{ height: '70px', width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
+          className="-ml-3 mb-0" 
+        />
+        <p className="text-[0.65rem] font-bold text-[#C8742A] tracking-[0.25em] font-label mt-0 pl-1 uppercase">
+          Admin Suite
+        </p>
       </div>
 
       <nav className="flex-grow space-y-0">
