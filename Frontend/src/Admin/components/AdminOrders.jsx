@@ -11,21 +11,30 @@ export default function AdminOrders() {
 
   // Grab the order ID to highlight from the router state (passed from Dashboard)
   const highlightOrderId = location.state?.highlightOrderId || null;
-
-  const fetchOrders = async () => {
+ 
+  const fetchOrders = async (showLoader = true) => {
     try {
-      setLoading(true);
+      if (showLoader) setLoading(true);
       const { data } = await api.get("/api/admin/orders");
       setOrders(data);
     } catch (error) {
       console.error("Error fetching orders:", error);
     } finally {
-      setLoading(false);
+      if (showLoader) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchOrders();
+    // Initial load with the spinner
+    fetchOrders(true);
+
+    // Auto-refresh (Live Polling): Fetch new data silently every 10 seconds
+    const intervalId = setInterval(() => {
+      fetchOrders(false);
+    }, 10000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   // Effect to scroll to the highlighted order once the orders load
@@ -40,7 +49,8 @@ export default function AdminOrders() {
   const updateOrderStatus = async (orderId, action) => {
     try {
       await api.put(`/api/admin/orders/${orderId}/${action}`);
-      fetchOrders();
+      // Fetch fresh data silently so the screen doesn't blank out
+      fetchOrders(false);
     } catch (error) {
       console.error(`Error updating order to ${action}:`, error);
     }
@@ -50,7 +60,8 @@ export default function AdminOrders() {
     if (!window.confirm("CONFIRM DELETION: Permanently erase this logistics record?")) return;
     try {
       await api.delete(`/api/admin/orders/${orderId}/delete`);
-      fetchOrders();
+      // Fetch fresh data silently
+      fetchOrders(false);
     } catch (error) {
       console.error("Error deleting order:", error);
     }
@@ -138,7 +149,7 @@ export default function AdminOrders() {
                       <div className="flex items-center gap-6">
                         {previewImg && (
                           <div className="w-12 h-16 bg-[#F3ECEA] overflow-hidden rounded-none shrink-0 border border-[#D1C4BC]">
-                            <img src={previewImg} alt="Preview" className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
+                            <img src={previewImg} alt="Preview" className="w-full h-full object-cover transition-all duration-500" />
                           </div>
                         )}
                         <div>
@@ -158,7 +169,7 @@ export default function AdminOrders() {
                     </td>
 
                     <td className="py-6 px-6 font-headline text-xl font-bold text-[#1A1109]">
-                      ₹{order.totalDiscountedPrice}
+                      ₹{order.totalDiscountedPrice?.toLocaleString('en-IN')}
                     </td>
 
                     <td className="py-6 px-6">

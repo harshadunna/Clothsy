@@ -30,7 +30,7 @@ export default function AdminCustomers() {
   }, []);
 
   const handleRoleChange = async (userId, currentRole) => {
-    const newRole = currentRole === "ADMIN" ? "CUSTOMER" : "ADMIN";
+    const newRole = currentRole === "ADMIN" || currentRole === "ROLE_ADMIN" ? "CUSTOMER" : "ADMIN";
     const actionText = newRole === "ADMIN" ? "promote this user to ADMIN" : "revoke ADMIN privileges for this user";
     
     if (!window.confirm(`Are you sure you want to ${actionText}?`)) return;
@@ -44,18 +44,15 @@ export default function AdminCustomers() {
     }
   };
 
-  // Function to securely download the CSV file
   const handleExportData = async () => {
     try {
       setIsExporting(true);
       setError(null);
       
-      // Request the file as a Blob (Binary Large Object)
       const response = await api.get("/api/admin/users/export", {
         responseType: "blob" 
       });
 
-      // Create a temporary hidden link to force the browser to download the file
       const blob = new Blob([response.data], { type: "text/csv" });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -64,7 +61,6 @@ export default function AdminCustomers() {
       document.body.appendChild(link);
       link.click();
       
-      // Clean up the temporary link
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
@@ -72,6 +68,31 @@ export default function AdminCustomers() {
       setError("Failed to export data. Please try again.");
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const formatDate = (dateInput) => {
+    if (!dateInput) return "Unknown (Old Account)"; 
+    
+    try {
+      let date;
+      
+      if (Array.isArray(dateInput)) {
+        date = new Date(dateInput[0], dateInput[1] - 1, dateInput[2], dateInput[3] || 0, dateInput[4] || 0);
+      } else {
+        date = new Date(dateInput);
+      }
+
+      // Check if it resulted in a valid date
+      if (isNaN(date.getTime())) return "Unknown";
+      
+      return date.toLocaleDateString("en-GB", {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+    } catch (e) {
+      return "Unknown";
     }
   };
 
@@ -95,7 +116,6 @@ export default function AdminCustomers() {
           </p>
         </div>
         <div className="flex gap-4">
-          {/* WIRED UP EXPORT BUTTON */}
           <button 
             onClick={handleExportData}
             disabled={isExporting || customers.length === 0}
@@ -168,7 +188,7 @@ export default function AdminCustomers() {
 
                   <td className="py-6 px-6">
                     <p className="font-label text-[0.75rem] font-bold text-[#1A1109] uppercase tracking-widest">
-                      {customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : "Unknown"}
+                      {formatDate(customer.createdAt || customer.createdDate || customer.registrationDate)}
                     </p>
                   </td>
 
@@ -185,14 +205,14 @@ export default function AdminCustomers() {
                   <td className="py-6 px-6 text-right">
                     {customer.role === "ADMIN" || customer.role === "ROLE_ADMIN" ? (
                       <button 
-                        onClick={() => handleRoleChange(customer.id, "ADMIN")}
+                        onClick={() => handleRoleChange(customer.id, customer.role)}
                         className="font-label text-[0.65rem] font-black uppercase tracking-[0.2em] text-[#BA1A1A] hover:opacity-60 transition-opacity"
                       >
                         Revoke Admin
                       </button>
                     ) : (
                       <button 
-                        onClick={() => handleRoleChange(customer.id, "CUSTOMER")}
+                        onClick={() => handleRoleChange(customer.id, customer.role)}
                         className="border border-[#1A1109] text-[#1A1109] hover:bg-[#1A1109] hover:text-[#FFF8F5] px-4 py-2 font-label text-[0.6rem] font-black uppercase tracking-widest transition-colors"
                       >
                         Promote to Admin
