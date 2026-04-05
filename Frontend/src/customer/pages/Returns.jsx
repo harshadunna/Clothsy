@@ -9,23 +9,41 @@ export default function Returns() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("Returns useEffect fired");
     window.scrollTo(0, 0);
 
     // FETCH ORDERS AND EXTRACT RETURN ITEMS 
     api.get("/api/orders/user")
       .then((res) => {
+        console.log("Raw res:", res);
+        console.log("Raw res.data:", res.data);
         const allOrders = res.data || [];
+        console.log("allOrders length:", allOrders.length);
+        console.log("First order:", allOrders[0]);
+        // const allOrders = res.data || [];
+
         const extractedReturns = [];
 
         // Loop through all orders and aggressively catch any return/refund status
         allOrders.forEach(order => {
+          // 1. Check if the parent Order is marked as a return
+          const orderStatusStr = String(order.orderStatus || "").toUpperCase();
+          const isOrderReturn = orderStatusStr.includes("RETURN") || orderStatusStr.includes("REFUND");
+
           if (order.orderItems && Array.isArray(order.orderItems)) {
             order.orderItems.forEach(item => {
-              const statusStr = String(item.itemStatus || "").toUpperCase();
+              // 2. Check if the individual Item is marked as a return
+              const itemStatusStr = String(item.itemStatus || "").toUpperCase();
+              const isItemReturn = itemStatusStr.includes("RETURN") || itemStatusStr.includes("REFUND");
 
-              // If the status contains RETURN or REFUND, it belongs on this dashboard
-              if (statusStr.includes("RETURN") || statusStr.includes("REFUND")) {
-                extractedReturns.push({ item, order });
+              // 3. Catch-all: If the item OR the order has a return status (and the item isn't cancelled), show it!
+              if (isItemReturn || (isOrderReturn && itemStatusStr !== "CANCELLED")) {
+                extractedReturns.push({
+                  item,
+                  order,
+                  // Inherit the correct status to display in the progress bar
+                  effectiveStatus: isItemReturn ? itemStatusStr : orderStatusStr
+                });
               }
             });
           }
@@ -38,6 +56,7 @@ export default function Returns() {
         });
 
         setReturns(sortedReturns);
+        console.log("Extracted returns:", extractedReturns);
         setLoading(false);
       })
       .catch((err) => {
@@ -66,12 +85,12 @@ export default function Returns() {
     let currentIndex = steps.findIndex(step => statusString.includes(step));
 
     // Map REFUND_INITIATED to "Inspected" (Index 2)
-    if (statusString === "REFUND_INITIATED") {
+    if (statusString.includes("REFUND_INITIATED")) {
       currentIndex = 2;
     }
-    
+
     // Fallback for generic returned status to "Refunded" (Index 3)
-    if (statusString === "RETURNED") {
+    if (statusString.includes("RETURNED")) {
       currentIndex = 3;
     }
 
@@ -177,7 +196,7 @@ export default function Returns() {
             initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
             className="space-y-16"
           >
-            {returns.map(({ item, order }) => {
+            {returns.map(({ item, order, effectiveStatus }) => {
               const productObj = item?.product || {};
               const imageUrl = productObj.imageUrl || "https://static.zara.net/assets/public/599e/c48f/016a474398ac/012b767d2fd5/02949310800-p/02949310800-p.jpg?w=1024";
               const title = productObj.title || "Archive Silhouette";
@@ -185,7 +204,8 @@ export default function Returns() {
               const color = productObj.color || "As Pictured";
               const date = order?.createdAt ? new Date(order.createdAt).toLocaleDateString('en-GB') : "Recent";
               const amount = item?.discountedPrice || item?.price || 0;
-              const status = item?.itemStatus || "RETURN_REQUESTED";
+
+              const status = effectiveStatus || "RETURN_REQUESTED";
 
               return (
                 <motion.div
