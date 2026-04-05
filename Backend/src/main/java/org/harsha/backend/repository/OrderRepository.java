@@ -35,4 +35,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("SELECT o FROM Order o WHERE o.orderStatus != 'CANCELLED'")
     List<Order> findAllValidOrders();
+
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.orderStatus IN :statuses")
+    long countByOrderStatusIn(@Param("statuses") List<String> statuses);
+
+    @Query("SELECT o.orderStatus, COUNT(o) FROM Order o GROUP BY o.orderStatus")
+    List<Object[]> countByOrderStatusGrouped();
+
+    List<Order> findTop10ByOrderByCreatedAtDesc();
 }
