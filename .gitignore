@@ -1,0 +1,5 @@
+# Root ignores
+node_modules/
+.idea/
+temp_product.json
+.DS_Store
