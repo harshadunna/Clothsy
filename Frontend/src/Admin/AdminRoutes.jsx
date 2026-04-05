@@ -11,6 +11,7 @@ import AdminSidebar from './components/AdminSidebar';
 import CreateProduct from './components/CreateProduct';
 import UpdateProduct from './components/UpdateProduct';
 import AdminPromotions from './components/AdminPromotions'; 
+import AdminAnalytics from './components/AdminAnalytics'; 
 
 const AdminRoutes = () => {
   const auth = useSelector(store => store.auth);
@@ -53,6 +54,7 @@ const AdminRoutes = () => {
           <Route path="/orders" element={<AdminOrders />} />
           <Route path="/customers" element={<AdminCustomers />} />
           <Route path="/promotions" element={<AdminPromotions />} /> 
+          <Route path="/analytics" element={<AdminAnalytics />} />
         </Routes>
       </main>
     </div>
