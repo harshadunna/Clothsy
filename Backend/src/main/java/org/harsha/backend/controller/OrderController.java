@@ -10,9 +10,6 @@ import org.harsha.backend.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.harsha.backend.service.InvoiceService;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 
 import java.util.List;
 import java.util.Map;
@@ -31,7 +28,6 @@ import java.util.Map;
  * GET    /api/orders/{id}         → Get a specific order by ID
  * PUT    /api/orders/{id}/cancel-items  → Partially or fully cancel items
  * PUT    /api/orders/{id}/return-items  → Request a return for delivered items
- * GET    /api/orders/{id}/invoice → Download PDF invoice for an order
  */
 @RestController
 @RequestMapping("/api/orders")
@@ -40,7 +36,6 @@ public class OrderController {
 
     private final OrderService orderService;
     private final UserService userService;
-    private final InvoiceService invoiceService;
 
     /**
      * POST /api/orders
@@ -168,41 +163,5 @@ public class OrderController {
         Order updatedOrder = orderService.returnOrderItems(orderId, itemIdsToReturn);
 
         return new ResponseEntity<>(updatedOrder, HttpStatus.OK);
-    }
-
-    /**
-     * GET /api/orders/{orderId}/invoice
-     *
-     * Generates and streams a PDF invoice for the specified order.
-     *
-     * Flow:
-     * 1. Verify JWT and resolve user
-     * 2. Load the order (with all items) via findOrderById
-     * 3. Generate PDF bytes via InvoiceService
-     * 4. Return as application/pdf with Content-Disposition: attachment
-     *
-     * @param orderId the ID of the order to invoice
-     * @param jwt     Bearer token from Authorization header
-     * @return PDF bytes as a downloadable file attachment
-     */
-    @GetMapping("/{orderId}/invoice")
-    public ResponseEntity<byte[]> downloadInvoice(
-            @PathVariable Long orderId,
-            @RequestHeader("Authorization") String jwt) throws Exception {
-
-        userService.findUserProfileByJwt(jwt);
-        Order order = orderService.findOrderById(orderId);
-
-        byte[] pdfBytes = invoiceService.generateInvoicePdf(order);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDispositionFormData(
-                "attachment",
-                "Invoice_Order_" + orderId + ".pdf"
-        );
-        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-
-        return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
     }
 }

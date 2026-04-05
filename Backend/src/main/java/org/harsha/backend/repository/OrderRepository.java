@@ -9,7 +9,10 @@ import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    @Query("SELECT o FROM Order o WHERE o.user.id = :userId AND (o.orderStatus = 'PLACED' OR o.orderStatus = 'CONFIRMED' OR o.orderStatus = 'SHIPPED' OR o.orderStatus = 'DELIVERED')")
+    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderItems WHERE o.user.id = :userId " +
+       "AND o.orderStatus IN ('PLACED', 'CONFIRMED', 'SHIPPED', 'OUT_FOR_DELIVERY', " +
+       "'DELIVERED', 'CANCELLED', 'RETURN_REQUESTED', 'RETURN_PICKED', " +
+       "'RETURN_RECEIVED', 'REFUND_INITIATED', 'REFUND_COMPLETED')")
     List<Order> getUsersOrders(@Param("userId") Long userId);
 
     @Query("SELECT o FROM Order o JOIN FETCH o.orderItems oi JOIN FETCH oi.product WHERE o.id = :orderId")
