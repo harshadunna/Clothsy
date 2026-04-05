@@ -1,3 +1,6 @@
+/**
+ * This repository interface manages all database transactions for the Product entity through Spring Data JPA. It features a comprehensive suite of custom queries for complex product filtering, full-text search, category-based hierarchical lookups, and AI-driven pairing suggestions. It also includes optimized methods to rapidly fetch low-stock inventory alerts for the administrative dashboard directly at the database level.
+ */
 package org.harsha.backend.repository;
 
 import org.harsha.backend.model.Product;
@@ -76,8 +79,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query(value = "SELECT * FROM products LIMIT 12", nativeQuery = true)
     List<Product> findSafetyNetFallback();
 
-    // CLOTHSY AI PAIRING QUERIES 
-
     @Query("SELECT p FROM Product p " +
             "JOIN p.category c " +
             "JOIN c.parentCategory mid " +
@@ -98,4 +99,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             @Param("excludedSlug") String excludedSlug,
             Pageable pageable
     );
+
+    List<Product> findTop5ByQuantityLessThanEqualOrderByQuantityAsc(int quantityThreshold);
 }

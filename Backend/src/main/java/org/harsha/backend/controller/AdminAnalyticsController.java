@@ -2,7 +2,6 @@ package org.harsha.backend.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.harsha.backend.model.Order;
-import org.harsha.backend.model.Product;
 import org.harsha.backend.repository.OrderRepository;
 import org.harsha.backend.repository.ProductRepository;
 import org.harsha.backend.repository.UserRepository;
@@ -28,26 +27,16 @@ public class AdminAnalyticsController {
 
     @GetMapping("/dashboard")
     public ResponseEntity<Map<String, Object>> getDashboardMetrics() {
-        List<Order> allOrders = orderRepository.findAll();
-        List<Product> allProducts = productRepository.findAll();
-
-        // 1. Calculate Total Revenue (Excluding Cancelled and Refunded)
-        long totalRevenue = allOrders.stream()
-                .filter(order -> !"CANCELLED".equals(order.getOrderStatus()) && !"REFUND_COMPLETED".equals(order.getOrderStatus()))
-                .mapToLong(Order::getTotalDiscountedPrice)
-                .sum();
-
-        // 2. Total Orders
-        long totalOrders = allOrders.size();
-
-        // 3. Active Customers
+        
+        // 1 & 2 & 3: Instant Database Aggregations (O(1) Memory Usage)
+        long totalRevenue = orderRepository.calculateTotalActiveRevenue();
+        long totalOrders = orderRepository.count();
         long totalCustomers = userRepository.count();
 
-        // 4. Low Stock Items (Quantity <= 5)
-        List<Map<String, Object>> lowStockItems = allProducts.stream()
-                .filter(p -> p.getQuantity() <= 5)
-                .sorted(Comparator.comparingInt(Product::getQuantity))
-                .limit(5)
+        // 4. Low Stock Items - Fetches ONLY 5 rows from DB instantly
+        List<Map<String, Object>> lowStockItems = productRepository
+                .findTop5ByQuantityLessThanEqualOrderByQuantityAsc(5)
+                .stream()
                 .map(p -> {
                     Map<String, Object> map = new HashMap<>();
                     map.put("id", p.getId());
@@ -58,10 +47,10 @@ public class AdminAnalyticsController {
                 })
                 .collect(Collectors.toList());
 
-        // 5. Pending Orders (Requires Admin Action)
-        List<Map<String, Object>> pendingOrders = allOrders.stream()
-                .filter(order -> "PLACED".equals(order.getOrderStatus()) || "RETURN_REQUESTED".equals(order.getOrderStatus()))
-                .limit(5)
+        // 5. Pending Orders - Fetches ONLY 5 rows from DB instantly
+        List<Map<String, Object>> pendingOrders = orderRepository
+                .findTop5ByOrderStatusInOrderByCreatedAtDesc(Arrays.asList("PLACED", "RETURN_REQUESTED"))
+                .stream()
                 .map(o -> {
                     Map<String, Object> map = new HashMap<>();
                     map.put("id", o.getId());
@@ -84,12 +73,8 @@ public class AdminAnalyticsController {
 
     @GetMapping("/charts")
     public ResponseEntity<Map<String, Object>> getChartData() {
-        List<Order> allOrders = orderRepository.findAll();
-
-        // Filter out cancelled orders for accurate financial reporting
-        List<Order> validOrders = allOrders.stream()
-                .filter(order -> !"CANCELLED".equals(order.getOrderStatus()))
-                .collect(Collectors.toList());
+        // Optimized: Only fetch non-cancelled orders from the database
+        List<Order> validOrders = orderRepository.findAllValidOrders();
 
         Map<String, Object> response = new HashMap<>();
 
@@ -126,7 +111,6 @@ public class AdminAnalyticsController {
         List<Map<String, Object>> weeklyData = new ArrayList<>();
         for (DayOfWeek day : DayOfWeek.values()) {
             Map<String, Object> map = new HashMap<>();
-            // Format to "Mon", "Tue", etc.
             map.put("name", day.name().substring(0, 3).toUpperCase(Locale.ROOT));
             map.put("revenue", revenueByDay.getOrDefault(day, 0.0));
             map.put("orders", ordersByDay.getOrDefault(day, 0L));
@@ -174,7 +158,6 @@ public class AdminAnalyticsController {
                 .collect(Collectors.toList());
 
         List<Map<String, Object>> monthlyData = new ArrayList<>();
-        // Simplify by dividing the month into 4 quarters
         for (int i = 1; i <= 4; i++) {
             Map<String, Object> map = new HashMap<>();
             map.put("name", "Week " + i);
