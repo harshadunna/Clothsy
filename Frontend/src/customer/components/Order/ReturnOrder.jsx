@@ -51,12 +51,7 @@ export default function ReturnOrder() {
     
     setSubmitting(true);
     try {
-      // SUBMISSION LOGIC 
-      console.log("Submitting return for items:", selectedItems);
-      
       const response = await api.put(`/api/orders/${orderId}/return-items`, selectedItems);
-      console.log("Backend Response to Return Request:", response.data);
-      
       // Navigate directly to our new tracking dashboard!
       navigate(`/returns`, { state: { returnSuccess: true }});
     } catch (error) {

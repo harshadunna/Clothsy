@@ -14,7 +14,6 @@ import {
 export const createOrder = (reqData) => async (dispatch) => {
   dispatch({ type: CREATE_ORDER_REQUEST });
   try {
-    console.log("Sending to backend:", { addressId: reqData.address.id });
     const { data } = await api.post("/api/orders/", { addressId: reqData.address.id });
 
     dispatch({ type: CREATE_ORDER_SUCCESS, payload: data });

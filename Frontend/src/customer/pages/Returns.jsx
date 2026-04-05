@@ -9,18 +9,12 @@ export default function Returns() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("Returns useEffect fired");
     window.scrollTo(0, 0);
 
     // FETCH ORDERS AND EXTRACT RETURN ITEMS 
     api.get("/api/orders/user")
       .then((res) => {
-        console.log("Raw res:", res);
-        console.log("Raw res.data:", res.data);
         const allOrders = res.data || [];
-        console.log("allOrders length:", allOrders.length);
-        console.log("First order:", allOrders[0]);
-        // const allOrders = res.data || [];
 
         const extractedReturns = [];
 
@@ -56,7 +50,6 @@ export default function Returns() {
         });
 
         setReturns(sortedReturns);
-        console.log("Extracted returns:", extractedReturns);
         setLoading(false);
       })
       .catch((err) => {

@@ -50,13 +50,6 @@ const CurationPage = () => {
       try {
         const { data } = await api.get(`/api/products/curations/${safeEditName}`);
 
-        console.log("PRODUCTS COUNT:", data.length);
-        console.log(
-          "FIRST PRODUCT:",
-          data[0]?.title,
-          data[0]?.category?.parentCategory?.parentCategory?.name
-        );
-
         setProducts(data);
       } catch (e) {
         console.error("Curation API Error:", e);
