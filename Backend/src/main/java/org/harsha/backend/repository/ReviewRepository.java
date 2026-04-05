@@ -26,6 +26,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
      * @param productId the ID of the product to fetch reviews for
      * @return list of all Review entities for the given product
      */
-    @Query("SELECT r FROM Review r WHERE r.product.id = :productId")
+    @Query("SELECT r FROM Review r JOIN FETCH r.user WHERE r.product.id = :productId")
     List<Review> getAllProductsReview(@Param("productId") Long productId);
 }

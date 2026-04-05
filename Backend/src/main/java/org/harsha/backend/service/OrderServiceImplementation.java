@@ -73,6 +73,7 @@ public class OrderServiceImplementation implements OrderService {
     }
 
     @Override
+    @Transactional
     public Order placedOrder(Long orderId) throws OrderException {
         Order order = findOrderById(orderId);
         order.setOrderStatus("PLACED");
@@ -98,6 +99,7 @@ public class OrderServiceImplementation implements OrderService {
     }
 
     @Override
+    @Transactional
     public Order confirmedOrder(Long orderId) throws OrderException {
         Order order = findOrderById(orderId);
         order.setOrderStatus("CONFIRMED");
@@ -248,6 +250,7 @@ public class OrderServiceImplementation implements OrderService {
     }
 
     @Override
+    @Transactional
     public Order returnPickedOrder(Long orderId) throws OrderException {
         Order order = findOrderById(orderId);
         order.setOrderStatus("RETURN_PICKED");
@@ -260,6 +263,7 @@ public class OrderServiceImplementation implements OrderService {
     }
 
     @Override
+    @Transactional
     public Order returnReceivedOrder(Long orderId) throws OrderException {
         Order order = findOrderById(orderId);
         order.setOrderStatus("RETURN_RECEIVED");
@@ -272,6 +276,7 @@ public class OrderServiceImplementation implements OrderService {
     }
 
     @Override
+    @Transactional
     public Order refundInitiatedOrder(Long orderId) throws OrderException {
         Order order = findOrderById(orderId);
         order.setOrderStatus("REFUND_INITIATED");
@@ -314,7 +319,7 @@ public class OrderServiceImplementation implements OrderService {
     @Transactional
     public void simulateCourierTracking() {
         LocalDateTime now = LocalDateTime.now();
-        List<Order> allOrders = orderRepository.findAll();
+        List<Order> allOrders = orderRepository.findActiveOrdersForTracking();
 
         for (Order order : allOrders) {
             // 1. FORWARD LOGISTICS (DELIVERY)

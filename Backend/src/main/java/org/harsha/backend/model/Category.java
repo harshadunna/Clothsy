@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
  * The level field indicates depth in the hierarchy (1 = top-level).
  */
 @Entity
-@Table(name = "categories")
+@Table(name = "categories", indexes = {@Index(name = "idx_category_name", columnList = "name")})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

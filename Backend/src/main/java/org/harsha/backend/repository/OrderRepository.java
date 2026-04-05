@@ -18,5 +18,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT o FROM Order o JOIN FETCH o.orderItems oi JOIN FETCH oi.product WHERE o.id = :orderId")
     Optional<Order> findOrderById(@Param("orderId") Long orderId);
 
+    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderItems JOIN FETCH o.user ORDER BY o.createdAt DESC")
     List<Order> findAllByOrderByCreatedAtDesc();
+
+    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderItems WHERE o.orderStatus IN ('SHIPPED', 'OUT_FOR_DELIVERY', 'RETURN_REQUESTED', 'RETURN_PICKED', 'RETURN_RECEIVED', 'REFUND_INITIATED')")
+    List<Order> findActiveOrdersForTracking();
 }
