@@ -10,6 +10,7 @@ import Cart from "../customer/components/Cart/Cart";
 import Checkout from "../customer/components/Checkout/Checkout";
 import OrderDetails from "../customer/components/Order/OrderDetails";
 import ReturnOrder from "../customer/components/Order/ReturnOrder";
+import Invoice from "../customer/components/Order/Invoice"; // <--- ADDED INVOICE IMPORT
 import PaymentSuccess from "../customer/components/Payment/PaymentSuccess";
 import PaymentCancel from "../customer/components/Payment/PaymentCancel";
 import RateProduct from "../customer/components/ProductDetails/RateProduct";
@@ -57,6 +58,7 @@ const CustomerRoutes = () => {
           <Route path="/home" element={<PageTransition><HomePage /></PageTransition>} />
 
           {/* Product Handling */}
+          <Route path="/product/:productId/rate" element={<PageTransition><RateProduct /></PageTransition>} />
           <Route path="/product/:productId" element={<PageTransition><ProductDetails /></PageTransition>} />
           <Route path="/products" element={<PageTransition><Product /></PageTransition>} />
           <Route path="/product" element={<PageTransition><Product /></PageTransition>} />
@@ -77,13 +79,17 @@ const CustomerRoutes = () => {
           {/* User Account */}
           <Route path="/account/profile" element={<PageTransition><Profile /></PageTransition>} />
           <Route path="/account/orders" element={<PageTransition><Profile /></PageTransition>} />
+          
+          {/* ORDER & INVOICE ROUTES */}
           <Route path="/account/order/:orderId" element={<PageTransition><OrderDetails /></PageTransition>} />
+          <Route path="/account/order/:orderId/invoice" element={<PageTransition><Invoice /></PageTransition>} /> {/* <--- ADDED INVOICE ROUTE */}
           <Route path="/account/order/:orderId/return" element={<PageTransition><ReturnOrder /></PageTransition>} />
           <Route path="/account/rate/:productId" element={<PageTransition><RateProduct /></PageTransition>} />
 
           {/* Editorial / Info */}
           <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
           <Route path="/about" element={<PageTransition><About /></PageTransition>} />
+          <Route path="/craftsmanship" element={<PageTransition><About /></PageTransition>} />
           
           {/* Journal & Returns */}
           <Route path="/journal" element={<PageTransition><Journal /></PageTransition>} />

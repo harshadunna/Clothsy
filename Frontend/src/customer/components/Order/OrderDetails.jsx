@@ -46,7 +46,6 @@ export default function OrderDetails() {
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [downloading, setDownloading] = useState(false);
 
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [selectedItemsToCancel, setSelectedItemsToCancel] = useState([]);
@@ -79,25 +78,6 @@ export default function OrderDetails() {
       return () => clearInterval(interval);
     }
   }, [order?.orderStatus]);
-
-  const handleDownloadInvoice = async () => {
-    setDownloading(true);
-    try {
-      const response = await api.get(`/api/orders/${orderId}/invoice`, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `Invoice_Order_${orderId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Failed to download invoice:", error);
-    } finally {
-      setDownloading(false);
-    }
-  };
 
   const handleCancelSubmit = async () => {
     if (selectedItemsToCancel.length === 0) return;
@@ -376,11 +356,11 @@ export default function OrderDetails() {
 
         <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           <button
-            onClick={handleDownloadInvoice}
-            disabled={downloading || isFullyCancelled}
+            onClick={() => window.open(`/account/order/${orderId}/invoice`, '_blank')}
+            disabled={isFullyCancelled}
             className="w-full border border-[#1A1109] text-[#1A1109] py-6 font-label text-[0.7rem] uppercase tracking-[0.2em] font-black hover:bg-[#1A1109] hover:text-[#FFF8F5] transition-all duration-300 disabled:opacity-50 flex justify-center items-center gap-2"
           >
-            {downloading ? <span className="material-symbols-outlined animate-spin text-[16px]">sync</span> : <span className="material-symbols-outlined text-[16px]">receipt_long</span>}
+            <span className="material-symbols-outlined text-[16px]">receipt_long</span>
             Invoice
           </button>
 

@@ -42,20 +42,10 @@ export default function PaymentSuccess() {
     return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
   };
 
-  const handleDownloadInvoice = async () => {
-    try {
-      const response = await api.get(`/api/orders/${orderId}/invoice`, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `Clothsy_Invoice_${orderId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error("Invoice generation failed:", error);
-    }
-  };
+  // --- NEW SHIPPING LOGIC ---
+  const itemTotal = orderData?.totalDiscountedPrice || 0;
+  const shippingFee = (itemTotal > 0 && itemTotal < 2999) ? 100 : 0;
+  const finalTotal = itemTotal + shippingFee;
 
   return (
     <main className="min-h-screen pt-32 pb-24 flex flex-col items-center justify-center px-6 bg-background">
@@ -108,7 +98,7 @@ export default function PaymentSuccess() {
                       <div className="pt-1">
                         <p className="font-headline italic text-xl text-on-surface">{item.product?.title}</p>
                         <p className="font-label text-[10px] uppercase tracking-widest text-outline mt-1">{item.product?.brand} / {item.size}</p>
-                        <p className="font-body text-sm mt-2 font-bold">{item.quantity} × ₹{item.discountedPrice}</p>
+                        <p className="font-body text-sm mt-2 font-bold">{item.quantity} × ₹{item.discountedPrice?.toLocaleString('en-IN')}</p>
                       </div>
                     </div>
                   ))}
@@ -134,15 +124,17 @@ export default function PaymentSuccess() {
                   <div className="pt-8 mt-8 border-t border-outline-variant/30 space-y-3">
                     <div className="flex justify-between text-sm">
                       <span className="font-label uppercase tracking-widest text-[10px] text-outline">Subtotal</span>
-                      <span className="font-body font-bold">₹{orderData?.totalPrice}</span>
+                      <span className="font-body font-bold">₹{orderData?.totalPrice?.toLocaleString('en-IN')}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="font-label uppercase tracking-widest text-[10px] text-outline">Shipping</span>
-                      <span className="font-label uppercase text-[10px] tracking-widest text-primary">Complimentary</span>
+                      <span className={`font-label uppercase text-[10px] tracking-widest ${shippingFee === 0 ? 'text-primary' : 'font-body font-bold text-on-surface'}`}>
+                        {shippingFee === 0 ? 'Complimentary' : `₹${shippingFee}`}
+                      </span>
                     </div>
                     <div className="flex justify-between items-end pt-4 border-t border-outline-variant/30">
                       <span className="font-label uppercase tracking-[0.2em] text-xs font-bold text-on-surface">Total Secured</span>
-                      <span className="font-headline italic text-4xl text-on-surface">₹{orderData?.totalDiscountedPrice}</span>
+                      <span className="font-headline italic text-4xl text-on-surface">₹{finalTotal.toLocaleString('en-IN')}</span>
                     </div>
                   </div>
                 </div>
@@ -159,7 +151,7 @@ export default function PaymentSuccess() {
                 Continue Selection
               </button>
               <button 
-                onClick={handleDownloadInvoice}
+                onClick={() => window.open(`/account/order/${orderId}/invoice`, '_blank')}
                 className="border border-outline-variant text-on-surface font-label uppercase tracking-[0.2em] text-[11px] px-12 py-5 hover:bg-surface-container transition-all duration-500 w-full md:w-auto text-center font-bold"
               >
                 Archive Invoice (PDF)
