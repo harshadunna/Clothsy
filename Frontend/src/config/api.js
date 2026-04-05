@@ -12,7 +12,10 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("jwt");
+  // Dynamically select the token based on the environment being accessed
+  const isAdminRoute = window.location.pathname.startsWith('/admin');
+  const token = isAdminRoute ? localStorage.getItem("admin_jwt") : localStorage.getItem("jwt");
+  
   if (token && token !== "null") {
     config.headers.Authorization = `Bearer ${token}`;
   }

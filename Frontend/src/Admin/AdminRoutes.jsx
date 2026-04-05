@@ -1,5 +1,8 @@
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { getUser } from '../Redux/Auth/Action'; 
+
 import AdminDashboard from './components/AdminDashboard';
 import AdminProducts from './components/AdminProducts';
 import AdminOrders from './components/AdminOrders';
@@ -10,11 +13,37 @@ import UpdateProduct from './components/UpdateProduct';
 import AdminPromotions from './components/AdminPromotions'; 
 
 const AdminRoutes = () => {
+  const auth = useSelector(store => store.auth);
+  const dispatch = useDispatch();
+  
+  const adminJwt = localStorage.getItem("admin_jwt");
+
+  useEffect(() => {
+    if (adminJwt && !auth.user) {
+      dispatch(getUser(adminJwt));
+    }
+  }, [adminJwt, auth.user, dispatch]);
+
+  if (!adminJwt) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (auth.isLoading || (!auth.user && adminJwt)) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-[#FFF8F5]">
+        <div className="w-12 h-12 border-2 border-t-transparent border-[#1A1109] animate-spin rounded-none" />
+      </div>
+    );
+  }
+
+  if (auth.user && auth.user.role !== "ADMIN" && auth.user.role !== "ROLE_ADMIN") {
+    return <Navigate to="/" replace />;
+  }
+
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
       <AdminSidebar />
       
-      {/* Main content area takes the rest of the screen and scrolls */}
       <main className="flex-1 overflow-y-auto">
         <Routes>
           <Route path="/" element={<AdminDashboard />} />

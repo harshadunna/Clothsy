@@ -51,7 +51,16 @@ export const login = (userData) => async (dispatch) => {
 export const getUser = (token) => async (dispatch) => {
   dispatch({ type: GET_USER_REQUEST });
   try {
-    const { data } = await api.get("/api/users/profile");
+    // Explicitly pass the token to prevent interceptor race conditions during login
+    const { data } = await api.get("/api/users/profile", {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    // If the authenticated user is an Admin, securely grant them an isolated admin token
+    if (data.role === "ADMIN" || data.role === "ROLE_ADMIN") {
+        localStorage.setItem("admin_jwt", token);
+    }
+
     dispatch({ type: GET_USER_SUCCESS, payload: data });
   } catch (error) {
     dispatch({ type: GET_USER_FAILURE, payload: error.message });
@@ -69,9 +78,16 @@ export const getAllCustomers = () => async (dispatch) => {
 };
 
 export const logout = () => (dispatch) => {
-  localStorage.removeItem("jwt");
+  // Check which part of the application triggered the logout
+  const isAdminRoute = window.location.pathname.startsWith('/admin');
+  
+  if (isAdminRoute) {
+    localStorage.removeItem("admin_jwt");
+  } else {
+    localStorage.removeItem("jwt");
+  }
+
   dispatch({ type: LOGOUT });
-  // Make sure cart resets to empty when logged out
   dispatch({ type: "CLEAR_CART" }); 
 };
 
@@ -80,7 +96,10 @@ export const updateUserProfile = (userData) => async (dispatch) => {
   try {
     const { data } = await api.put("/api/users/profile", userData);
     dispatch({ type: "UPDATE_USER_SUCCESS", payload: data });
-    dispatch(getUser(localStorage.getItem("jwt")));
+    
+    // Check which token to use for reloading the profile
+    const token = window.location.pathname.startsWith('/admin') ? localStorage.getItem("admin_jwt") : localStorage.getItem("jwt");
+    dispatch(getUser(token));
   } catch (error) {
     dispatch({ type: "UPDATE_USER_FAILURE", payload: error.response?.data?.message || error.message });
   }
