@@ -30,6 +30,9 @@ public class AppConfig {
     @Value("${jwt.secret}")
     private String jwtSecret;
 
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
+
     @Autowired
     @Lazy
     private UserRepository userRepository;
@@ -88,7 +91,7 @@ public class AppConfig {
                             String token = jwtProvider.generateTokenFromEmail(user.getEmail(), user.getRole());
 
                             // Redirect back to frontend
-                            response.sendRedirect("http://localhost:5173/oauth2/redirect?token=" + token);
+                            response.sendRedirect(frontendUrl + "/oauth2/redirect?token=" + token);
                         })
                 )
                 .addFilterBefore(new JwtTokenValidator(jwtSecret), BasicAuthenticationFilter.class)
@@ -103,10 +106,10 @@ public class AppConfig {
     private CorsConfigurationSource corsConfigurationSource() {
         return request -> {
             CorsConfiguration cfg = new CorsConfiguration();
-            cfg.setAllowedOrigins(List.of("http://localhost:5173"));
-            cfg.setAllowedMethods(List.of("*"));
+            cfg.setAllowedOrigins(List.of(frontendUrl));
+            cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
             cfg.setAllowCredentials(true);
-            cfg.setAllowedHeaders(List.of("*"));
+            cfg.setAllowedHeaders(List.of("Authorization", "Content-Type"));
             cfg.setExposedHeaders(List.of("Authorization"));
             cfg.setMaxAge(3600L);
             return cfg;

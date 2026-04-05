@@ -28,6 +28,9 @@ public class EmailApiService {
     @Value("${resend.api.key}")
     private String apiKey;
 
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
+
     private final ObjectMapper objectMapper;
 
     public EmailApiService(ObjectMapper objectMapper) {
@@ -96,6 +99,9 @@ public class EmailApiService {
         }
 
         try {
+            if (htmlContent != null) {
+                htmlContent = htmlContent.replace("http://localhost:5173", frontendUrl);
+            }
             sendResendEmail(order.getUser().getEmail(), subject, htmlContent, attachmentBytes, attachmentName);
         } catch (Exception e) {
             System.err.println("Failed to send " + updateType + " email: " + e.getMessage());
@@ -188,8 +194,7 @@ public class EmailApiService {
                         "India"
                 ) : List.of(),
                 labelFont, bodyFont, boldBody, lightBg, border);
-        billCell.setBorderRight(new PdfPCell().getBorderRight());
-
+        
         PdfPCell shipCell = addressBlock("SHIP TO",
                 order.getShippingAddress() != null
                         ? order.getShippingAddress().getFirstName() + " " + order.getShippingAddress().getLastName()

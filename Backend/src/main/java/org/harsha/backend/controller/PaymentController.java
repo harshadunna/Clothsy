@@ -32,6 +32,9 @@ public class PaymentController {
     @Value("${stripe.webhook.secret}")
     private String endpointSecret;
 
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
+
     // UPDATE CONSTRUCTOR 
     public PaymentController(OrderService orderService, EmailApiService emailApiService) {
         this.orderService = orderService;
@@ -47,8 +50,8 @@ public class PaymentController {
         SessionCreateParams params = SessionCreateParams.builder()
                 .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
                 .setMode(SessionCreateParams.Mode.PAYMENT)
-                .setSuccessUrl("http://localhost:5173/payment/success?order_id=" + orderId)
-                .setCancelUrl("http://localhost:5173/payment/cancel?order_id=" + orderId)
+                .setSuccessUrl(frontendUrl + "/payment/success?order_id=" + orderId)
+                .setCancelUrl(frontendUrl + "/payment/cancel?order_id=" + orderId)
                 .putMetadata("order_id", orderId.toString())
                 .addLineItem(SessionCreateParams.LineItem.builder()
                         .setQuantity(1L)

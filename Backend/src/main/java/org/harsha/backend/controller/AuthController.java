@@ -53,6 +53,9 @@ public class AuthController {
     private final EmailApiService emailApiService;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
 
+    @org.springframework.beans.factory.annotation.Value("${app.frontend.url}")
+    private String frontendUrl;
+
     /**
      * Registers a new user account.
      *
@@ -140,7 +143,7 @@ public class AuthController {
             passwordResetTokenRepository.save(resetToken);
 
             // Create the link pointing to your React frontend
-            String resetLink = "http://localhost:5173/reset-password?token=" + token;
+            String resetLink = frontendUrl + "/reset-password?token=" + token;
             
             // Dispatch email
             emailApiService.sendPasswordResetEmail(user.getEmail(), resetLink);
