@@ -43,5 +43,7 @@ public interface ProductService {
 
     List<Product> getRecommendations(Long productId) throws ProductException;
 
+    List<Product> getSimilarProducts(Long productId) throws ProductException;
+
     List<Product> findAllProducts();
 }

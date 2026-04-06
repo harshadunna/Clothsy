@@ -146,7 +146,7 @@ public class ProductServiceImplementation implements ProductService {
         List<Promotion> activePromos = promotionRepository.findActivePromotions(LocalDateTime.now());
         applyActivePromotions(product, activePromos);
         return product;
-}
+    }
 
     @Override
     public List<Product> findProductByCategory(String category) {
@@ -266,6 +266,37 @@ public class ProductServiceImplementation implements ProductService {
         List<Promotion> activePromos = promotionRepository.findActivePromotions(LocalDateTime.now());
         products.forEach(p -> applyActivePromotions(p, activePromos));
         return products;
+    }
+
+    // SIMILAR PRODUCTS LOGIC (By Category)
+    @Override
+    public List<Product> getSimilarProducts(Long productId) throws ProductException {
+        Product product = findProductById(productId);
+        String categoryName = product.getCategory() != null ? product.getCategory().getName() : "";
+
+        List<Product> similar = new ArrayList<>();
+        
+        if (!categoryName.isEmpty()) {
+            similar = productRepository.findByCategory(categoryName);
+            similar = similar.stream()
+                    .filter(p -> !p.getId().equals(productId))
+                    .collect(Collectors.toList());
+            Collections.shuffle(similar);
+            similar = similar.stream().limit(4).collect(Collectors.toList());
+        }
+
+        // Fallback to safety net if category is empty or has no other items
+        if (similar.isEmpty()) {
+            similar = productRepository.findSafetyNetFallback().stream()
+                    .filter(p -> !p.getId().equals(productId))
+                    .limit(4)
+                    .collect(Collectors.toList());
+        }
+
+        List<Promotion> activePromos = promotionRepository.findActivePromotions(LocalDateTime.now());
+        similar.forEach(p -> applyActivePromotions(p, activePromos));
+
+        return similar;
     }
 
     // GENDER-SEPARATED CLOTHSY AI PAIRING LOGIC

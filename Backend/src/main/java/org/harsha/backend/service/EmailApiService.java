@@ -194,7 +194,7 @@ public class EmailApiService {
                         "India"
                 ) : List.of(),
                 labelFont, bodyFont, boldBody, lightBg, border);
-        
+
         PdfPCell shipCell = addressBlock("SHIP TO",
                 order.getShippingAddress() != null
                         ? order.getShippingAddress().getFirstName() + " " + order.getShippingAddress().getLastName()

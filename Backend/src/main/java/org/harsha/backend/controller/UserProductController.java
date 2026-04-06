@@ -65,6 +65,13 @@ public class UserProductController {
         return ResponseEntity.ok(recommendations);
     }
 
+    @GetMapping("/products/{productId}/similar")
+    public ResponseEntity<List<Product>> getSimilarProducts(
+            @PathVariable Long productId) throws ProductException {
+        List<Product> similarProducts = productService.getSimilarProducts(productId);
+        return ResponseEntity.ok(similarProducts);
+    }
+
     @GetMapping("/products/curations/{tag}")
     public ResponseEntity<List<Product>> getCuratedProducts(@PathVariable String tag) {
         String normalizedTag = tag.toLowerCase();
