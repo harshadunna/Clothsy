@@ -9,7 +9,7 @@ import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
 import ProductReviewCard from "./ProductReviewCard";
 import NotFound from "../../pages/NotFound";
 
-import { findProductById, getProductRecommendations } from "../../../Redux/Customers/Product/Action";
+import { findProductById, getProductRecommendations, getSimilarProducts } from "../../../Redux/Customers/Product/Action";
 import { addItemToCart, getCart } from "../../../Redux/Customers/Cart/Action";
 import { getWishlist, toggleWishlistItem } from "../../../Redux/Customers/Wishlist/Action";
 import api from "../../../config/api";
@@ -163,72 +163,16 @@ const SimilarProductCard = ({ item }) => {
   );
 };
 
-const SimilarProducts = ({ category, currentProductId }) => {
-  const navigate = useNavigate();
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const hasFetched = useRef(false);
-
-  useEffect(() => {
-    if (!category || hasFetched.current) return;
-    hasFetched.current = true;
-    const fetchSimilar = async () => {
-      setLoading(true);
-      try {
-        const { data } = await api.get("/api/products", {
-          params: { category, pageNumber: 0, pageSize: 10 },
-        });
-        const list = Array.isArray(data) ? data : data?.content || [];
-        const filtered = list.filter((p) => p.id !== currentProductId).slice(0, 4);
-        setItems(filtered);
-      } catch (err) {
-        console.error("Similar products fetch failed:", err);
-        setItems([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSimilar();
-  }, [category, currentProductId]);
-
-  if (loading) {
-    return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-12">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="aspect-[3/4] bg-[#E8E1DE] animate-pulse" />
-        ))}
-      </div>
-    );
-  }
-
-  if (!items.length) return null;
-
-  return (
-    <>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-12">
-        {items.map((item) => (
-          <SimilarProductCard key={item.id} item={item} />
-        ))}
-      </div>
-      <div className="mt-12 flex justify-center md:hidden">
-        <button
-          onClick={() => navigate(`/products?category=${category}`)}
-          className="font-label text-[0.65rem] font-black uppercase tracking-[0.2em] text-[#1A1109] border-b border-[#1A1109] pb-0.5 hover:text-[#C8742A] hover:border-[#C8742A] transition-colors"
-        >
-          View All in Category →
-        </button>
-      </div>
-    </>
-  );
-};
-
 export default function ProductDetails() {
   const [selectedSize, setSelectedSize] = useState(null);
   const [addingToCart, setAddingToCart] = useState(false);
   const [toast, setToast] = useState(null);
   const toastTimerRef = useRef(null);
   const [openAccordion, setOpenAccordion] = useState(null);
+  
+  // States for both Recommendations and Similar Products
   const [recommendations, setRecommendations] = useState([]);
+  const [similarProducts, setSimilarProducts] = useState([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
 
   const navigate = useNavigate();
@@ -253,7 +197,6 @@ export default function ProductDetails() {
     if (location.state?.reviewSuccess) {
       triggerToast("Perspective published successfully.", "wishlist", "added");
       dispatch(findProductById(productId));
-      // Clear the router state so it doesn't loop on manual refresh
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.state, dispatch, productId, navigate]);
@@ -263,22 +206,31 @@ export default function ProductDetails() {
     if (auth?.user) dispatch(getWishlist());
   }, [dispatch, auth?.user]);
 
+  // Concurrent Data Fetching for "Complete the Look" & "Similar Pieces"
   useEffect(() => {
     if (!product?.id) return;
     let cancelled = false;
-    const fetchRecs = async () => {
+    const fetchCrossSells = async () => {
       setLoadingRecs(true);
-      setRecommendations([]);
       try {
-        const data = await getProductRecommendations(product.id);
-        if (!cancelled) setRecommendations(data || []);
+        const [recsData, similarData] = await Promise.all([
+          getProductRecommendations(product.id),
+          getSimilarProducts(product.id)
+        ]);
+        if (!cancelled) {
+          setRecommendations(recsData || []);
+          setSimilarProducts(similarData || []);
+        }
       } catch {
-        if (!cancelled) setRecommendations([]);
+        if (!cancelled) {
+          setRecommendations([]);
+          setSimilarProducts([]);
+        }
       } finally {
         if (!cancelled) setLoadingRecs(false);
       }
     };
-    fetchRecs();
+    fetchCrossSells();
     return () => { cancelled = true; };
   }, [product?.id]);
 
@@ -348,7 +300,6 @@ export default function ProductDetails() {
     }
   };
 
-  // Safely extract the native reviews payload from the backend
   const reviews = product?.reviews || [];
   const images = product.images?.length > 0
     ? product.images
@@ -358,10 +309,6 @@ export default function ProductDetails() {
     typeof product.category === "string"
       ? product.category
       : product.category?.name || product.topLevelCategory || null;
-
-  const showCompleteTheLook = !loadingRecs && recommendations.length > 0;
-  const showLoadingSkeleton = loadingRecs;
-  const showFallback = !loadingRecs && recommendations.length === 0 && categoryName;
 
   return (
     <div className="bg-[#FFF8F5] text-[#1A1109] font-body antialiased min-h-screen selection:bg-[#C8742A] selection:text-[#FFF8F5]">
@@ -538,63 +485,77 @@ export default function ProductDetails() {
         )}
       </section>
 
-      {/* Complete the Look / Fallback */}
+      {/* Cascading Cross-Sells Section */}
       <section className="border-t border-[#D1C4BC] px-6 md:px-12 lg:px-20 py-24">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-4">
-            <div>
-              {showCompleteTheLook ? (
-                <>
+
+          {/* Loading State */}
+          {loadingRecs && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-12">
+              {[...Array(4)].map((_, i) => <LookCardSkeleton key={i} />)}
+            </div>
+          )}
+
+          {/* 1. Complete the Look */}
+          {!loadingRecs && recommendations.length > 0 && (
+            <div className="mb-24">
+              <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+                <div>
                   <p className="font-label text-[0.6rem] font-black uppercase tracking-[0.4em] text-[#C8742A] mb-3">
                     Editorial Styling
                   </p>
                   <h2 className="font-headline italic text-4xl md:text-5xl text-[#1A1109] tracking-tighter leading-none">
                     Complete the Look
                   </h2>
-                </>
-              ) : showFallback ? (
-                <>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
+                {recommendations.map((item, i) => (
+                  <LookCard key={item.id} item={item} index={i} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 2. Similar Pieces */}
+          {!loadingRecs && similarProducts.length > 0 && (
+            <div>
+              <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+                <div>
                   <p className="font-label text-[0.6rem] font-black uppercase tracking-[0.4em] text-[#C8742A] mb-3">
                     You May Also Covet
                   </p>
                   <h2 className="font-headline italic text-4xl md:text-5xl text-[#1A1109] tracking-tighter leading-none">
                     Similar Pieces
                   </h2>
-                </>
-              ) : showLoadingSkeleton ? (
-                <>
-                  <div className="h-3 w-24 bg-[#E8E1DE] animate-pulse mb-4" />
-                  <div className="h-10 w-64 bg-[#E8E1DE] animate-pulse" />
-                </>
-              ) : null}
+                </div>
+                {categoryName && (
+                  <button
+                    onClick={() => navigate(`/products?category=${categoryName}`)}
+                    className="hidden md:block font-label text-[0.65rem] font-black uppercase tracking-[0.2em] text-[#1A1109] border-b border-[#1A1109] pb-0.5 hover:text-[#C8742A] hover:border-[#C8742A] transition-colors whitespace-nowrap"
+                  >
+                    View All in Category →
+                  </button>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-12">
+                {similarProducts.map((item) => (
+                  <SimilarProductCard key={item.id} item={item} />
+                ))}
+              </div>
+              
+              {categoryName && (
+                <div className="mt-12 flex justify-center md:hidden">
+                  <button
+                    onClick={() => navigate(`/products?category=${categoryName}`)}
+                    className="font-label text-[0.65rem] font-black uppercase tracking-[0.2em] text-[#1A1109] border-b border-[#1A1109] pb-0.5 hover:text-[#C8742A] hover:border-[#C8742A] transition-colors"
+                  >
+                    View All in Category →
+                  </button>
+                </div>
+              )}
             </div>
-
-            {showFallback && (
-              <button
-                onClick={() => navigate(`/products?category=${categoryName}`)}
-                className="hidden md:block font-label text-[0.65rem] font-black uppercase tracking-[0.2em] text-[#1A1109] border-b border-[#1A1109] pb-0.5 hover:text-[#C8742A] hover:border-[#C8742A] transition-colors whitespace-nowrap"
-              >
-                View All →
-              </button>
-            )}
-          </div>
-
-          {showLoadingSkeleton && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-12">
-              {[...Array(4)].map((_, i) => <LookCardSkeleton key={i} />)}
-            </div>
-          )}
-
-          {showCompleteTheLook && (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
-              {recommendations.map((item, i) => (
-                <LookCard key={item.id} item={item} index={i} />
-              ))}
-            </div>
-          )}
-
-          {showFallback && (
-            <SimilarProducts category={categoryName} currentProductId={product.id} />
           )}
 
         </div>

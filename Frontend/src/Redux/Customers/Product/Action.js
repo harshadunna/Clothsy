@@ -103,3 +103,13 @@ export const getProductRecommendations = async (productId) => {
     return [];
   }
 };
+
+export const getSimilarProducts = async (productId) => {
+  try {
+    const { data } = await api.get(`/api/products/${productId}/similar`);
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch similar products:", error);
+    return [];
+  }
+};

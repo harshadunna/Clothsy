@@ -24,7 +24,6 @@ export default function Product() {
   const searchParams = new URLSearchParams(location.search);
   const pageNumber = parseInt(searchParams.get("page") || "1");
   
-  // FIX: Safely read the new Spring Boot 3.3 VIA_DTO pagination structure
   const totalPages = customersProduct?.products?.page?.totalPages || customersProduct?.products?.totalPages || 1;
   const totalProducts = customersProduct?.products?.page?.totalElements || customersProduct?.products?.totalElements || 0;
   const products = customersProduct?.products?.content || [];
@@ -32,9 +31,10 @@ export default function Product() {
   useEffect(() => {
     const priceRange = searchParams.get("price");
     const [minPrice, maxPrice] = priceRange ? priceRange.split("-").map(Number) : [0, 100000];
+    const activeCategory = searchParams.get("category") || levelThree || "";
 
     const reqData = {
-      category: levelThree || "",
+      category: activeCategory,
       colors: searchParams.get("color") || "",
       sizes: searchParams.get("size") || "",
       minPrice, maxPrice,
@@ -82,12 +82,12 @@ export default function Product() {
   const clearFilters = () => navigate({ search: "" });
   const hasActiveFilters = Array.from(searchParams.keys()).some((key) => key !== "sort" && key !== "page" && key !== "search");
 
-  // Keep the title clean without hyphens for the UI
+  const activeCategoryForTitle = searchParams.get("category") || levelThree;
   const pageTitle = searchParams.get("search")
     ? `Results for "${searchParams.get("search")}"`
-    : (levelThree ? levelThree.replace(/-/g, " ") : "The Archive");
+    : (activeCategoryForTitle ? activeCategoryForTitle.replace(/-/g, " ") : "The Archive");
 
-  // Brutalist Architectural Filters
+  // Architectural Filters
   const FilterSidebar = () => (
     <div className="space-y-12 pr-8">
       {filters.map((section) => (
