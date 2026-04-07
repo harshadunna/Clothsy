@@ -1,5 +1,9 @@
-# Root ignores
-node_modules/
-.idea/
-temp_product.json
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+
+# Root IDE files
+.vscode/
+.idea/
+*.code-workspace
