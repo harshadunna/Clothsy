@@ -11,7 +11,7 @@ export default function CartItem({ item, showButton = true }) {
 
   // ROCK SOLID FALLBACKS: Uses images array if main URL is missing
   const product = item?.product || {};
-  const imageUrl        = product.imageUrl || (product.images && product.images.length > 0 ? product.images[0] : "");
+  const imageUrl        = product.imageUrl || product.images?.[0] || "";
   const title           = product.title || "Product Title";
   const brand           = product.brand || "Brand";
   const size            = item?.size || "M";

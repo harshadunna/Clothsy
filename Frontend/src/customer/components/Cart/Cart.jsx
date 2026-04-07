@@ -163,7 +163,7 @@ export default function Cart() {
                 </div>
 
                 <AnimatePresence mode="sync" initial={false}>
-                  {cartItems.map((item) => (
+                  {(cartItems || []).map((item) => (
                     <CartItem key={item.id} item={item} showButton />
                   ))}
                 </AnimatePresence>
@@ -245,7 +245,7 @@ export default function Cart() {
         )}
 
         {/* Cross-sell: Seasonless Objects */}
-        {!loading && crossSellItems.length > 0 && (
+        {!loading && crossSellItems?.length > 0 && (
           <section className={`mt-32 pt-20 ${isEmpty ? "" : "border-t border-[#D1C4BC]"}`}>
             <div className="flex items-end justify-between mb-16">
               <div>
@@ -261,7 +261,7 @@ export default function Cart() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
-              {crossSellItems.map((item, i) => (
+              {(crossSellItems || []).map((item, i) => (
                 <div
                   key={item.id}
                   className={`space-y-5 cursor-pointer group ${i % 2 !== 0 && isEmpty ? "md:translate-y-12" : ""}`}

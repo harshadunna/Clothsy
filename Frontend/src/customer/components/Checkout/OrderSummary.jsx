@@ -48,7 +48,7 @@ export default function OrderSummary({ handleNext }) {
         <div className="space-y-12">
           {orderItems.map((item) => {
             const product = item.product || {};
-            const imageSrc = product.imageUrl || (product.images && product.images.length > 0 ? product.images[0] : "");
+            const imageSrc = product.imageUrl || product.images?.[0] || "";
             const title = product.title || "Product Title";
             const brand = product.brand || "Brand";
             const price = item.discountedPrice || product.discountedPrice || 0;

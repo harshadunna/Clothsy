@@ -460,7 +460,7 @@ export default function ProductDetails() {
               Client Perspectives
             </h2>
             <p className="font-label text-[0.65rem] font-black uppercase tracking-[0.3em] text-[#C8742A]">
-              {reviews.length} {reviews.length === 1 ? "Review" : "Reviews"}
+              {reviews?.length || 0} {reviews?.length === 1 ? "Review" : "Reviews"}
             </p>
           </div>
           <button
@@ -470,7 +470,7 @@ export default function ProductDetails() {
             Draft a Review
           </button>
         </div>
-        {reviews.length === 0 ? (
+        {!reviews?.length ? (
           <div className="py-12 border-t border-[#D1C4BC]">
             <p className="font-body text-[#7F756E] italic text-lg">
               No perspectives have been recorded for this piece yet.
@@ -478,7 +478,7 @@ export default function ProductDetails() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
-            {reviews.map((review, index) => (
+            {(reviews || []).map((review, index) => (
               <ProductReviewCard key={review.id || index} item={review} />
             ))}
           </div>
@@ -518,7 +518,7 @@ export default function ProductDetails() {
           )}
 
           {/* 2. Similar Pieces */}
-          {!loadingRecs && similarProducts.length > 0 && (
+          {!loadingRecs && similarProducts?.length > 0 && (
             <div>
               <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
                 <div>
@@ -540,7 +540,7 @@ export default function ProductDetails() {
               </div>
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-12">
-                {similarProducts.map((item) => (
+                {(similarProducts || []).map((item) => (
                   <SimilarProductCard key={item.id} item={item} />
                 ))}
               </div>

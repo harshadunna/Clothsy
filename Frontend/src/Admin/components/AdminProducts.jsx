@@ -56,12 +56,11 @@ export default function AdminProducts() {
     );
   }
 
-  const uniqueCategories = ["All", ...new Set(products.map((p) => p.category?.name).filter(Boolean))];
+  const uniqueCategories = ["All", ...new Set((products || []).map((p) => p.category?.name).filter(Boolean))];
 
   const filteredProducts =
     selectedCategory === "All"
-      ? products
-      : products.filter((p) => p.category?.name === selectedCategory);
+      ? products : (products || []).filter((p) => p.category?.name === selectedCategory);
 
   return (
     <div className="p-12 max-w-[1440px] mx-auto min-h-screen bg-[#FFF8F5]">
@@ -133,14 +132,14 @@ export default function AdminProducts() {
           </thead>
 
           <tbody>
-            {filteredProducts.length === 0 ? (
+            {!filteredProducts?.length ? (
               <tr>
                 <td colSpan="5" className="py-12 text-center font-label text-[0.75rem] tracking-widest uppercase text-[#7F756E]">
                   No products found.
                 </td>
               </tr>
             ) : (
-              filteredProducts.map((product) => {
+              (filteredProducts || []).map((product) => {
                 const isHighlighted = product.id === highlightProductId;
 
                 return (

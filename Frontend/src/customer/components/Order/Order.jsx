@@ -29,7 +29,7 @@ export default function Order() {
 
   const allItems = (orders || []).flatMap((order) => {
     if (!order || !Array.isArray(order.orderItems)) return [];
-    return order.orderItems.map((item) => ({ item, order }));
+    return (order.orderItems || []).map((item) => ({ item, order }));
   });
 
   if (loading) {
@@ -46,14 +46,14 @@ export default function Order() {
         Order Archive
       </h2>
       
-      {allItems.length === 0 ? (
+      {!allItems?.length ? (
         <div className="py-12 border-t border-[#D1C4BC]">
           <p className="font-label uppercase tracking-[0.2em] text-[10px] text-[#7F756E] font-bold">No order history found in the archive.</p>
         </div>
       ) : (
         <div className="relative pl-8 border-l border-[#D1C4BC]">
           <AnimatePresence>
-            {allItems.map(({ item, order }, idx) => (
+            {(allItems || []).map(({ item, order }, idx) => (
               <motion.div key={`${order.id}-${item.id}`} variants={fadeUp} initial="hidden" animate="show" exit="hidden" transition={{ delay: idx * 0.1 }}>
                 <OrderCard item={item} order={order} /> 
               </motion.div>

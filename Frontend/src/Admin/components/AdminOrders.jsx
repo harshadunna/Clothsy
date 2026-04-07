@@ -126,12 +126,12 @@ export default function AdminOrders() {
             </tr>
           </thead>
           <tbody>
-            {orders.length === 0 ? (
+            {!orders?.length ? (
               <tr>
                 <td colSpan="6" className="py-12 text-center font-label text-[0.75rem] tracking-widest uppercase text-[#7F756E]">No active dispatches.</td>
               </tr>
             ) : (
-              orders.map((order) => {
+              (orders || []).map((order) => {
                 // Get image from first item for the editorial thumbnail look
                 const previewImg = order.orderItems?.[0]?.product?.imageUrl;
                 

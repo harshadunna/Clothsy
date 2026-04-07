@@ -241,21 +241,21 @@ const HomePage = () => {
         const womensCats = shuffle(ALL_WOMENS_CATS);
         let mensItems = [], womensItems = [];
         for (const cat of mensCats) {
-          if (mensItems.length >= 2) break;
+          if ((mensItems || []).length >= 2) break;
           const res = await api.get("/api/products", {
             params: { category: cat, pageSize: 10, pageNumber: 0, minPrice: 0, maxPrice: 100000, minDiscount: 0, sort: "" },
           });
           mensItems = [...mensItems, ...pickRandom(res.data?.content || [], 2)];
         }
         for (const cat of womensCats) {
-          if (womensItems.length >= 2) break;
+          if ((womensItems || []).length >= 2) break;
           const res = await api.get("/api/products", {
             params: { category: cat, pageSize: 10, pageNumber: 0, minPrice: 0, maxPrice: 100000, minDiscount: 0, sort: "" },
           });
           womensItems = [...womensItems, ...pickRandom(res.data?.content || [], 2)];
         }
-        const uM = [...new Map(mensItems.map((p)   => [p.id, p])).values()].slice(0, 2);
-        const uW = [...new Map(womensItems.map((p) => [p.id, p])).values()].slice(0, 2);
+        const uM = [...new Map((mensItems || []).map((p)   => [p.id, p])).values()].slice(0, 2);
+        const uW = [...new Map((womensItems || []).map((p) => [p.id, p])).values()].slice(0, 2);
         setCuratedProducts([uW[0], uM[0], uW[1], uM[1]].filter(Boolean));
       } catch (err) {
         console.error("Curated fetch error:", err);
@@ -292,7 +292,7 @@ const HomePage = () => {
 
   // GSAP curated scroll-in 
   useEffect(() => {
-    if (!curatedProducts.length || !gridRef.current) return;
+    if (!curatedProducts?.length || !gridRef.current) return;
     const ctx = gsap.context(() => {
       const cards = gsap.utils.toArray(".curated-card");
       if (cards.length > 0) {
@@ -577,7 +577,7 @@ const HomePage = () => {
           </section>
 
           {/* 2. CURATED EDIT */}
-          {curatedProducts.length > 0 && (
+          {curatedProducts?.length > 0 && (
             <section ref={gridRef} className="py-20 md:py-28 px-6 md:px-16 max-w-[1440px] mx-auto">
               <div className="flex flex-col md:flex-row items-baseline justify-between mb-14 border-b border-[#D1C4BC] pb-5">
                 <div>
@@ -592,7 +592,7 @@ const HomePage = () => {
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-12 gap-x-8 gap-y-16">
-                {curatedProducts.map((product, index) => {
+                {(curatedProducts || []).map((product, index) => {
                   const genderLabel = isMens(product) ? "Mens" : isWomens(product) ? "Womens" : null;
                   return (
                     <div
