@@ -100,7 +100,7 @@ public class EmailApiService {
 
         try {
             if (htmlContent != null) {
-                htmlContent = htmlContent.replace("http://localhost:5173", frontendUrl);
+                // frontendUrl is now injected directly into the templates
             }
             sendResendEmail(order.getUser().getEmail(), subject, htmlContent, attachmentBytes, attachmentName);
         } catch (Exception e) {
@@ -498,7 +498,7 @@ public class EmailApiService {
                             %s %s<br/>%s<br/>%s, %s %s
                         </p>
                     </div>
-                    <a href="http://localhost:5173/account/order/%s" style="display: block; background-color: #1C1C1A; color: #ffffff; text-align: center; padding: 20px; font-size: 12px; font-weight: bold; letter-spacing: 0.3em; text-transform: uppercase; text-decoration: none;">VIEW ORDER</a>
+                    <a href="%s/account/order/%s" style="display: block; background-color: #1C1C1A; color: #ffffff; text-align: center; padding: 20px; font-size: 12px; font-weight: bold; letter-spacing: 0.3em; text-transform: uppercase; text-decoration: none;">VIEW ORDER</a>
                 </div>
             </body>
             </html>
@@ -513,6 +513,7 @@ public class EmailApiService {
                 order.getShippingAddress() != null ? order.getShippingAddress().getCity() : "",
                 order.getShippingAddress() != null ? order.getShippingAddress().getState() : "",
                 order.getShippingAddress() != null ? order.getShippingAddress().getZipCode() : "",
+                frontendUrl,
                 order.getId()
         );
     }
@@ -530,13 +531,14 @@ public class EmailApiService {
                         <span style="font-size: 10px; font-weight: bold; letter-spacing: 0.2em; color: #C8742A; text-transform: uppercase;">TRACKING DETAILS</span>
                         <div style="font-family: monospace; font-size: 32px; font-weight: bold; margin-top: 16px;">%s</div>
                     </div>
-                    <a href="http://localhost:5173/account/order/%s" style="display: block; background-color: #1C1C1A; color: #ffffff; text-align: center; padding: 20px; font-size: 12px; font-weight: bold; letter-spacing: 0.3em; text-transform: uppercase; text-decoration: none;">TRACK YOUR SHIPMENT</a>
+                    <a href="%s/account/order/%s" style="display: block; background-color: #1C1C1A; color: #ffffff; text-align: center; padding: 20px; font-size: 12px; font-weight: bold; letter-spacing: 0.3em; text-transform: uppercase; text-decoration: none;">TRACK YOUR SHIPMENT</a>
                 </div>
             </body>
             </html>
             """.formatted(
                 order.getId(),
                 order.getTrackingNumber() != null ? order.getTrackingNumber() : "Pending Courier Assignment",
+                frontendUrl,
                 order.getId()
         );
     }
@@ -554,11 +556,11 @@ public class EmailApiService {
                         <p style="font-size: 10px; font-weight: bold; letter-spacing: 0.2em; color: #C8742A; text-transform: uppercase; margin: 0;">Ref No.</p>
                         <p style="font-family: 'Newsreader', serif; font-style: italic; font-size: 24px; margin: 8px 0 0 0;">#%s</p>
                     </div>
-                    <a href="http://localhost:5173/account/order/%s" style="display: inline-block; border: 1px solid #1C1C1A; color: #1C1C1A; padding: 16px 48px; font-size: 11px; font-weight: bold; letter-spacing: 0.2em; text-transform: uppercase; text-decoration: none;">VIEW ORDER OR START RETURN</a>
+                    <a href="%s/account/order/%s" style="display: inline-block; border: 1px solid #1C1C1A; color: #1C1C1A; padding: 16px 48px; font-size: 11px; font-weight: bold; letter-spacing: 0.2em; text-transform: uppercase; text-decoration: none;">VIEW ORDER OR START RETURN</a>
                 </div>
             </body>
             </html>
-            """.formatted(order.getId(), order.getId());
+            """.formatted(order.getId(), frontendUrl, order.getId());
     }
 
     private String buildCancelledHtml(Order order) {
@@ -580,7 +582,7 @@ public class EmailApiService {
                     <div style="border-top: 1px solid rgba(200,116,42,0.1); border-bottom: 1px solid rgba(200,116,42,0.1); padding: 24px 0; margin-bottom: 40px; font-size: 12px; color: #7A7570; text-transform: uppercase; letter-spacing: 2px;">
                         Order #%s | %s | ₹%s
                     </div>
-                    <a href="http://localhost:5173/" style="display: block; background-color: #1C1C1A; color: #ffffff; text-align: center; padding: 20px; font-size: 12px; font-weight: bold; letter-spacing: 0.2em; text-transform: uppercase; text-decoration: none;">CONTINUE SHOPPING</a>
+                    <a href="%s/" style="display: block; background-color: #1C1C1A; color: #ffffff; text-align: center; padding: 20px; font-size: 12px; font-weight: bold; letter-spacing: 0.2em; text-transform: uppercase; text-decoration: none;">CONTINUE SHOPPING</a>
                 </div>
             </body>
             </html>
@@ -588,7 +590,8 @@ public class EmailApiService {
                 order.getId(),
                 String.format("%,d", order.getTotalDiscountedPrice() != null ? order.getTotalDiscountedPrice() : 0),
                 order.getId(), dateStr,
-                String.format("%,d", order.getTotalDiscountedPrice() != null ? order.getTotalDiscountedPrice() : 0)
+                String.format("%,d", order.getTotalDiscountedPrice() != null ? order.getTotalDiscountedPrice() : 0),
+                frontendUrl
         );
     }
 
@@ -610,11 +613,11 @@ public class EmailApiService {
                         <p style="font-size: 12px; color: #544338; line-height: 1.6; margin-bottom: 8px;">✓ The pickup agent will bring the shipping label.</p>
                         <p style="font-size: 12px; color: #544338; line-height: 1.6; margin-bottom: 0;">✓ Items must be in their original, unused condition.</p>
                     </div>
-                    <a href="http://localhost:5173/returns" style="display: block; background-color: #1C1C1A; color: #ffffff; text-align: center; padding: 20px; font-size: 12px; font-weight: bold; letter-spacing: 0.2em; text-transform: uppercase; text-decoration: none;">VIEW RETURN STATUS</a>
+                    <a href="%s/returns" style="display: block; background-color: #1C1C1A; color: #ffffff; text-align: center; padding: 20px; font-size: 12px; font-weight: bold; letter-spacing: 0.2em; text-transform: uppercase; text-decoration: none;">VIEW RETURN STATUS</a>
                 </div>
             </body>
             </html>
-            """.formatted(order.getId());
+            """.formatted(order.getId(), frontendUrl);
     }
 
     private String buildRefundHtml(Order order) {
@@ -635,13 +638,14 @@ public class EmailApiService {
                         <p style="font-size: 12px; color: #1C1C1A; margin: 0 0 4px 0;">Refund to original payment method</p>
                         <p style="font-family: 'Newsreader', serif; font-style: italic; font-size: 14px; color: #544338; margin: 0;">Allow 3-5 business days for this to appear in your account.</p>
                     </div>
-                    <a href="http://localhost:5173/" style="display: block; background-color: #1C1C1A; color: #ffffff; text-align: center; padding: 20px; font-size: 12px; font-weight: bold; letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;">SHOP THE NEW ARRIVALS</a>
+                    <a href="%s/" style="display: block; background-color: #1C1C1A; color: #ffffff; text-align: center; padding: 20px; font-size: 12px; font-weight: bold; letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;">SHOP THE NEW ARRIVALS</a>
                 </div>
             </body>
             </html>
             """.formatted(
                 order.getId(),
-                String.format("%,d", order.getTotalDiscountedPrice() != null ? order.getTotalDiscountedPrice() : 0)
+                String.format("%,d", order.getTotalDiscountedPrice() != null ? order.getTotalDiscountedPrice() : 0),
+                frontendUrl
         );
     }
 }
