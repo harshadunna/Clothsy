@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { getUser, register } from "../../../Redux/Auth/Action";
+import { API_BASE_URL } from "../../../config/api";
 
 export default function RegisterForm() {
   const dispatch = useDispatch();
@@ -36,11 +37,11 @@ export default function RegisterForm() {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:8080/oauth2/authorization/google";
+    window.location.href = `${API_BASE_URL}/oauth2/authorization/google`;
   };
 
   const handleGithubLogin = () => {
-    window.location.href = "http://localhost:8080/oauth2/authorization/github";
+    window.location.href = `${API_BASE_URL}/oauth2/authorization/github`;
   };
 
   const renderField = (id, label, placeholder, type = "text") => {
