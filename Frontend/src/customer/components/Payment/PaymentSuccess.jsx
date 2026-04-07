@@ -19,20 +19,30 @@ export default function PaymentSuccess() {
     dispatch(clearCart());
 
     if (orderId) {
+      let attempts = 0;
+      const maxAttempts = 5; // Try 5 times (total 10 seconds)
+
       const fetchOrderDetails = async () => {
-        // Wait 1.5s for webhooks/DB synchronization
-        setTimeout(async () => {
-          try {
-            const res = await api.get(`/api/orders/${orderId}`);
+        try {
+          const res = await api.get(`/api/orders/${orderId}`);
+          // Check if the backend actually marked it as PLACED
+          if (res.data.orderStatus === "PLACED" || res.data.paymentDetails?.paymentStatus === "COMPLETED") {
             setOrderData(res.data);
             setStatus("success");
-          } catch (err) {
-            console.error("Order synchronization in progress...");
-            setStatus("error");
+          } else if (attempts < maxAttempts) {
+            attempts++;
+            console.log(`Order not updated yet. Retrying... (${attempts}/${maxAttempts})`);
+            setTimeout(fetchOrderDetails, 2000); // Try again in 2 seconds
+          } else {
+            setStatus("error"); // Give up after 10 seconds
           }
-        }, 1500);
+        } catch (err) {
+          setStatus("error");
+        }
       };
-      fetchOrderDetails();
+
+      // Start the first check after 2 seconds
+      setTimeout(fetchOrderDetails, 2000);
     }
   }, [orderId, dispatch]);
 
