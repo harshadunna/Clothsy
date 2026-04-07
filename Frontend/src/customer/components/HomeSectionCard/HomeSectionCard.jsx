@@ -20,7 +20,7 @@ export default function HomeSectionCard({ product }) {
         style={{ width: "180px", height: "240px" }}
       >
         <img
-          src={product?.imageUrl || product?.images?.[0]}
+          src={(product?.imageUrl || product?.images?.[0])?.replace('/upload/', '/upload/q_auto,f_auto/')}
           alt={product?.title || "Product Image"}
           draggable={false}
           className="w-full h-full object-cover object-top select-none grayscale-[15%] transition-all duration-[800ms] group-hover:scale-105 group-hover:grayscale-0"

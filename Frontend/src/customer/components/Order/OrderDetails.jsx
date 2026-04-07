@@ -144,7 +144,7 @@ export default function OrderDetails() {
                   eligibleItemsForCancellation.map((item) => (
                     <label key={item.id} className="flex items-center gap-6 p-4 border border-[#D1C4BC] hover:border-[#1A1109] transition-colors cursor-pointer">
                       <input type="checkbox" className="w-4 h-4 border-[#D1C4BC] text-[#1A1109] focus:ring-0 rounded-none cursor-pointer" checked={selectedItemsToCancel.includes(item.id)} onChange={() => setSelectedItemsToCancel(p => p.includes(item.id) ? p.filter(id => id !== item.id) : [...p, item.id])} />
-                      <img src={item.product?.imageUrl} alt={item.product?.title} className="w-12 h-16 object-cover object-top bg-[#E8E1DE] grayscale-[20%]" />
+                      <img src={item.product?.imageUrl?.replace('/upload/', '/upload/q_auto,f_auto/')} alt={item.product?.title} className="w-12 h-16 object-cover object-top bg-[#E8E1DE] grayscale-[20%]" />
                       <div className="flex-1"><p className="text-sm font-bold text-[#1A1109] truncate font-headline italic">{item.product?.title}</p></div>
                     </label>
                   ))
@@ -317,7 +317,7 @@ export default function OrderDetails() {
                       </div>
                     )}
                     <img
-                      src={item.product?.imageUrl}
+                      src={item.product?.imageUrl?.replace('/upload/', '/upload/q_auto,f_auto/')}
                       alt={item.product?.title}
                       className="w-full h-full object-cover object-top grayscale-[15%] hover:grayscale-0 hover:scale-105 transition-transform duration-[1.5s]"
                     />

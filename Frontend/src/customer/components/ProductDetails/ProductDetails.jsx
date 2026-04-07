@@ -65,7 +65,7 @@ const LookCard = ({ item, index }) => {
     >
       <div className="relative overflow-hidden aspect-[3/4] bg-[#E8E1DE] mb-5">
         <img
-          src={image}
+          src={image?.replace('/upload/', '/upload/q_auto,f_auto/')}
           alt={item.title}
           className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-[1.04] transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
         />
@@ -131,7 +131,7 @@ const SimilarProductCard = ({ item }) => {
     >
       <div className="relative overflow-hidden aspect-[3/4] bg-[#E8E1DE] mb-4">
         <img
-          src={image}
+          src={image?.replace('/upload/', '/upload/q_auto,f_auto/')}
           alt={item.title}
           className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
         />
@@ -358,7 +358,7 @@ export default function ProductDetails() {
               className="w-full aspect-[3/4] bg-[#E8E1DE] overflow-hidden"
             >
               <img
-                src={src}
+                src={src?.replace('/upload/', '/upload/q_auto,f_auto/')}
                 alt={`${product.title} - Detail ${idx + 1}`}
                 className="w-full h-full object-cover grayscale-[15%] hover:grayscale-0 transition-all duration-1000"
               />

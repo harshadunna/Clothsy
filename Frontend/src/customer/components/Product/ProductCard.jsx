@@ -41,7 +41,7 @@ const ProductCard = ({ product }) => {
       {/* IMAGE CONTAINER */}
       <div className="aspect-[3/4] overflow-hidden bg-[#E8E1DE] mb-6 relative border border-transparent group-hover:border-[#D1C4BC] transition-colors duration-500">
         <img
-          src={imageUrl}
+          src={imageUrl?.replace('/upload/', '/upload/q_auto,f_auto/')}
           alt={title}
           className="w-full h-full object-cover grayscale-[15%] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
           onError={(e) => {

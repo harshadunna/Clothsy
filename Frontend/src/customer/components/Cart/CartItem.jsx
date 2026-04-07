@@ -45,7 +45,7 @@ export default function CartItem({ item, showButton = true }) {
         >
           {imageUrl ? (
              <img
-               src={imageUrl}
+               src={imageUrl?.replace('/upload/', '/upload/q_auto,f_auto/')}
                alt={title}
                className="w-full h-full object-cover grayscale-[10%] hover:grayscale-0 transition-all duration-700 ease-out hover:scale-105"
              />
