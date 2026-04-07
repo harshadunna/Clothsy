@@ -152,7 +152,7 @@ const HomePage = () => {
 
   const timerRef = useRef(null);
   const heroSlidesLenRef = useRef(0);
-  heroSlidesLenRef.current = heroSlides.length;
+  heroSlidesLenRef.current = heroSlides?.length || 0;
 
   const startTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -173,13 +173,13 @@ const HomePage = () => {
   }, [animateHeroText, startTimer]);
 
   useEffect(() => {
-    if (heroSlides.length < 2) return;
+    if ((heroSlides?.length || 0) < 2) return;
     startTimer();
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [heroSlides.length, startTimer]);
 
   useEffect(() => {
-    if (!heroLoading && heroSlides.length > 0) {
+    if (!heroLoading && (heroSlides?.length || 0) > 0) {
       setTimeout(animateHeroText, 350);
     }
   }, [heroLoading, heroSlides.length, animateHeroText]);
@@ -210,7 +210,7 @@ const HomePage = () => {
             };
           })
           .filter((s) => s?.imageUrl);
-        setHeroSlides(slides.length > 0 ? slides : null); 
+        setHeroSlides(slides.length > 0 ? slides : []); 
       } catch {
         setHeroSlides(
           HERO_THEMES.map((theme, i) => ({
@@ -373,7 +373,7 @@ const HomePage = () => {
             {heroLoading ? (
               <div className="absolute inset-0 bg-[#1A1109] animate-pulse" />
             ) : (
-              heroSlides.map((slide, i) => (
+              (heroSlides || []).map((slide, i) => (
                 <div
                   key={`mobile-bg-${i}`}
                   onClick={handleHeroClick}
@@ -437,7 +437,7 @@ const HomePage = () => {
                 {String(activeSlide + 1).padStart(2, "0")}
               </span>
               <div className="flex gap-2">
-                {heroSlides.map((_, i) => (
+                {(heroSlides || []).map((_, i) => (
                   <button
                     key={`mob-btn-${i}`}
                     onClick={() => goToSlide(i)}
@@ -514,7 +514,7 @@ const HomePage = () => {
                   {String(activeSlide + 1).padStart(2, "0")}
                 </span>
                 <div className="flex gap-2">
-                  {heroSlides.map((_, i) => (
+                  {(heroSlides || []).map((_, i) => (
                     <button
                       key={`desk-btn-${i}`}
                       onClick={() => goToSlide(i)}
@@ -537,7 +537,7 @@ const HomePage = () => {
               {heroLoading ? (
                 <div className="absolute inset-0 bg-[#1A1109] animate-pulse" />
               ) : (
-                heroSlides.map((slide, i) => (
+                (heroSlides || []).map((slide, i) => (
                   <div
                     key={`desk-bg-${i}`}
                     className="absolute inset-0 overflow-hidden"
