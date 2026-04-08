@@ -106,10 +106,17 @@ public class AppConfig {
     private CorsConfigurationSource corsConfigurationSource() {
         return request -> {
             CorsConfiguration cfg = new CorsConfiguration();
-            cfg.setAllowedOrigins(List.of(frontendUrl));
+            
+            cfg.setAllowedOriginPatterns(List.of(
+                    frontendUrl,
+                    "http://localhost:5173",
+                    "https://clothsy-seven.vercel.app",
+                    "https://*.vercel.app"
+            ));
+            
             cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
             cfg.setAllowCredentials(true);
-            cfg.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+            cfg.setAllowedHeaders(List.of("*"));
             cfg.setExposedHeaders(List.of("Authorization"));
             cfg.setMaxAge(3600L);
             return cfg;
