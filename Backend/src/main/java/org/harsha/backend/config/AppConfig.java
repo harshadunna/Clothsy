@@ -21,6 +21,10 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.core.Ordered;
+import org.springframework.security.config.Customizer;
+import org.springframework.web.filter.CorsFilter;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -101,32 +105,40 @@ public class AppConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
+                .cors(Customizer.withDefaults());
 
         return http.build();
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration cfg = new CorsConfiguration();
+    public FilterRegistrationBean<CorsFilter> corsFilter() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
         
-        cfg.setAllowedOriginPatterns(Arrays.asList(
-                frontendUrl != null ? frontendUrl : "http://localhost:5173",
+        // Defensive logic to strip trailing slash
+        String safeFrontendUrl = frontendUrl != null ? frontendUrl : "http://localhost:5173";
+        if (safeFrontendUrl.endsWith("/")) {
+            safeFrontendUrl = safeFrontendUrl.substring(0, safeFrontendUrl.length() - 1);
+        }
+
+        config.setAllowedOriginPatterns(Arrays.asList(
+                safeFrontendUrl,
                 "http://localhost:5173",
                 "https://clothsy-seven.vercel.app",
                 "https://*.vercel.app"
         ));
         
-        cfg.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        cfg.setAllowCredentials(true);
-        cfg.setAllowedHeaders(Arrays.asList("*"));
-        cfg.setExposedHeaders(Arrays.asList("Authorization"));
-        cfg.setMaxAge(3600L);
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        config.setAllowCredentials(true);
+        config.setAllowedHeaders(Arrays.asList("*"));
+        config.setExposedHeaders(Arrays.asList("Authorization"));
+        config.setMaxAge(3600L);
         
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", cfg);
+        source.registerCorsConfiguration("/**", config);
         
-        return source;
+        FilterRegistrationBean<CorsFilter> bean = new FilterRegistrationBean<>(new CorsFilter(source));
+        bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        return bean;
     }
 
     @Bean
