@@ -20,9 +20,10 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Arrays;
 
 @Configuration
 public class AppConfig {
@@ -50,6 +51,8 @@ public class AppConfig {
         http
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        
                         .requestMatchers("/auth/**", "/oauth2/**").permitAll()
                         .requestMatchers("/api/payments/webhook").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/products").permitAll()
@@ -103,25 +106,27 @@ public class AppConfig {
         return http.build();
     }
 
-    private CorsConfigurationSource corsConfigurationSource() {
-        return request -> {
-            CorsConfiguration cfg = new CorsConfiguration();
-            
-            cfg.setAllowedOriginPatterns(List.of(
-                    frontendUrl,
-                    "http://localhost:5173",
-                    "https://clothsy-seven.vercel.app",
-                    "https://*.vercel.app"
-            ));
-            
-            cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-            cfg.setAllowCredentials(true);
-            
-            cfg.setAllowedHeaders(List.of("*"));
-            cfg.setExposedHeaders(List.of("Authorization"));
-            cfg.setMaxAge(3600L);
-            return cfg;
-        };
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration cfg = new CorsConfiguration();
+        
+        cfg.setAllowedOriginPatterns(Arrays.asList(
+                frontendUrl != null ? frontendUrl : "http://localhost:5173",
+                "http://localhost:5173",
+                "https://clothsy-seven.vercel.app",
+                "https://*.vercel.app"
+        ));
+        
+        cfg.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        cfg.setAllowCredentials(true);
+        cfg.setAllowedHeaders(Arrays.asList("*"));
+        cfg.setExposedHeaders(Arrays.asList("Authorization"));
+        cfg.setMaxAge(3600L);
+        
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", cfg);
+        
+        return source;
     }
 
     @Bean
