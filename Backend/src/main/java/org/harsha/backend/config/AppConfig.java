@@ -19,11 +19,9 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.core.Ordered;
-import org.springframework.security.config.Customizer;
 import org.springframework.web.filter.CorsFilter;
 
 import java.time.LocalDateTime;
@@ -105,17 +103,16 @@ public class AppConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .cors(Customizer.withDefaults());
+                .cors(AbstractHttpConfigurer::disable);
 
         return http.build();
     }
 
     @Bean
-    public FilterRegistrationBean<CorsFilter> corsFilter() {
+    public FilterRegistrationBean<CorsFilter> customCorsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         
-        // Defensive logic to strip trailing slash
         String safeFrontendUrl = frontendUrl != null ? frontendUrl : "http://localhost:5173";
         if (safeFrontendUrl.endsWith("/")) {
             safeFrontendUrl = safeFrontendUrl.substring(0, safeFrontendUrl.length() - 1);
