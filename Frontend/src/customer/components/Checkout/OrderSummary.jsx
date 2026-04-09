@@ -107,9 +107,34 @@ export default function OrderSummary({ handleNext }) {
             </div>
           </div>
 
+          {/* DEVELOPER DEMO MODE ALERT */}
+          <div className="mt-8 bg-white border border-[#D1C4BC] p-5 shadow-sm">
+            <h4 className="font-label text-[10px] uppercase tracking-widest font-bold text-[#1A1109] mb-3 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[14px] text-[#C8742A]">science</span>
+              Developer Demo Mode
+            </h4>
+            <p className="font-body text-[11px] text-[#7F756E] leading-relaxed mb-4">
+              To test the Stripe payment gateway safely, please use the following test card details:
+            </p>
+            <div className="font-body text-[11px] text-[#1A1109] space-y-2 bg-[#FDF8F3] p-3 border border-[#E8E1DE]">
+              <div className="flex justify-between">
+                <span className="text-[#7F756E]">Card Number:</span>
+                <span className="font-bold tracking-widest">4242 4242 4242 4242</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#7F756E]">Expiry:</span>
+                <span className="font-bold">Any Future Date</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#7F756E]">CVC:</span>
+                <span className="font-bold">Any 3 Digits</span>
+              </div>
+            </div>
+          </div>
+
           <button 
             onClick={handleCreatePayment}
-            className="mt-12 w-full bg-[#1A1109] text-[#FFF8F5] py-5 font-label text-[11px] font-black uppercase tracking-[0.3em] hover:bg-[#C8742A] transition-colors duration-300"
+            className="mt-6 w-full bg-[#1A1109] text-[#FFF8F5] py-5 font-label text-[11px] font-black uppercase tracking-[0.3em] hover:bg-[#C8742A] transition-colors duration-300"
           >
             PROCEED TO PAYMENT
           </button>
